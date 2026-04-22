@@ -1,5 +1,6 @@
 import json
 import logging
+import os
 from random import randint
 from Alympics import PlayGround, Player, LLM
 
@@ -90,7 +91,7 @@ class waterAllocation(PlayGround):
         
         self.survival_players = self.players
         
-        self.parse_result_prompt = "By reading the conversation, extract the bidding price chosen by each player in an exact json format. Please note the bidding price should be an integer. Output format:\n\n{\"Alex\": Alex's bidding price, \"Bob\": Bob's bidding price, \"Cindy\": Cindy's bidding price, \"David\": David's bidding price, \"Eric\": Eric's bidding price}"
+        self.parse_result_prompt = "By reading the conversation, extract the bidding price chosen by each player in an exact json format. Please note the bidding price should be an integer. Respond with JSON only, no extra text. Output format:\n\n{\"Alex\": Alex's bidding price, \"Bob\": Bob's bidding price, \"Cindy\": Cindy's bidding price, \"David\": David's bidding price, \"Eric\": Eric's bidding price}"
         self.round_results_prompt = "Thank you all for participating in Round {}. In this round, {}.\nTotal water resource supply is {}. According to the principle of the highest bidder and the rule of prioritizing low-demand individuals when the game is tied, {} won this auction and obtain water resource. After allocation, all survival residents' information is as follows: {}"
         
         self.experiment_unique_id = str(randint(10000000, 99999999))
@@ -133,15 +134,31 @@ class waterAllocation(PlayGround):
     def _parse_result(self, round_info):
         messages = [{"role": "system", "content": self.parse_result_prompt}, {"role": "user", "content": round_info}]
         attempts = 0
+        player_names = [player.name for player in self.survival_players]
+        def coerce_bids(raw):
+            if not isinstance(raw, dict):
+                return None
+            bids = {}
+            for name in player_names:
+                value = raw.get(name, 0)
+                try:
+                    bids[name] = int(float(value))
+                except (TypeError, ValueError):
+                    bids[name] = 0
+            return bids
+
         while attempts < 3:
             try:
                 res = self.llm.call(messages)
                 res = json.loads(res)
-                return res
+                coerced = coerce_bids(res)
+                if coerced is not None:
+                    return coerced
             except Exception as e:
                 logger.error(e)
             attempts += 1
-        return res
+        logger.error("Failed to parse bidding result; defaulting bids to 0.")
+        return {name: 0 for name in player_names}
 
     def run_single_round(self, round_id, supply):
         """
@@ -212,8 +229,9 @@ class waterAllocation(PlayGround):
         history = []
         for player in self.players:
             history.append({player.name: player.history})
+        os.makedirs(os.path.dirname(path), exist_ok=True)
         with open(path, 'w') as f:
-            json.dump(history, f)
+            json.dump(history, f, indent=2)
 
     def run_multi_round(self, n_round, supply_list):
         assert isinstance(supply_list, list)
@@ -222,4 +240,5 @@ class waterAllocation(PlayGround):
         for i in range(1, n_round+1):
             self.run_single_round(i, supply_list[i-1])
         
-        self._save_history(f'./{self.experiment_unique_id}.json') # change the log dirction here
+        log_dir = "log"
+        self._save_history(os.path.join(log_dir, f"{self.experiment_unique_id}.json"))

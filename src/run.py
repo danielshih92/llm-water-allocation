@@ -12,7 +12,7 @@ def generate_data(lower, upper, round):
 
 def main():
     parser = argparse.ArgumentParser(description='Water Allocation Challenge')
-    parser.add_argument('--round', type=int, default=20, help='Number of rounds')
+    parser.add_argument('--round', type=int, default=3, help='Number of rounds')
     parser.add_argument('--lower', type=int, default=10, help='Lower limit of water supply')
     parser.add_argument('--upper', type=int, default=20, help='Upper limit of water supply')
     args = parser.parse_args()
