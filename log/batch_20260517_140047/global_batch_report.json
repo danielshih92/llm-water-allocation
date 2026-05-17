@@ -1,0 +1,1217 @@
+{
+  "report_metadata": {
+    "generated_at": "2026-05-17 19:45:25",
+    "source_batch": "log/batch_20260517_140047"
+  },
+  "batch_execution_manifest": {
+    "batch_id": "batch_20260517_140047",
+    "total_experiments": 30,
+    "total_runtime_sec": 20677.59,
+    "experiments": [
+      {
+        "experiment_id": "batch_20260517_140047/exp_000",
+        "runtime_sec": 682.33,
+        "backend_config": {
+          "Alex": {
+            "backend": "openai",
+            "model": "gpt-5.4",
+            "temperature": 0.6
+          },
+          "Bob": {
+            "backend": "openai",
+            "model": "gpt-5.4-nano",
+            "temperature": 0.6
+          },
+          "Cindy": {
+            "backend": "gemini",
+            "model": "gemini-2.5-flash",
+            "temperature": 0.6
+          },
+          "David": {
+            "backend": "gemini",
+            "model": "gemini-3.1-flash-lite-preview",
+            "temperature": 0.6
+          },
+          "Eric": {
+            "backend": "deepseek",
+            "model": "deepseek-v4-flash",
+            "temperature": 0.6
+          }
+        }
+      },
+      {
+        "experiment_id": "batch_20260517_140047/exp_001",
+        "runtime_sec": 667.05,
+        "backend_config": {
+          "Alex": {
+            "backend": "openai",
+            "model": "gpt-5.4",
+            "temperature": 0.6
+          },
+          "Bob": {
+            "backend": "openai",
+            "model": "gpt-5.4-nano",
+            "temperature": 0.6
+          },
+          "Cindy": {
+            "backend": "gemini",
+            "model": "gemini-2.5-flash",
+            "temperature": 0.6
+          },
+          "David": {
+            "backend": "deepseek",
+            "model": "deepseek-v4-flash",
+            "temperature": 0.6
+          },
+          "Eric": {
+            "backend": "gemini",
+            "model": "gemini-3.1-flash-lite-preview",
+            "temperature": 0.6
+          }
+        }
+      },
+      {
+        "experiment_id": "batch_20260517_140047/exp_002",
+        "runtime_sec": 645.9,
+        "backend_config": {
+          "Alex": {
+            "backend": "openai",
+            "model": "gpt-5.4",
+            "temperature": 0.6
+          },
+          "Bob": {
+            "backend": "openai",
+            "model": "gpt-5.4-nano",
+            "temperature": 0.6
+          },
+          "Cindy": {
+            "backend": "gemini",
+            "model": "gemini-3.1-flash-lite-preview",
+            "temperature": 0.6
+          },
+          "David": {
+            "backend": "gemini",
+            "model": "gemini-2.5-flash",
+            "temperature": 0.6
+          },
+          "Eric": {
+            "backend": "deepseek",
+            "model": "deepseek-v4-flash",
+            "temperature": 0.6
+          }
+        }
+      },
+      {
+        "experiment_id": "batch_20260517_140047/exp_003",
+        "runtime_sec": 638.55,
+        "backend_config": {
+          "Alex": {
+            "backend": "openai",
+            "model": "gpt-5.4",
+            "temperature": 0.6
+          },
+          "Bob": {
+            "backend": "openai",
+            "model": "gpt-5.4-nano",
+            "temperature": 0.6
+          },
+          "Cindy": {
+            "backend": "gemini",
+            "model": "gemini-3.1-flash-lite-preview",
+            "temperature": 0.6
+          },
+          "David": {
+            "backend": "deepseek",
+            "model": "deepseek-v4-flash",
+            "temperature": 0.6
+          },
+          "Eric": {
+            "backend": "gemini",
+            "model": "gemini-2.5-flash",
+            "temperature": 0.6
+          }
+        }
+      },
+      {
+        "experiment_id": "batch_20260517_140047/exp_004",
+        "runtime_sec": 663.55,
+        "backend_config": {
+          "Alex": {
+            "backend": "openai",
+            "model": "gpt-5.4",
+            "temperature": 0.6
+          },
+          "Bob": {
+            "backend": "openai",
+            "model": "gpt-5.4-nano",
+            "temperature": 0.6
+          },
+          "Cindy": {
+            "backend": "deepseek",
+            "model": "deepseek-v4-flash",
+            "temperature": 0.6
+          },
+          "David": {
+            "backend": "gemini",
+            "model": "gemini-2.5-flash",
+            "temperature": 0.6
+          },
+          "Eric": {
+            "backend": "gemini",
+            "model": "gemini-3.1-flash-lite-preview",
+            "temperature": 0.6
+          }
+        }
+      },
+      {
+        "experiment_id": "batch_20260517_140047/exp_005",
+        "runtime_sec": 688.92,
+        "backend_config": {
+          "Alex": {
+            "backend": "openai",
+            "model": "gpt-5.4",
+            "temperature": 0.6
+          },
+          "Bob": {
+            "backend": "openai",
+            "model": "gpt-5.4-nano",
+            "temperature": 0.6
+          },
+          "Cindy": {
+            "backend": "deepseek",
+            "model": "deepseek-v4-flash",
+            "temperature": 0.6
+          },
+          "David": {
+            "backend": "gemini",
+            "model": "gemini-3.1-flash-lite-preview",
+            "temperature": 0.6
+          },
+          "Eric": {
+            "backend": "gemini",
+            "model": "gemini-2.5-flash",
+            "temperature": 0.6
+          }
+        }
+      },
+      {
+        "experiment_id": "batch_20260517_140047/exp_006",
+        "runtime_sec": 1249.48,
+        "backend_config": {
+          "Alex": {
+            "backend": "openai",
+            "model": "gpt-5.4",
+            "temperature": 0.6
+          },
+          "Bob": {
+            "backend": "gemini",
+            "model": "gemini-2.5-flash",
+            "temperature": 0.6
+          },
+          "Cindy": {
+            "backend": "openai",
+            "model": "gpt-5.4-nano",
+            "temperature": 0.6
+          },
+          "David": {
+            "backend": "gemini",
+            "model": "gemini-3.1-flash-lite-preview",
+            "temperature": 0.6
+          },
+          "Eric": {
+            "backend": "deepseek",
+            "model": "deepseek-v4-flash",
+            "temperature": 0.6
+          }
+        }
+      },
+      {
+        "experiment_id": "batch_20260517_140047/exp_007",
+        "runtime_sec": 632.7,
+        "backend_config": {
+          "Alex": {
+            "backend": "openai",
+            "model": "gpt-5.4",
+            "temperature": 0.6
+          },
+          "Bob": {
+            "backend": "gemini",
+            "model": "gemini-2.5-flash",
+            "temperature": 0.6
+          },
+          "Cindy": {
+            "backend": "openai",
+            "model": "gpt-5.4-nano",
+            "temperature": 0.6
+          },
+          "David": {
+            "backend": "deepseek",
+            "model": "deepseek-v4-flash",
+            "temperature": 0.6
+          },
+          "Eric": {
+            "backend": "gemini",
+            "model": "gemini-3.1-flash-lite-preview",
+            "temperature": 0.6
+          }
+        }
+      },
+      {
+        "experiment_id": "batch_20260517_140047/exp_008",
+        "runtime_sec": 621.59,
+        "backend_config": {
+          "Alex": {
+            "backend": "openai",
+            "model": "gpt-5.4",
+            "temperature": 0.6
+          },
+          "Bob": {
+            "backend": "gemini",
+            "model": "gemini-2.5-flash",
+            "temperature": 0.6
+          },
+          "Cindy": {
+            "backend": "gemini",
+            "model": "gemini-3.1-flash-lite-preview",
+            "temperature": 0.6
+          },
+          "David": {
+            "backend": "openai",
+            "model": "gpt-5.4-nano",
+            "temperature": 0.6
+          },
+          "Eric": {
+            "backend": "deepseek",
+            "model": "deepseek-v4-flash",
+            "temperature": 0.6
+          }
+        }
+      },
+      {
+        "experiment_id": "batch_20260517_140047/exp_009",
+        "runtime_sec": 635.17,
+        "backend_config": {
+          "Alex": {
+            "backend": "openai",
+            "model": "gpt-5.4",
+            "temperature": 0.6
+          },
+          "Bob": {
+            "backend": "gemini",
+            "model": "gemini-2.5-flash",
+            "temperature": 0.6
+          },
+          "Cindy": {
+            "backend": "gemini",
+            "model": "gemini-3.1-flash-lite-preview",
+            "temperature": 0.6
+          },
+          "David": {
+            "backend": "deepseek",
+            "model": "deepseek-v4-flash",
+            "temperature": 0.6
+          },
+          "Eric": {
+            "backend": "openai",
+            "model": "gpt-5.4-nano",
+            "temperature": 0.6
+          }
+        }
+      },
+      {
+        "experiment_id": "batch_20260517_140047/exp_010",
+        "runtime_sec": 653.67,
+        "backend_config": {
+          "Alex": {
+            "backend": "openai",
+            "model": "gpt-5.4",
+            "temperature": 0.6
+          },
+          "Bob": {
+            "backend": "gemini",
+            "model": "gemini-2.5-flash",
+            "temperature": 0.6
+          },
+          "Cindy": {
+            "backend": "deepseek",
+            "model": "deepseek-v4-flash",
+            "temperature": 0.6
+          },
+          "David": {
+            "backend": "openai",
+            "model": "gpt-5.4-nano",
+            "temperature": 0.6
+          },
+          "Eric": {
+            "backend": "gemini",
+            "model": "gemini-3.1-flash-lite-preview",
+            "temperature": 0.6
+          }
+        }
+      },
+      {
+        "experiment_id": "batch_20260517_140047/exp_011",
+        "runtime_sec": 701.0,
+        "backend_config": {
+          "Alex": {
+            "backend": "openai",
+            "model": "gpt-5.4",
+            "temperature": 0.6
+          },
+          "Bob": {
+            "backend": "gemini",
+            "model": "gemini-2.5-flash",
+            "temperature": 0.6
+          },
+          "Cindy": {
+            "backend": "deepseek",
+            "model": "deepseek-v4-flash",
+            "temperature": 0.6
+          },
+          "David": {
+            "backend": "gemini",
+            "model": "gemini-3.1-flash-lite-preview",
+            "temperature": 0.6
+          },
+          "Eric": {
+            "backend": "openai",
+            "model": "gpt-5.4-nano",
+            "temperature": 0.6
+          }
+        }
+      },
+      {
+        "experiment_id": "batch_20260517_140047/exp_012",
+        "runtime_sec": 700.66,
+        "backend_config": {
+          "Alex": {
+            "backend": "openai",
+            "model": "gpt-5.4",
+            "temperature": 0.6
+          },
+          "Bob": {
+            "backend": "gemini",
+            "model": "gemini-3.1-flash-lite-preview",
+            "temperature": 0.6
+          },
+          "Cindy": {
+            "backend": "openai",
+            "model": "gpt-5.4-nano",
+            "temperature": 0.6
+          },
+          "David": {
+            "backend": "gemini",
+            "model": "gemini-2.5-flash",
+            "temperature": 0.6
+          },
+          "Eric": {
+            "backend": "deepseek",
+            "model": "deepseek-v4-flash",
+            "temperature": 0.6
+          }
+        }
+      },
+      {
+        "experiment_id": "batch_20260517_140047/exp_013",
+        "runtime_sec": 658.62,
+        "backend_config": {
+          "Alex": {
+            "backend": "openai",
+            "model": "gpt-5.4",
+            "temperature": 0.6
+          },
+          "Bob": {
+            "backend": "gemini",
+            "model": "gemini-3.1-flash-lite-preview",
+            "temperature": 0.6
+          },
+          "Cindy": {
+            "backend": "openai",
+            "model": "gpt-5.4-nano",
+            "temperature": 0.6
+          },
+          "David": {
+            "backend": "deepseek",
+            "model": "deepseek-v4-flash",
+            "temperature": 0.6
+          },
+          "Eric": {
+            "backend": "gemini",
+            "model": "gemini-2.5-flash",
+            "temperature": 0.6
+          }
+        }
+      },
+      {
+        "experiment_id": "batch_20260517_140047/exp_014",
+        "runtime_sec": 655.96,
+        "backend_config": {
+          "Alex": {
+            "backend": "openai",
+            "model": "gpt-5.4",
+            "temperature": 0.6
+          },
+          "Bob": {
+            "backend": "gemini",
+            "model": "gemini-3.1-flash-lite-preview",
+            "temperature": 0.6
+          },
+          "Cindy": {
+            "backend": "gemini",
+            "model": "gemini-2.5-flash",
+            "temperature": 0.6
+          },
+          "David": {
+            "backend": "openai",
+            "model": "gpt-5.4-nano",
+            "temperature": 0.6
+          },
+          "Eric": {
+            "backend": "deepseek",
+            "model": "deepseek-v4-flash",
+            "temperature": 0.6
+          }
+        }
+      },
+      {
+        "experiment_id": "batch_20260517_140047/exp_015",
+        "runtime_sec": 655.89,
+        "backend_config": {
+          "Alex": {
+            "backend": "openai",
+            "model": "gpt-5.4",
+            "temperature": 0.6
+          },
+          "Bob": {
+            "backend": "gemini",
+            "model": "gemini-3.1-flash-lite-preview",
+            "temperature": 0.6
+          },
+          "Cindy": {
+            "backend": "gemini",
+            "model": "gemini-2.5-flash",
+            "temperature": 0.6
+          },
+          "David": {
+            "backend": "deepseek",
+            "model": "deepseek-v4-flash",
+            "temperature": 0.6
+          },
+          "Eric": {
+            "backend": "openai",
+            "model": "gpt-5.4-nano",
+            "temperature": 0.6
+          }
+        }
+      },
+      {
+        "experiment_id": "batch_20260517_140047/exp_016",
+        "runtime_sec": 676.74,
+        "backend_config": {
+          "Alex": {
+            "backend": "openai",
+            "model": "gpt-5.4",
+            "temperature": 0.6
+          },
+          "Bob": {
+            "backend": "gemini",
+            "model": "gemini-3.1-flash-lite-preview",
+            "temperature": 0.6
+          },
+          "Cindy": {
+            "backend": "deepseek",
+            "model": "deepseek-v4-flash",
+            "temperature": 0.6
+          },
+          "David": {
+            "backend": "openai",
+            "model": "gpt-5.4-nano",
+            "temperature": 0.6
+          },
+          "Eric": {
+            "backend": "gemini",
+            "model": "gemini-2.5-flash",
+            "temperature": 0.6
+          }
+        }
+      },
+      {
+        "experiment_id": "batch_20260517_140047/exp_017",
+        "runtime_sec": 744.1,
+        "backend_config": {
+          "Alex": {
+            "backend": "openai",
+            "model": "gpt-5.4",
+            "temperature": 0.6
+          },
+          "Bob": {
+            "backend": "gemini",
+            "model": "gemini-3.1-flash-lite-preview",
+            "temperature": 0.6
+          },
+          "Cindy": {
+            "backend": "deepseek",
+            "model": "deepseek-v4-flash",
+            "temperature": 0.6
+          },
+          "David": {
+            "backend": "gemini",
+            "model": "gemini-2.5-flash",
+            "temperature": 0.6
+          },
+          "Eric": {
+            "backend": "openai",
+            "model": "gpt-5.4-nano",
+            "temperature": 0.6
+          }
+        }
+      },
+      {
+        "experiment_id": "batch_20260517_140047/exp_018",
+        "runtime_sec": 671.39,
+        "backend_config": {
+          "Alex": {
+            "backend": "openai",
+            "model": "gpt-5.4",
+            "temperature": 0.6
+          },
+          "Bob": {
+            "backend": "deepseek",
+            "model": "deepseek-v4-flash",
+            "temperature": 0.6
+          },
+          "Cindy": {
+            "backend": "openai",
+            "model": "gpt-5.4-nano",
+            "temperature": 0.6
+          },
+          "David": {
+            "backend": "gemini",
+            "model": "gemini-2.5-flash",
+            "temperature": 0.6
+          },
+          "Eric": {
+            "backend": "gemini",
+            "model": "gemini-3.1-flash-lite-preview",
+            "temperature": 0.6
+          }
+        }
+      },
+      {
+        "experiment_id": "batch_20260517_140047/exp_019",
+        "runtime_sec": 686.82,
+        "backend_config": {
+          "Alex": {
+            "backend": "openai",
+            "model": "gpt-5.4",
+            "temperature": 0.6
+          },
+          "Bob": {
+            "backend": "deepseek",
+            "model": "deepseek-v4-flash",
+            "temperature": 0.6
+          },
+          "Cindy": {
+            "backend": "openai",
+            "model": "gpt-5.4-nano",
+            "temperature": 0.6
+          },
+          "David": {
+            "backend": "gemini",
+            "model": "gemini-3.1-flash-lite-preview",
+            "temperature": 0.6
+          },
+          "Eric": {
+            "backend": "gemini",
+            "model": "gemini-2.5-flash",
+            "temperature": 0.6
+          }
+        }
+      },
+      {
+        "experiment_id": "batch_20260517_140047/exp_020",
+        "runtime_sec": 627.5,
+        "backend_config": {
+          "Alex": {
+            "backend": "openai",
+            "model": "gpt-5.4",
+            "temperature": 0.6
+          },
+          "Bob": {
+            "backend": "deepseek",
+            "model": "deepseek-v4-flash",
+            "temperature": 0.6
+          },
+          "Cindy": {
+            "backend": "gemini",
+            "model": "gemini-2.5-flash",
+            "temperature": 0.6
+          },
+          "David": {
+            "backend": "openai",
+            "model": "gpt-5.4-nano",
+            "temperature": 0.6
+          },
+          "Eric": {
+            "backend": "gemini",
+            "model": "gemini-3.1-flash-lite-preview",
+            "temperature": 0.6
+          }
+        }
+      },
+      {
+        "experiment_id": "batch_20260517_140047/exp_021",
+        "runtime_sec": 681.52,
+        "backend_config": {
+          "Alex": {
+            "backend": "openai",
+            "model": "gpt-5.4",
+            "temperature": 0.6
+          },
+          "Bob": {
+            "backend": "deepseek",
+            "model": "deepseek-v4-flash",
+            "temperature": 0.6
+          },
+          "Cindy": {
+            "backend": "gemini",
+            "model": "gemini-2.5-flash",
+            "temperature": 0.6
+          },
+          "David": {
+            "backend": "gemini",
+            "model": "gemini-3.1-flash-lite-preview",
+            "temperature": 0.6
+          },
+          "Eric": {
+            "backend": "openai",
+            "model": "gpt-5.4-nano",
+            "temperature": 0.6
+          }
+        }
+      },
+      {
+        "experiment_id": "batch_20260517_140047/exp_022",
+        "runtime_sec": 671.68,
+        "backend_config": {
+          "Alex": {
+            "backend": "openai",
+            "model": "gpt-5.4",
+            "temperature": 0.6
+          },
+          "Bob": {
+            "backend": "deepseek",
+            "model": "deepseek-v4-flash",
+            "temperature": 0.6
+          },
+          "Cindy": {
+            "backend": "gemini",
+            "model": "gemini-3.1-flash-lite-preview",
+            "temperature": 0.6
+          },
+          "David": {
+            "backend": "openai",
+            "model": "gpt-5.4-nano",
+            "temperature": 0.6
+          },
+          "Eric": {
+            "backend": "gemini",
+            "model": "gemini-2.5-flash",
+            "temperature": 0.6
+          }
+        }
+      },
+      {
+        "experiment_id": "batch_20260517_140047/exp_023",
+        "runtime_sec": 637.5,
+        "backend_config": {
+          "Alex": {
+            "backend": "openai",
+            "model": "gpt-5.4",
+            "temperature": 0.6
+          },
+          "Bob": {
+            "backend": "deepseek",
+            "model": "deepseek-v4-flash",
+            "temperature": 0.6
+          },
+          "Cindy": {
+            "backend": "gemini",
+            "model": "gemini-3.1-flash-lite-preview",
+            "temperature": 0.6
+          },
+          "David": {
+            "backend": "gemini",
+            "model": "gemini-2.5-flash",
+            "temperature": 0.6
+          },
+          "Eric": {
+            "backend": "openai",
+            "model": "gpt-5.4-nano",
+            "temperature": 0.6
+          }
+        }
+      },
+      {
+        "experiment_id": "batch_20260517_140047/exp_024",
+        "runtime_sec": 675.06,
+        "backend_config": {
+          "Alex": {
+            "backend": "openai",
+            "model": "gpt-5.4-nano",
+            "temperature": 0.6
+          },
+          "Bob": {
+            "backend": "openai",
+            "model": "gpt-5.4",
+            "temperature": 0.6
+          },
+          "Cindy": {
+            "backend": "gemini",
+            "model": "gemini-2.5-flash",
+            "temperature": 0.6
+          },
+          "David": {
+            "backend": "gemini",
+            "model": "gemini-3.1-flash-lite-preview",
+            "temperature": 0.6
+          },
+          "Eric": {
+            "backend": "deepseek",
+            "model": "deepseek-v4-flash",
+            "temperature": 0.6
+          }
+        }
+      },
+      {
+        "experiment_id": "batch_20260517_140047/exp_025",
+        "runtime_sec": 734.62,
+        "backend_config": {
+          "Alex": {
+            "backend": "openai",
+            "model": "gpt-5.4-nano",
+            "temperature": 0.6
+          },
+          "Bob": {
+            "backend": "openai",
+            "model": "gpt-5.4",
+            "temperature": 0.6
+          },
+          "Cindy": {
+            "backend": "gemini",
+            "model": "gemini-2.5-flash",
+            "temperature": 0.6
+          },
+          "David": {
+            "backend": "deepseek",
+            "model": "deepseek-v4-flash",
+            "temperature": 0.6
+          },
+          "Eric": {
+            "backend": "gemini",
+            "model": "gemini-3.1-flash-lite-preview",
+            "temperature": 0.6
+          }
+        }
+      },
+      {
+        "experiment_id": "batch_20260517_140047/exp_026",
+        "runtime_sec": 743.1,
+        "backend_config": {
+          "Alex": {
+            "backend": "openai",
+            "model": "gpt-5.4-nano",
+            "temperature": 0.6
+          },
+          "Bob": {
+            "backend": "openai",
+            "model": "gpt-5.4",
+            "temperature": 0.6
+          },
+          "Cindy": {
+            "backend": "gemini",
+            "model": "gemini-3.1-flash-lite-preview",
+            "temperature": 0.6
+          },
+          "David": {
+            "backend": "gemini",
+            "model": "gemini-2.5-flash",
+            "temperature": 0.6
+          },
+          "Eric": {
+            "backend": "deepseek",
+            "model": "deepseek-v4-flash",
+            "temperature": 0.6
+          }
+        }
+      },
+      {
+        "experiment_id": "batch_20260517_140047/exp_027",
+        "runtime_sec": 614.02,
+        "backend_config": {
+          "Alex": {
+            "backend": "openai",
+            "model": "gpt-5.4-nano",
+            "temperature": 0.6
+          },
+          "Bob": {
+            "backend": "openai",
+            "model": "gpt-5.4",
+            "temperature": 0.6
+          },
+          "Cindy": {
+            "backend": "gemini",
+            "model": "gemini-3.1-flash-lite-preview",
+            "temperature": 0.6
+          },
+          "David": {
+            "backend": "deepseek",
+            "model": "deepseek-v4-flash",
+            "temperature": 0.6
+          },
+          "Eric": {
+            "backend": "gemini",
+            "model": "gemini-2.5-flash",
+            "temperature": 0.6
+          }
+        }
+      },
+      {
+        "experiment_id": "batch_20260517_140047/exp_028",
+        "runtime_sec": 666.45,
+        "backend_config": {
+          "Alex": {
+            "backend": "openai",
+            "model": "gpt-5.4-nano",
+            "temperature": 0.6
+          },
+          "Bob": {
+            "backend": "openai",
+            "model": "gpt-5.4",
+            "temperature": 0.6
+          },
+          "Cindy": {
+            "backend": "deepseek",
+            "model": "deepseek-v4-flash",
+            "temperature": 0.6
+          },
+          "David": {
+            "backend": "gemini",
+            "model": "gemini-2.5-flash",
+            "temperature": 0.6
+          },
+          "Eric": {
+            "backend": "gemini",
+            "model": "gemini-3.1-flash-lite-preview",
+            "temperature": 0.6
+          }
+        }
+      },
+      {
+        "experiment_id": "batch_20260517_140047/exp_029",
+        "runtime_sec": 696.06,
+        "backend_config": {
+          "Alex": {
+            "backend": "openai",
+            "model": "gpt-5.4-nano",
+            "temperature": 0.6
+          },
+          "Bob": {
+            "backend": "openai",
+            "model": "gpt-5.4",
+            "temperature": 0.6
+          },
+          "Cindy": {
+            "backend": "deepseek",
+            "model": "deepseek-v4-flash",
+            "temperature": 0.6
+          },
+          "David": {
+            "backend": "gemini",
+            "model": "gemini-3.1-flash-lite-preview",
+            "temperature": 0.6
+          },
+          "Eric": {
+            "backend": "gemini",
+            "model": "gemini-2.5-flash",
+            "temperature": 0.6
+          }
+        }
+      }
+    ]
+  },
+  "performance_by_model": {
+    "gpt-5.4": {
+      "global_mortality_rate": "33.0%",
+      "total_evaluated_meta_rounds": 300,
+      "total_agent_observations": 30,
+      "total_experiments": 30,
+      "grand_avg_survival_days": 8.16,
+      "grand_avg_final_budget": 107.9,
+      "grand_avg_daily_bid": 81.37,
+      "grand_avg_total_bid": 813.68,
+      "grand_avg_metric_average_bid": 81.37,
+      "grand_avg_bid_variance": 1392.1329,
+      "grand_avg_bid_entropy": 2.5281,
+      "grand_avg_adaptation_score": 128.2968,
+      "grand_avg_panic_score": 0.5367,
+      "grand_avg_opponent_awareness_score": 3.2367,
+      "grand_avg_recovery_score": 0.2033,
+      "grand_avg_supply_bid_correlation": -0.0401,
+      "grand_avg_utility_score": 513.8916,
+      "grand_avg_survival_efficiency": 0.010293,
+      "grand_avg_strategy_complexity": 614.88,
+      "grand_avg_branch_count": 22.41,
+      "grand_avg_loop_count": 1.4833,
+      "grand_avg_function_call_count": 31.7267,
+      "grand_avg_compile_success": 1.0,
+      "grand_avg_runtime_success": 0.9867,
+      "grand_avg_hallucinated_api_count": 0.0
+    },
+    "deepseek-v4-flash": {
+      "global_mortality_rate": "53.0%",
+      "total_evaluated_meta_rounds": 300,
+      "total_agent_observations": 30,
+      "total_experiments": 30,
+      "grand_avg_survival_days": 6.99,
+      "grand_avg_final_budget": 261.36,
+      "grand_avg_daily_bid": 61.74,
+      "grand_avg_total_bid": 617.41,
+      "grand_avg_metric_average_bid": 61.74,
+      "grand_avg_bid_variance": 921.3211,
+      "grand_avg_bid_entropy": 1.6978,
+      "grand_avg_adaptation_score": 68.5934,
+      "grand_avg_panic_score": 0.59,
+      "grand_avg_opponent_awareness_score": 4.9467,
+      "grand_avg_recovery_score": 0.1567,
+      "grand_avg_supply_bid_correlation": -0.0693,
+      "grand_avg_utility_score": 450.8307,
+      "grand_avg_survival_efficiency": 0.01474,
+      "grand_avg_strategy_complexity": 199.4233,
+      "grand_avg_branch_count": 4.3633,
+      "grand_avg_loop_count": 0.7433,
+      "grand_avg_function_call_count": 9.6167,
+      "grand_avg_compile_success": 0.94,
+      "grand_avg_runtime_success": 0.9467,
+      "grand_avg_hallucinated_api_count": 0.0
+    },
+    "gemini-3.1-flash-lite-preview": {
+      "global_mortality_rate": "67.7%",
+      "total_evaluated_meta_rounds": 300,
+      "total_agent_observations": 30,
+      "total_experiments": 30,
+      "grand_avg_survival_days": 5.7,
+      "grand_avg_final_budget": 196.58,
+      "grand_avg_daily_bid": 43.3,
+      "grand_avg_total_bid": 433.04,
+      "grand_avg_metric_average_bid": 43.3,
+      "grand_avg_bid_variance": 890.3463,
+      "grand_avg_bid_entropy": 1.4466,
+      "grand_avg_adaptation_score": 55.1158,
+      "grand_avg_panic_score": 0.4333,
+      "grand_avg_opponent_awareness_score": 4.4567,
+      "grand_avg_recovery_score": 0.3533,
+      "grand_avg_supply_bid_correlation": -0.0181,
+      "grand_avg_utility_score": 379.0799,
+      "grand_avg_survival_efficiency": 0.007047,
+      "grand_avg_strategy_complexity": 103.0133,
+      "grand_avg_branch_count": 2.0467,
+      "grand_avg_loop_count": 0.27,
+      "grand_avg_function_call_count": 6.3667,
+      "grand_avg_compile_success": 0.6133,
+      "grand_avg_runtime_success": 0.9967,
+      "grand_avg_hallucinated_api_count": 0.0
+    },
+    "gemini-2.5-flash": {
+      "global_mortality_rate": "8.0%",
+      "total_evaluated_meta_rounds": 300,
+      "total_agent_observations": 30,
+      "total_experiments": 30,
+      "grand_avg_survival_days": 9.59,
+      "grand_avg_final_budget": 341.64,
+      "grand_avg_daily_bid": 107.18,
+      "grand_avg_total_bid": 1071.83,
+      "grand_avg_metric_average_bid": 107.18,
+      "grand_avg_bid_variance": 702.6991,
+      "grand_avg_bid_entropy": 2.1529,
+      "grand_avg_adaptation_score": 66.4442,
+      "grand_avg_panic_score": 0.07,
+      "grand_avg_opponent_awareness_score": 6.72,
+      "grand_avg_recovery_score": 0.0767,
+      "grand_avg_supply_bid_correlation": -0.0373,
+      "grand_avg_utility_score": 587.7507,
+      "grand_avg_survival_efficiency": 0.00938,
+      "grand_avg_strategy_complexity": 365.61,
+      "grand_avg_branch_count": 10.8767,
+      "grand_avg_loop_count": 1.0933,
+      "grand_avg_function_call_count": 15.31,
+      "grand_avg_compile_success": 1.0,
+      "grand_avg_runtime_success": 0.9767,
+      "grand_avg_hallucinated_api_count": 0.0
+    },
+    "gpt-5.4-nano": {
+      "global_mortality_rate": "60.7%",
+      "total_evaluated_meta_rounds": 300,
+      "total_agent_observations": 30,
+      "total_experiments": 30,
+      "grand_avg_survival_days": 6.5,
+      "grand_avg_final_budget": 223.15,
+      "grand_avg_daily_bid": 60.44,
+      "grand_avg_total_bid": 604.39,
+      "grand_avg_metric_average_bid": 60.44,
+      "grand_avg_bid_variance": 1004.0136,
+      "grand_avg_bid_entropy": 2.1592,
+      "grand_avg_adaptation_score": 68.9706,
+      "grand_avg_panic_score": 0.8367,
+      "grand_avg_opponent_awareness_score": 5.0333,
+      "grand_avg_recovery_score": 0.1767,
+      "grand_avg_supply_bid_correlation": -0.0808,
+      "grand_avg_utility_score": 394.1373,
+      "grand_avg_survival_efficiency": 0.011473,
+      "grand_avg_strategy_complexity": 451.2967,
+      "grand_avg_branch_count": 11.8733,
+      "grand_avg_loop_count": 1.8867,
+      "grand_avg_function_call_count": 26.8167,
+      "grand_avg_compile_success": 1.0,
+      "grand_avg_runtime_success": 0.8833,
+      "grand_avg_hallucinated_api_count": 0.0
+    }
+  },
+  "performance_by_agent": {
+    "Alex": {
+      "global_mortality_rate": "48.0%",
+      "total_evaluated_meta_rounds": 300,
+      "total_agent_observations": 30,
+      "total_experiments": 30,
+      "grand_avg_survival_days": 7.19,
+      "grand_avg_final_budget": 71.25,
+      "grand_avg_daily_bid": 70.81,
+      "grand_avg_total_bid": 708.05,
+      "grand_avg_metric_average_bid": 70.81,
+      "grand_avg_bid_variance": 1363.1078,
+      "grand_avg_bid_entropy": 2.3861,
+      "grand_avg_adaptation_score": 115.9504,
+      "grand_avg_panic_score": 0.7933,
+      "grand_avg_opponent_awareness_score": 3.5767,
+      "grand_avg_recovery_score": 0.22,
+      "grand_avg_supply_bid_correlation": -0.0359,
+      "grand_avg_utility_score": 436.04,
+      "grand_avg_survival_efficiency": 0.011063,
+      "grand_avg_strategy_complexity": 576.2833,
+      "grand_avg_branch_count": 20.2733,
+      "grand_avg_loop_count": 1.5767,
+      "grand_avg_function_call_count": 30.32,
+      "grand_avg_compile_success": 1.0,
+      "grand_avg_runtime_success": 0.9733,
+      "grand_avg_hallucinated_api_count": 0.0
+    },
+    "Bob": {
+      "global_mortality_rate": "44.7%",
+      "total_evaluated_meta_rounds": 300,
+      "total_agent_observations": 30,
+      "total_experiments": 30,
+      "grand_avg_survival_days": 7.37,
+      "grand_avg_final_budget": 147.35,
+      "grand_avg_daily_bid": 67.3,
+      "grand_avg_total_bid": 672.98,
+      "grand_avg_metric_average_bid": 67.3,
+      "grand_avg_bid_variance": 949.8248,
+      "grand_avg_bid_entropy": 2.0604,
+      "grand_avg_adaptation_score": 79.0045,
+      "grand_avg_panic_score": 0.49,
+      "grand_avg_opponent_awareness_score": 4.85,
+      "grand_avg_recovery_score": 0.1767,
+      "grand_avg_supply_bid_correlation": -0.0333,
+      "grand_avg_utility_score": 479.8443,
+      "grand_avg_survival_efficiency": 0.011153,
+      "grand_avg_strategy_complexity": 344.9767,
+      "grand_avg_branch_count": 10.1867,
+      "grand_avg_loop_count": 1.0667,
+      "grand_avg_function_call_count": 17.99,
+      "grand_avg_compile_success": 0.91,
+      "grand_avg_runtime_success": 0.96,
+      "grand_avg_hallucinated_api_count": 0.0
+    },
+    "Cindy": {
+      "global_mortality_rate": "46.7%",
+      "total_evaluated_meta_rounds": 300,
+      "total_agent_observations": 30,
+      "total_experiments": 30,
+      "grand_avg_survival_days": 7.27,
+      "grand_avg_final_budget": 427.84,
+      "grand_avg_daily_bid": 77.68,
+      "grand_avg_total_bid": 776.83,
+      "grand_avg_metric_average_bid": 77.68,
+      "grand_avg_bid_variance": 1002.6479,
+      "grand_avg_bid_entropy": 1.8326,
+      "grand_avg_adaptation_score": 69.5448,
+      "grand_avg_panic_score": 0.4633,
+      "grand_avg_opponent_awareness_score": 5.28,
+      "grand_avg_recovery_score": 0.29,
+      "grand_avg_supply_bid_correlation": -0.0594,
+      "grand_avg_utility_score": 407.1857,
+      "grand_avg_survival_efficiency": 0.009313,
+      "grand_avg_strategy_complexity": 267.46,
+      "grand_avg_branch_count": 6.9467,
+      "grand_avg_loop_count": 0.9133,
+      "grand_avg_function_call_count": 13.57,
+      "grand_avg_compile_success": 0.89,
+      "grand_avg_runtime_success": 0.9433,
+      "grand_avg_hallucinated_api_count": 0.0
+    },
+    "David": {
+      "global_mortality_rate": "44.3%",
+      "total_evaluated_meta_rounds": 300,
+      "total_agent_observations": 30,
+      "total_experiments": 30,
+      "grand_avg_survival_days": 7.35,
+      "grand_avg_final_budget": 120.58,
+      "grand_avg_daily_bid": 59.66,
+      "grand_avg_total_bid": 596.56,
+      "grand_avg_metric_average_bid": 59.66,
+      "grand_avg_bid_variance": 821.8957,
+      "grand_avg_bid_entropy": 1.8954,
+      "grand_avg_adaptation_score": 68.1631,
+      "grand_avg_panic_score": 0.4567,
+      "grand_avg_opponent_awareness_score": 5.4333,
+      "grand_avg_recovery_score": 0.14,
+      "grand_avg_supply_bid_correlation": -0.042,
+      "grand_avg_utility_score": 520.9868,
+      "grand_avg_survival_efficiency": 0.011853,
+      "grand_avg_strategy_complexity": 278.7133,
+      "grand_avg_branch_count": 7.3333,
+      "grand_avg_loop_count": 1.02,
+      "grand_avg_function_call_count": 14.34,
+      "grand_avg_compile_success": 0.8867,
+      "grand_avg_runtime_success": 0.9667,
+      "grand_avg_hallucinated_api_count": 0.0
+    },
+    "Eric": {
+      "global_mortality_rate": "38.7%",
+      "total_evaluated_meta_rounds": 300,
+      "total_agent_observations": 30,
+      "total_experiments": 30,
+      "grand_avg_survival_days": 7.75,
+      "grand_avg_final_budget": 363.61,
+      "grand_avg_daily_bid": 78.59,
+      "grand_avg_total_bid": 785.93,
+      "grand_avg_metric_average_bid": 78.59,
+      "grand_avg_bid_variance": 773.0369,
+      "grand_avg_bid_entropy": 1.81,
+      "grand_avg_adaptation_score": 54.758,
+      "grand_avg_panic_score": 0.2633,
+      "grand_avg_opponent_awareness_score": 5.2533,
+      "grand_avg_recovery_score": 0.14,
+      "grand_avg_supply_bid_correlation": -0.075,
+      "grand_avg_utility_score": 481.6334,
+      "grand_avg_survival_efficiency": 0.00955,
+      "grand_avg_strategy_complexity": 266.79,
+      "grand_avg_branch_count": 6.83,
+      "grand_avg_loop_count": 0.9,
+      "grand_avg_function_call_count": 13.6167,
+      "grand_avg_compile_success": 0.8667,
+      "grand_avg_runtime_success": 0.9467,
+      "grand_avg_hallucinated_api_count": 0.0
+    }
+  }
+}

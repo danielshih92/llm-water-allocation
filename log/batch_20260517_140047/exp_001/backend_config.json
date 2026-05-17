@@ -1,0 +1,32 @@
+{
+  "Alex": {
+    "backend": "openai",
+    "model": "gpt-5.4",
+    "temperature": 0.6,
+    "base_url": ""
+  },
+  "Bob": {
+    "backend": "openai",
+    "model": "gpt-5.4-nano",
+    "temperature": 0.6,
+    "base_url": ""
+  },
+  "Cindy": {
+    "backend": "gemini",
+    "model": "gemini-2.5-flash",
+    "temperature": 0.6,
+    "base_url": ""
+  },
+  "David": {
+    "backend": "deepseek",
+    "model": "deepseek-v4-flash",
+    "temperature": 0.6,
+    "base_url": ""
+  },
+  "Eric": {
+    "backend": "gemini",
+    "model": "gemini-3.1-flash-lite-preview",
+    "temperature": 0.6,
+    "base_url": ""
+  }
+}
