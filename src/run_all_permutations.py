@@ -387,10 +387,16 @@ def build_inference_for_experiment(exp_dir, source_log_dir):
 def main():
     parser = argparse.ArgumentParser(description="Run permutation experiments.")
     parser.add_argument(
-        "--slice",
+        "--slice-start",
+        type=int,
+        default=1,
+        help="1-based start index (inclusive) for permutations.",
+    )
+    parser.add_argument(
+        "--slice-end",
         type=int,
         default=30,
-        help="Limit the number of permutations to run.",
+        help="1-based end index (inclusive) for permutations.",
     )
     args = parser.parse_args()
 
@@ -398,14 +404,18 @@ def main():
     batch_dir = os.path.join("log", batch_id)
     os.makedirs(batch_dir, exist_ok=True)
 
-    # 這裡可以自由選擇切片（例如 [:1] 或拿掉跑全排列）
-    slice_limit = args.slice
-    if slice_limit is None or slice_limit <= 0:
-        slice_limit = None
+    # 這裡可以自由選擇切片（例如 [0:1] 或拿掉跑全排列）
+    slice_start = args.slice_start
+    slice_end = args.slice_end
+    if slice_start < 1:
+        raise SystemExit("--slice-start must be >= 1")
+    if slice_end < slice_start:
+        raise SystemExit("--slice-end must be >= --slice-start")
 
     all_permutations = list(itertools.permutations(MODELS))
-    if slice_limit is not None:
-        all_permutations = all_permutations[:slice_limit]
+    start_index = slice_start - 1
+    end_index = slice_end
+    all_permutations = all_permutations[start_index:end_index]
     print(f"Total experiments: {len(all_permutations)}")
 
     batch_start_time = time.time()

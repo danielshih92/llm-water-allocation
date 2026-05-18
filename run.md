@@ -1,1 +1,1 @@
-python3 src/run_all_permutations.py --scenario medium --meta-rounds 10 --slice 10
+python3 src/run_all_permutations.py --scenario medium --meta-rounds 10 --slice-start 1 --slice-end 120
