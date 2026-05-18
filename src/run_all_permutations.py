@@ -1,7 +1,9 @@
+import argparse
 import itertools
 import json
 import subprocess
 import os
+import re
 import time
 from datetime import datetime
 
@@ -11,7 +13,7 @@ MODELS = [
     {"backend": "openai", "model": "gpt-5.4"},
     {"backend": "openai", "model": "gpt-5.4-nano"},
     {"backend": "gemini", "model": "gemini-2.5-flash"},
-    {"backend": "gemini", "model": "gemini-3.1-flash-lite-preview"},
+    {"backend": "gemini", "model": "gemini-3.1-flash-lite"},
     {"backend": "deepseek", "model": "deepseek-v4-flash"},
     # {"backend": "deepseek", "model": "deepseek-v4-flash"},
     # {"backend": "deepseek", "model": "deepseek-v4-flash"},
@@ -20,6 +22,8 @@ MODELS = [
     # {"backend": "deepseek", "model": "deepseek-v4-flash"},
 
 ]
+
+META_ROUND_PATTERN = re.compile(r"^meta_round_(\d+)\.json$")
 
 
 # ============================================================================
@@ -242,16 +246,166 @@ def aggregate_batch_results(batch_folder, batch_manifest=None):
 
     print(f"\nGlobal batch report saved to: {report_path}")
 
+
+def load_meta_rounds(exp_dir):
+    meta_rounds = []
+
+    for entry in os.listdir(exp_dir):
+        match = META_ROUND_PATTERN.match(entry)
+        if not match:
+            continue
+
+        meta_path = os.path.join(exp_dir, entry)
+        if not os.path.isfile(meta_path):
+            continue
+
+        try:
+            with open(meta_path, "r", encoding="utf-8") as handle:
+                data = json.load(handle)
+        except Exception:
+            continue
+
+        if not isinstance(data, list) or not data:
+            continue
+
+        payload = data[0]
+        meta_round_id = payload.get("meta_round_id")
+        if not isinstance(meta_round_id, int):
+            try:
+                meta_round_id = int(match.group(1))
+            except Exception:
+                continue
+
+        meta_rounds.append((meta_round_id, payload))
+
+    meta_rounds.sort(key=lambda item: item[0])
+    return meta_rounds
+
+
+def wrap_code_block(code_text):
+    if code_text is None:
+        code_text = ""
+
+    if "\"\"\"" in code_text:
+        code_text = code_text.replace("\"\"\"", "\\\"\\\"\\\"")
+
+    return f"\"\"\"\n{code_text}\n\"\"\""
+
+
+def build_code_py(exp_id, source_log, agent_id, meta_rounds):
+    lines = []
+    lines.append("# ============================================================")
+    lines.append(f"# Experiment: {exp_id}")
+    lines.append(f"# Agent: {agent_id}")
+    lines.append(f"# Source: {source_log}")
+    lines.append("# ============================================================")
+    lines.append("")
+
+    for meta_round_id, payload in meta_rounds:
+        lines.append("# ============================================================")
+        lines.append(f"# Meta Round {meta_round_id}")
+        lines.append("# ============================================================")
+        lines.append("")
+
+        strategy_code = ""
+        for agent_entry in payload.get("agents", []):
+            if agent_entry.get("agent_id") == agent_id:
+                strategy_code = agent_entry.get("strategy_code") or ""
+                break
+
+        block = wrap_code_block(strategy_code)
+        lines.append(f"META_ROUND_{meta_round_id}_CODE = {block}")
+        lines.append("")
+
+    return "\n".join(lines).rstrip() + "\n"
+
+
+def build_inference_for_experiment(exp_dir, source_log_dir):
+    meta_rounds = load_meta_rounds(exp_dir)
+    if not meta_rounds:
+        return
+
+    inference_dir = os.path.join(exp_dir, "inference")
+    os.makedirs(inference_dir, exist_ok=True)
+
+    first_payload = meta_rounds[0][1]
+    agent_ids = [
+        agent.get("agent_id")
+        for agent in first_payload.get("agents", [])
+        if agent.get("agent_id")
+    ]
+
+    exp_id = os.path.basename(exp_dir)
+    source_log = os.path.relpath(exp_dir, source_log_dir).replace(os.sep, "/")
+
+    for agent_id in agent_ids:
+        cot_history = []
+
+        for meta_round_id, payload in meta_rounds:
+            reasoning_cot = ""
+            for agent_entry in payload.get("agents", []):
+                if agent_entry.get("agent_id") == agent_id:
+                    reasoning_cot = agent_entry.get("reasoning_cot") or ""
+                    break
+
+            cot_history.append({
+                "meta_round_id": meta_round_id,
+                "reasoning_cot": reasoning_cot,
+            })
+
+        agent_dir = os.path.join(inference_dir, agent_id)
+        os.makedirs(agent_dir, exist_ok=True)
+
+        cot_path = os.path.join(agent_dir, "cot.json")
+        with open(cot_path, "w", encoding="utf-8") as handle:
+            json.dump(
+                {
+                    "experiment_id": exp_id,
+                    "agent_id": agent_id,
+                    "source_log": source_log,
+                    "cot_history": cot_history,
+                },
+                handle,
+                indent=2,
+                ensure_ascii=False,
+            )
+            handle.write("\n")
+
+        code_path = os.path.join(agent_dir, "code.py")
+        code_text = build_code_py(
+            exp_id,
+            source_log,
+            agent_id,
+            meta_rounds,
+        )
+        with open(code_path, "w", encoding="utf-8") as handle:
+            handle.write(code_text)
+
 # ============================================================
 # 🚀 主執行流程區
 # ============================================================
 def main():
+    parser = argparse.ArgumentParser(description="Run permutation experiments.")
+    parser.add_argument(
+        "--slice",
+        type=int,
+        default=30,
+        help="Limit the number of permutations to run.",
+    )
+    args = parser.parse_args()
+
     batch_id = datetime.now().strftime("batch_%Y%m%d_%H%M%S")
     batch_dir = os.path.join("log", batch_id)
     os.makedirs(batch_dir, exist_ok=True)
 
     # 這裡可以自由選擇切片（例如 [:1] 或拿掉跑全排列）
-    all_permutations = list(itertools.permutations(MODELS))[:30]
+    slice_limit = args.slice
+    if slice_limit is None or slice_limit <= 0:
+        slice_limit = None
+
+    all_permutations = list(itertools.permutations(MODELS))
+    if slice_limit is not None:
+        all_permutations = all_permutations[:slice_limit]
     print(f"Total experiments: {len(all_permutations)}")
 
     batch_start_time = time.time()
@@ -288,6 +442,9 @@ def main():
             "--backend-mode", "per-agent",
             "--experiment-id", experiment_id,
         ])
+
+        exp_dir = os.path.join(batch_dir, f"exp_{exp_idx:03d}")
+        build_inference_for_experiment(exp_dir, batch_dir)
 
         experiment_elapsed = time.time() - experiment_start_time
         print(f"\nExperiment runtime: {experiment_elapsed:.2f} sec")
