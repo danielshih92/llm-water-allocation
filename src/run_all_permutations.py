@@ -5,6 +5,7 @@ import subprocess
 import os
 import re
 import time
+import sys
 from datetime import datetime
 
 AGENTS = ["Alex", "Bob", "Cindy", "David", "Eric"]
@@ -398,10 +399,23 @@ def main():
         default=30,
         help="1-based end index (inclusive) for permutations.",
     )
+    parser.add_argument(
+        "--meta-rounds",
+        type=int,
+        default=10,
+        help="Number of meta-rounds to run for each experiment.",
+    )
+    parser.add_argument(
+        "--no-plots",
+        action="store_true",
+        help="Skip generating plots when calling run.py for each permutation.",
+    )
     args = parser.parse_args()
 
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    project_root = os.path.dirname(script_dir)
     batch_id = datetime.now().strftime("batch_%Y%m%d_%H%M%S")
-    batch_dir = os.path.join("log", batch_id)
+    batch_dir = os.path.join(project_root, "log", batch_id)
     os.makedirs(batch_dir, exist_ok=True)
 
     # 這裡可以自由選擇切片（例如 [0:1] 或拿掉跑全排列）
@@ -445,13 +459,23 @@ def main():
             print(f"{agent}: {backend_config[agent]['model']}")
         print("================================================\n")
 
-        subprocess.run([
-            "python", "src/run.py",
+        cmd = [
+            sys.executable,
+            os.path.join(script_dir, "run.py"),
             "--scenario", "medium",
-            "--meta-rounds", "10",  
             "--backend-mode", "per-agent",
             "--experiment-id", experiment_id,
-        ])
+            "--output-dir", os.path.join(project_root, "log"),
+            "--meta-rounds", str(args.meta_rounds),
+        ]
+        if args.no_plots:
+            cmd.append("--no-plots")
+
+        res = subprocess.run(cmd, cwd=os.path.dirname(__file__))
+
+        if res.returncode != 0:
+            print(f"[WARN] run.py failed for {experiment_id} (returncode={res.returncode}). Skipping inference build.")
+            continue
 
         exp_dir = os.path.join(batch_dir, f"exp_{exp_idx:03d}")
         build_inference_for_experiment(exp_dir, batch_dir)

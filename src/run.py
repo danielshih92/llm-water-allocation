@@ -414,6 +414,7 @@ def save_agent_average_summary(
     agent_runner: AgentRunner,
     agent_profiles: List[AgentProfile],
     output_filename: str,
+    enable_plots: bool = True,
 ) -> None:
     from collections import defaultdict
 
@@ -604,15 +605,18 @@ def save_agent_average_summary(
         f"Saved agent average summary: {output_filename}"
     )
 
-    cross_meta_plot_dir = os.path.join(
-        os.path.dirname(output_filename) or ".",
-        "cross_meta_metric_plots",
-    )
+    if enable_plots:
+        cross_meta_plot_dir = os.path.join(
+            os.path.dirname(output_filename) or ".",
+            "cross_meta_metric_plots",
+        )
 
-    save_cross_meta_metric_plots(
-        history=history,
-        output_dir=cross_meta_plot_dir,
-    )
+        save_cross_meta_metric_plots(
+            history=history,
+            output_dir=cross_meta_plot_dir,
+        )
+    else:
+        print("Skipping cross-meta plots (--no-plots).")
     
 def main() -> None:
     parser = argparse.ArgumentParser(
@@ -701,6 +705,12 @@ def main() -> None:
         type=str,
         default=None,
         help="Optional experiment ID suffix for log naming",
+    )
+
+    parser.add_argument(
+        "--no-plots",
+        action="store_true",
+        help="Skip generating daily and cross-meta line plots",
     )
 
     args = parser.parse_args()
@@ -985,10 +995,13 @@ def main() -> None:
             "daily_metric_plots",
         )
 
-        save_daily_metric_plots_for_meta_round(
-            record=record,
-            output_dir=daily_plot_dir,
-        )
+        if not args.no_plots:
+            save_daily_metric_plots_for_meta_round(
+                record=record,
+                output_dir=daily_plot_dir,
+            )
+        else:
+            print("Skipping daily metric plots (--no-plots).")
 
         history = {
             "last_meta_round": meta_round_id,
@@ -1118,6 +1131,7 @@ def main() -> None:
             exp_dir,
             "agent_averages.json",
         ),
+        enable_plots=not args.no_plots,
     )
 
 
