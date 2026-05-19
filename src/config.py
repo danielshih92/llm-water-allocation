@@ -2,7 +2,11 @@ import os
 import json
 
 # Whether to reveal opponent strategy code to the LLM
-REVEAL_OPPONENT_CODE = False
+REVEAL_OPPONENT_CODE = True
+
+# Opponent info exposure across meta-rounds:
+# full_code_access | outcome_only | no_opponent_info
+OPPONENT_INFO_MODE = "full_code_access"
 
 OPENAI_ENGINE = "gpt-4.1-nano"
 OPENAI_TEMPERATURE = None

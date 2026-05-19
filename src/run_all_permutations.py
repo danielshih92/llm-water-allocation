@@ -398,6 +398,17 @@ def main():
         default=30,
         help="1-based end index (inclusive) for permutations.",
     )
+    parser.add_argument(
+        "--opponent-info-mode",
+        type=str,
+        default=None,
+        choices=[
+            "full_code_access",
+            "outcome_only",
+            "no_opponent_info",
+        ],
+        help="Opponent info exposure across meta-rounds (optional).",
+    )
     args = parser.parse_args()
 
     batch_id = datetime.now().strftime("batch_%Y%m%d_%H%M%S")
@@ -445,13 +456,28 @@ def main():
             print(f"{agent}: {backend_config[agent]['model']}")
         print("================================================\n")
 
-        subprocess.run([
-            "python", "src/run.py",
-            "--scenario", "medium",
-            "--meta-rounds", "10",  
-            "--backend-mode", "per-agent",
-            "--experiment-id", experiment_id,
-        ])
+        run_cmd = [
+            "python",
+            "src/run.py",
+            "--scenario",
+            "medium",
+            "--meta-rounds",
+            "10",
+            "--backend-mode",
+            "per-agent",
+            "--experiment-id",
+            experiment_id,
+        ]
+
+        if args.opponent_info_mode:
+            run_cmd.extend(
+                [
+                    "--opponent-info-mode",
+                    args.opponent_info_mode,
+                ]
+            )
+
+        subprocess.run(run_cmd)
 
         exp_dir = os.path.join(batch_dir, f"exp_{exp_idx:03d}")
         build_inference_for_experiment(exp_dir, batch_dir)

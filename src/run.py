@@ -703,6 +703,18 @@ def main() -> None:
         help="Optional experiment ID suffix for log naming",
     )
 
+    parser.add_argument(
+        "--opponent-info-mode",
+        type=str,
+        default=config.OPPONENT_INFO_MODE,
+        choices=[
+            "full_code_access",
+            "outcome_only",
+            "no_opponent_info",
+        ],
+        help="Opponent info exposure across meta-rounds",
+    )
+
     args = parser.parse_args()
 
     total_start_time = time.time()
@@ -914,24 +926,30 @@ def main() -> None:
                 f"  Model: {model_name}"
             )
 
-            opponent_code = {
-                agent_id: code
-                for agent_id, code in previous_codes.items()
-                if agent_id != profile.agent_id
-            }
+            opponent_info_mode = args.opponent_info_mode
 
-            opponent_history = {}
-
-            if history.get(
-                "agent_summaries"
-            ):
-                opponent_history = {
-                    agent_id: summary
-                    for agent_id, summary in history[
-                        "agent_summaries"
-                    ].items()
+            if opponent_info_mode == "full_code_access":
+                opponent_code = {
+                    agent_id: code
+                    for agent_id, code in previous_codes.items()
                     if agent_id != profile.agent_id
                 }
+            else:
+                opponent_code = {}
+
+            opponent_history = {}
+            self_summary = None
+
+            if history.get("agent_summaries"):
+                summaries = history["agent_summaries"]
+                self_summary = summaries.get(profile.agent_id)
+
+                if opponent_info_mode in ["full_code_access", "outcome_only"]:
+                    opponent_history = {
+                        agent_id: summary
+                        for agent_id, summary in summaries.items()
+                        if agent_id != profile.agent_id
+                    }
 
             print(
                 "  Generating reasoning/code..."
@@ -949,8 +967,14 @@ def main() -> None:
                     "last_meta_round": history.get(
                         "last_meta_round"
                     ),
+                    "self_summary": self_summary,
                     "opponent_summaries": opponent_history,
                 },
+                opponent_info_mode=opponent_info_mode,
+                show_opponent_code=(
+                    opponent_info_mode == "full_code_access"
+                    and config.REVEAL_OPPONENT_CODE
+                ),
             )
 
             print(

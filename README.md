@@ -36,6 +36,31 @@ Alympics provides a research platform for conducting experiments on complex stra
 
 The details can be found in our paper.
 
+## Water Allocation Challenge: Opponent Info Modes
+
+The programmatic runner supports three meta-round exposure modes that control what is sent to each LLM agent.
+
+Command-line flag:
+- --opponent-info-mode {full_code_access|outcome_only|no_opponent_info}
+
+Modes
+- full_code_access: includes opponent source code from the previous meta-round (only if REVEAL_OPPONENT_CODE=true) and last-round outcomes for all agents.
+- outcome_only: includes last-round outcomes for all agents, but no opponent code.
+- no_opponent_info: includes only the agent's own last-round outcome; no opponent data.
+
+LLM input payload (common fields)
+- agent_profile: agent_id, water_requirement, daily_salary
+- game_state: scenario, supply_range, episode_days, meta_round_id
+- history: last_meta_round, self_summary, opponent_summaries (depending on mode)
+
+Outcome summary fields (self_summary / opponent_summaries)
+- final_hp, survival_days, average_bid, final_budget, max_bid
+
+Prompt differences
+- The prompt header states the active mode and changes the reasoning focus line.
+- In full_code_access, the prompt may include an OPPONENT SOURCE CODE block.
+- The LATEST METAROUND CONTEXT block always reflects the mode-filtered history.
+
 ## Citation
 
 ```

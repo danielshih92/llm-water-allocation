@@ -12,44 +12,66 @@ class PromptBuilder:
         game_state: Dict[str, Any],
         opponent_code: Dict[str, str],
         history: Optional[Dict[str, Any]] = None,
+        opponent_info_mode: Optional[str] = None,
+        show_opponent_code: Optional[bool] = None,
     ) -> str:
 
         # ============================================================
         # 核心優化：智慧識別並提取精簡的上一輪對手戰績狀態
         # ============================================================
-        filtered_history = {}
+        history_payload: Dict[str, Any] = {}
         if history and isinstance(history, dict):
-            # 🛠️ 修正安全隱患：如果已經是 run.py 包裝好的單輪摘要結構，直接精準提取內層對手字典
-            if "opponent_summaries" in history:
-                filtered_history = history["opponent_summaries"]
-            else:
+            last_meta_round = history.get("last_meta_round")
+            if last_meta_round is not None:
+                history_payload["last_meta_round"] = last_meta_round
+
+            if history.get("self_summary") is not None:
+                history_payload["self_summary"] = history.get("self_summary")
+
+            if history.get("opponent_summaries") is not None:
+                history_payload["opponent_summaries"] = history.get("opponent_summaries")
+
+            if not history_payload:
                 # 保持向下相容：如果未來傳入全域歷史大池 (all_meta_history) 也能安全解析
                 keys = list(history.keys())
                 if keys:
                     try:
                         latest_key = max(
-                            keys, 
-                            key=lambda x: tuple(int(s) for s in re.findall(r'\d+', x)) if re.findall(r'\d+', x) else (0,)
+                            keys,
+                            key=lambda x: tuple(int(s) for s in re.findall(r"\d+", x))
+                            if re.findall(r"\d+", x)
+                            else (0,),
                         )
                         data = history[latest_key]
                         # 檢查內層是否帶有 summary 殼
                         if isinstance(data, dict) and "summary" in data:
-                            filtered_history = data["summary"]
+                            history_payload = data["summary"]
                         else:
-                            filtered_history = data
+                            history_payload = data
                     except Exception:
                         latest_key = keys[-1]
-                        filtered_history = history[latest_key]
+                        history_payload = history[latest_key]
 
         # 將原本臃腫的歷史，替換為只有前一天數據的乾淨區塊
-        history_block = json.dumps(filtered_history, indent=2)
+        if show_opponent_code is None:
+            show_opponent_code = config.REVEAL_OPPONENT_CODE
+
+        if opponent_info_mode is None:
+            if show_opponent_code:
+                opponent_info_mode = "full_code_access"
+            elif history_payload.get("opponent_summaries"):
+                opponent_info_mode = "outcome_only"
+            else:
+                opponent_info_mode = "no_opponent_info"
+
+        history_block = json.dumps(history_payload, indent=2)
         state_block = json.dumps(game_state or {}, indent=2)      # 🌟 [補回] 格式化當前賽局狀態
         profile_block = json.dumps(agent_profile or {}, indent=2)  # 🌟 [補回] 格式化智慧體基本配置
 
         opponent_code_section = ""
 
         # 提供當前這一輪正在執行的對手原始碼
-        if config.REVEAL_OPPONENT_CODE:
+        if show_opponent_code and opponent_code:
             opponent_block = json.dumps(opponent_code or {}, indent=2)
 
             opponent_code_section = (
@@ -59,12 +81,39 @@ class PromptBuilder:
                 f"{opponent_block}\n\n"
             )
 
+        intro_line = (
+            "You are participating in the Water Allocation Challenge programmatic game.\n"
+        )
+
+        if opponent_info_mode == "full_code_access":
+            context_line = (
+                "You have opponent source code and last meta-round outcomes.\n"
+            )
+            reasoning_focus = (
+                "Keep reasoning under 60 words, focusing on how you exploit their YESTERDAY code/trace.\n"
+            )
+        elif opponent_info_mode == "outcome_only":
+            context_line = (
+                "You have last meta-round outcomes for all agents, but no opponent code.\n"
+            )
+            reasoning_focus = (
+                "Keep reasoning under 60 words, focusing on outcome patterns from the last meta-round.\n"
+            )
+        else:
+            context_line = (
+                "No opponent info is available; only your own last meta-round outcome is provided.\n"
+            )
+            reasoning_focus = (
+                "Keep reasoning under 60 words, focusing on your own last outcome and survival.\n"
+            )
+
         return (
             # ============================================================
             # Reasoning Prompt
             # ============================================================
-            "You are participating in the Water Allocation Challenge programmatic game.\n"
-            "Analyze the opponent source code and their active states to generate a winning bidding strategy.\n\n"
+            f"{intro_line}"
+            f"{context_line}"
+            "Analyze the available context to generate a winning bidding strategy.\n\n"
 
             f"Your Profile:\n{profile_block}\n\n"
             f"Current Meta-Round State:\n{state_block}\n\n"
@@ -123,7 +172,7 @@ class PromptBuilder:
             f"MAX_SUPPLY = 25\n"
             f"MIN_SUPPLY = 15\n\n"
 
-            "Keep reasoning under 60 words, focusing only on how you exploit their YESTERDAY code/trace.\n"
+            f"{reasoning_focus}"
             "Output valid JSON only.\n"
             "Output format:\n"
             "{\n"

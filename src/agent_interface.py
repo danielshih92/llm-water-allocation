@@ -323,6 +323,8 @@ class AgentRunner:
         game_state: Dict[str, Any],
         opponent_code: Dict[str, str],
         history: Optional[Dict[str, Any]] = None,
+        opponent_info_mode: Optional[str] = None,
+        show_opponent_code: Optional[bool] = None,
     ) -> Tuple[str, str]:
         backend = self._select_backend(agent_profile.get("agent_id", ""))
         combined_prompt = self.prompt_builder.build_combined_prompt(
@@ -330,6 +332,8 @@ class AgentRunner:
             game_state=game_state,
             opponent_code=opponent_code,
             history=history,
+            opponent_info_mode=opponent_info_mode,
+            show_opponent_code=show_opponent_code,
         )
 
         response = backend.generate(combined_prompt)

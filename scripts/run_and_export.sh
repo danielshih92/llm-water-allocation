@@ -6,13 +6,15 @@ META_ROUNDS=${META_ROUNDS:-3}
 BACKEND=${BACKEND:-mock}
 SEED=${SEED:-42}
 EXPERIMENT_ID=${EXPERIMENT_ID:-exp1}
+OPPONENT_INFO_MODE=${OPPONENT_INFO_MODE:-full_code_access}
 
 python src/run.py \
   --scenario "$SCENARIO" \
   --meta-rounds "$META_ROUNDS" \
   --backend "$BACKEND" \
   --seed "$SEED" \
-  --experiment-id "$EXPERIMENT_ID"
+  --experiment-id "$EXPERIMENT_ID" \
+  --opponent-info-mode "$OPPONENT_INFO_MODE"
 
 LOG_DIR="log/$EXPERIMENT_ID"
 if [[ ! -d "$LOG_DIR" ]]; then
