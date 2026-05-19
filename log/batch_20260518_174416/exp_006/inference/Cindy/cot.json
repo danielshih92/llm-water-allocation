@@ -1,0 +1,47 @@
+{
+  "experiment_id": "exp_006",
+  "agent_id": "Cindy",
+  "source_log": "exp_006",
+  "cot_history": [
+    {
+      "meta_round_id": 1,
+      "reasoning_cot": "My strategy prioritizes survival by bidding aggressively when my HP is low or supply is very tight. I react to opponent's previous high bids by either outbidding them if desperate or conserving budget if healthy, forcing them to overspend."
+    },
+    {
+      "meta_round_id": 2,
+      "reasoning_cot": "The strategy targets strong opponents (Eric, Alex) by using their previous_trace bids to set a competitive floor. Given the tight supply (only enough for one player's requirement), bidding is aggressive. HP and remaining days dynamically increase bids to prioritize survival, especially against Eric's high budget."
+    },
+    {
+      "meta_round_id": 3,
+      "reasoning_cot": "The game is winner-take-all for water. I must outbid Bob, the strongest opponent, by analyzing his previous bid. My strategy prioritizes survival by bidding aggressively when my HP is low or in the late game, while ensuring I don't overspend my budget."
+    },
+    {
+      "meta_round_id": 4,
+      "reasoning_cot": "Alex and Bob bid up to 150-151, while Eric was more conservative. Given extreme water scarcity (only 1 unit for 1 agent), I must consistently outbid the highest previous bid. I'll bid aggressively when desperate (low HP/no water days) or in late game, otherwise slightly above opponent's highest recent bid, capped at my salary to ensure sustainability."
+    },
+    {
+      "meta_round_id": 5,
+      "reasoning_cot": "My strategy adapts bid based on my HP (higher when low), supply (higher when tight), and yesterday's highest bid (outbid when desperate, conserve when strong). This aims to survive while forcing opponents to overspend."
+    },
+    {
+      "meta_round_id": 6,
+      "reasoning_cot": "Opponents Alex, Bob, and Eric have shown moderate-to-high bidding. My strategy adapts bids based on my HP, water scarcity (supply vs. players), and yesterday's highest opponent bid. I bid aggressively when HP is low or water is scarce, and more conservatively when HP is high or water is abundant, aiming to win efficiently."
+    },
+    {
+      "meta_round_id": 7,
+      "reasoning_cot": "Bob and Eric are aggressive bidders based on yesterday's context. My strategy dynamically adjusts to their highest previous bid and my current HP. I bid aggressively when HP is low to survive, and more conservatively when healthy, but always aiming to win against their observed high bids."
+    },
+    {
+      "meta_round_id": 8,
+      "reasoning_cot": "I bid dynamically, prioritizing survival with higher bids when HP is low or water is scarce. I analyze yesterday's highest bid to stay competitive, matching or slightly exceeding it, especially given the tight supply (typically only one agent can fully satisfy their water requirement)."
+    },
+    {
+      "meta_round_id": 9,
+      "reasoning_cot": "Eric is the primary threat, consistently bidding high and surviving with budget. My strategy focuses on outbidding Eric when water is crucial (low HP, few remaining days, tight supply) by slightly exceeding his previous bid, while conserving budget against weaker opponents or when my HP is high. Adapt bid based on my urgency and supply."
+    },
+    {
+      "meta_round_id": 10,
+      "reasoning_cot": "Opponents from the last meta-round were aggressive, quickly exhausting budgets and dying. My strategy prioritizes survival by conserving budget early, reacting to immediate opponent bids from 'previous_trace', and bidding aggressively only when my HP is critical or supply is scarce to outlast them."
+    }
+  ]
+}

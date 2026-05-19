@@ -1,0 +1,4846 @@
+[
+  {
+    "meta_round_id": 10,
+    "environment": {
+      "scenario": "medium",
+      "supply_range": [
+        15,
+        25
+      ],
+      "seed": null,
+      "episode_days": 10,
+      "players": [
+        {
+          "agent_id": "Alex",
+          "water_requirement": 13,
+          "daily_salary": 70
+        },
+        {
+          "agent_id": "Bob",
+          "water_requirement": 9,
+          "daily_salary": 90
+        },
+        {
+          "agent_id": "Cindy",
+          "water_requirement": 13,
+          "daily_salary": 150
+        },
+        {
+          "agent_id": "David",
+          "water_requirement": 7,
+          "daily_salary": 80
+        },
+        {
+          "agent_id": "Eric",
+          "water_requirement": 8,
+          "daily_salary": 140
+        }
+      ],
+      "supply_list": [
+        18,
+        16,
+        17,
+        16,
+        18,
+        15,
+        24,
+        19,
+        24,
+        20
+      ]
+    },
+    "agents": [
+      {
+        "agent_id": "Alex",
+        "reasoning_cot": "Cindy massively overbids and drains budget; Bob stays near salary and survives steadily; Eric is weak; David is irrelevant. I exploit this by bidding low on roomy days, spiking only when supply is tight or my dehydration risk is high, and shading just above Bob\u2019s/Cindy\u2019s yesterday bids only when necessary.",
+        "strategy_code": "def get_bid(day_context, my_status, opponents_status):\n    WATER_REQ = 13\n    DAILY_SALARY = 70\n    MIN_SUPPLY = 15\n    MAX_SUPPLY = 25\n\n    supply = day_context['supply']\n    day = day_context['day']\n    hp = my_status['hp']\n    budget = my_status['budget']\n    no_water_days = my_status['no_water_days']\n\n    alive = []\n    prev_bids = []\n    bob_bid = None\n    cindy_bid = None\n    for agent_id, opp in opponents_status.items():\n        if opp.get('alive'):\n            alive.append((agent_id, opp))\n            prev = opp.get('previous_trace', {})\n            if prev and prev.get('bid') is not None:\n                bid = prev['bid']\n                prev_bids.append(bid)\n                if agent_id == 'Bob':\n                    bob_bid = bid\n                elif agent_id == 'Cindy':\n                    cindy_bid = bid\n\n    if not alive:\n        return max(0.0, min(budget, 18.0))\n\n    live_count = len(alive) + 1\n    pressure = (WATER_REQ * live_count) / max(1.0, supply)\n\n    if prev_bids:\n        highest_prev = max(prev_bids)\n        avg_prev = sum(prev_bids) / float(len(prev_bids))\n    else:\n        highest_prev = DAILY_SALARY * 0.7\n        avg_prev = DAILY_SALARY * 0.6\n\n    if bob_bid is None:\n        bob_bid = 70.0\n    if cindy_bid is None:\n        cindy_bid = 145.0\n\n    urgent = hp <= 3 or no_water_days >= 2\n    semi_urgent = hp <= 5 or no_water_days >= 1\n    very_tight = supply <= 17\n    tight = supply <= 19\n    roomy = supply >= 23\n\n    target = 0.0\n\n    if urgent:\n        if cindy_bid > budget * 1.2:\n            target = min(budget, bob_bid + 3.0)\n        else:\n            target = min(budget, max(bob_bid + 2.0, DAILY_SALARY * 0.92))\n    elif very_tight:\n        if hp >= 8 and no_water_days == 0:\n            target = DAILY_SALARY * 0.28\n        else:\n            target = max(22.0, min(DAILY_SALARY * 0.88, bob_bid + 2.0))\n    elif tight:\n        if semi_urgent:\n            target = max(26.0, min(DAILY_SALARY * 0.82, bob_bid + 1.5))\n        else:\n            target = DAILY_SALARY * 0.36\n    elif roomy:\n        if hp >= 8 and no_water_days == 0:\n            target = DAILY_SALARY * 0.12\n        else:\n            target = DAILY_SALARY * 0.24\n    else:\n        if pressure > 2.2:\n            target = max(24.0, min(DAILY_SALARY * 0.75, avg_prev * 0.9))\n        elif semi_urgent:\n            target = max(20.0, min(DAILY_SALARY * 0.62, bob_bid + 1.0))\n        else:\n            target = DAILY_SALARY * 0.22\n\n    if budget < DAILY_SALARY * 0.8:\n        if urgent:\n            target = min(target, budget)\n        else:\n            target = min(target, budget * 0.55)\n\n    if day >= 8:\n        if hp >= 7 and no_water_days == 0 and not urgent:\n            target = min(target, DAILY_SALARY * 0.18)\n        elif semi_urgent:\n            target = max(target, DAILY_SALARY * 0.52)\n\n    bid = max(0.0, min(budget, float(target)))\n    return bid",
+        "daily_trace": [
+          {
+            "day": 1,
+            "bid": 26.0,
+            "supply": 18.0,
+            "hp_after": 7,
+            "budget_after": 70.0,
+            "status": "alive",
+            "error": null,
+            "opponents_status_before": {
+              "Bob": {
+                "hp": 8,
+                "budget": 90.0,
+                "no_water_days": 1,
+                "alive": true,
+                "water_requirement": 9,
+                "daily_salary": 90,
+                "last_bid": 0.0,
+                "last_status": null,
+                "last_hp_after": null,
+                "last_budget_after": null,
+                "previous_trace": {
+                  "day": null,
+                  "bid": 0.0,
+                  "supply": null,
+                  "hp_after": null,
+                  "budget_after": null,
+                  "status": null,
+                  "error": null
+                },
+                "recent_traces": []
+              },
+              "Cindy": {
+                "hp": 8,
+                "budget": 150.0,
+                "no_water_days": 1,
+                "alive": true,
+                "water_requirement": 13,
+                "daily_salary": 150,
+                "last_bid": 0.0,
+                "last_status": null,
+                "last_hp_after": null,
+                "last_budget_after": null,
+                "previous_trace": {
+                  "day": null,
+                  "bid": 0.0,
+                  "supply": null,
+                  "hp_after": null,
+                  "budget_after": null,
+                  "status": null,
+                  "error": null
+                },
+                "recent_traces": []
+              },
+              "David": {
+                "hp": 8,
+                "budget": 80.0,
+                "no_water_days": 1,
+                "alive": true,
+                "water_requirement": 7,
+                "daily_salary": 80,
+                "last_bid": 0.0,
+                "last_status": null,
+                "last_hp_after": null,
+                "last_budget_after": null,
+                "previous_trace": {
+                  "day": null,
+                  "bid": 0.0,
+                  "supply": null,
+                  "hp_after": null,
+                  "budget_after": null,
+                  "status": null,
+                  "error": null
+                },
+                "recent_traces": []
+              },
+              "Eric": {
+                "hp": 8,
+                "budget": 140.0,
+                "no_water_days": 1,
+                "alive": true,
+                "water_requirement": 8,
+                "daily_salary": 140,
+                "last_bid": 0.0,
+                "last_status": null,
+                "last_hp_after": null,
+                "last_budget_after": null,
+                "previous_trace": {
+                  "day": null,
+                  "bid": 0.0,
+                  "supply": null,
+                  "hp_after": null,
+                  "budget_after": null,
+                  "status": null,
+                  "error": null
+                },
+                "recent_traces": []
+              }
+            }
+          },
+          {
+            "day": 2,
+            "bid": 64.4,
+            "supply": 16.0,
+            "hp_after": 5,
+            "budget_after": 140.0,
+            "status": "alive",
+            "error": null,
+            "opponents_status_before": {
+              "Bob": {
+                "hp": 7,
+                "budget": 180.0,
+                "no_water_days": 2,
+                "alive": true,
+                "water_requirement": 9,
+                "daily_salary": 90,
+                "last_bid": 36.0,
+                "last_status": "alive",
+                "last_hp_after": 7,
+                "last_budget_after": 90.0,
+                "previous_trace": {
+                  "day": 1,
+                  "bid": 36.0,
+                  "supply": 18.0,
+                  "hp_after": 7,
+                  "budget_after": 90.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 36.0,
+                    "supply": 18.0,
+                    "hp_after": 7,
+                    "budget_after": 90.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "Cindy": {
+                "hp": 10,
+                "budget": 153.0,
+                "no_water_days": 1,
+                "alive": true,
+                "water_requirement": 13,
+                "daily_salary": 150,
+                "last_bid": 147.0,
+                "last_status": "alive",
+                "last_hp_after": 10,
+                "last_budget_after": 3.0,
+                "previous_trace": {
+                  "day": 1,
+                  "bid": 147.0,
+                  "supply": 18.0,
+                  "hp_after": 10,
+                  "budget_after": 3.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 147.0,
+                    "supply": 18.0,
+                    "hp_after": 10,
+                    "budget_after": 3.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "David": {
+                "hp": 7,
+                "budget": 160.0,
+                "no_water_days": 2,
+                "alive": true,
+                "water_requirement": 7,
+                "daily_salary": 80,
+                "last_bid": 1.0,
+                "last_status": "alive",
+                "last_hp_after": 7,
+                "last_budget_after": 80.0,
+                "previous_trace": {
+                  "day": 1,
+                  "bid": 1.0,
+                  "supply": 18.0,
+                  "hp_after": 7,
+                  "budget_after": 80.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 1.0,
+                    "supply": 18.0,
+                    "hp_after": 7,
+                    "budget_after": 80.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "Eric": {
+                "hp": 7,
+                "budget": 280.0,
+                "no_water_days": 2,
+                "alive": true,
+                "water_requirement": 8,
+                "daily_salary": 140,
+                "last_bid": 56.0,
+                "last_status": "alive",
+                "last_hp_after": 7,
+                "last_budget_after": 140.0,
+                "previous_trace": {
+                  "day": 1,
+                  "bid": 56.0,
+                  "supply": 18.0,
+                  "hp_after": 7,
+                  "budget_after": 140.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 56.0,
+                    "supply": 18.0,
+                    "hp_after": 7,
+                    "budget_after": 140.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "day": 3,
+            "bid": 87.5,
+            "supply": 17.0,
+            "hp_after": 2,
+            "budget_after": 210.0,
+            "status": "alive",
+            "error": null,
+            "opponents_status_before": {
+              "Bob": {
+                "hp": 5,
+                "budget": 270.0,
+                "no_water_days": 3,
+                "alive": true,
+                "water_requirement": 9,
+                "daily_salary": 90,
+                "last_bid": 85.5,
+                "last_status": "alive",
+                "last_hp_after": 5,
+                "last_budget_after": 180.0,
+                "previous_trace": {
+                  "day": 2,
+                  "bid": 85.5,
+                  "supply": 16.0,
+                  "hp_after": 5,
+                  "budget_after": 180.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 36.0,
+                    "supply": 18.0,
+                    "hp_after": 7,
+                    "budget_after": 90.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 2,
+                    "bid": 85.5,
+                    "supply": 16.0,
+                    "hp_after": 5,
+                    "budget_after": 180.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "Cindy": {
+                "hp": 10,
+                "budget": 156.0,
+                "no_water_days": 1,
+                "alive": true,
+                "water_requirement": 13,
+                "daily_salary": 150,
+                "last_bid": 147.0,
+                "last_status": "alive",
+                "last_hp_after": 10,
+                "last_budget_after": 6.0,
+                "previous_trace": {
+                  "day": 2,
+                  "bid": 147.0,
+                  "supply": 16.0,
+                  "hp_after": 10,
+                  "budget_after": 6.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 147.0,
+                    "supply": 18.0,
+                    "hp_after": 10,
+                    "budget_after": 3.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 2,
+                    "bid": 147.0,
+                    "supply": 16.0,
+                    "hp_after": 10,
+                    "budget_after": 6.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "David": {
+                "hp": 5,
+                "budget": 240.0,
+                "no_water_days": 3,
+                "alive": true,
+                "water_requirement": 7,
+                "daily_salary": 80,
+                "last_bid": 69.5625,
+                "last_status": "alive",
+                "last_hp_after": 5,
+                "last_budget_after": 160.0,
+                "previous_trace": {
+                  "day": 2,
+                  "bid": 69.5625,
+                  "supply": 16.0,
+                  "hp_after": 5,
+                  "budget_after": 160.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 1.0,
+                    "supply": 18.0,
+                    "hp_after": 7,
+                    "budget_after": 80.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 2,
+                    "bid": 69.5625,
+                    "supply": 16.0,
+                    "hp_after": 5,
+                    "budget_after": 160.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "Eric": {
+                "hp": 5,
+                "budget": 420.0,
+                "no_water_days": 3,
+                "alive": true,
+                "water_requirement": 8,
+                "daily_salary": 140,
+                "last_bid": 42.0,
+                "last_status": "alive",
+                "last_hp_after": 5,
+                "last_budget_after": 280.0,
+                "previous_trace": {
+                  "day": 2,
+                  "bid": 42.0,
+                  "supply": 16.0,
+                  "hp_after": 5,
+                  "budget_after": 280.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 56.0,
+                    "supply": 18.0,
+                    "hp_after": 7,
+                    "budget_after": 140.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 2,
+                    "bid": 42.0,
+                    "supply": 16.0,
+                    "hp_after": 5,
+                    "budget_after": 280.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "day": 4,
+            "bid": 87.5,
+            "supply": 16.0,
+            "hp_after": -2,
+            "budget_after": 0.0,
+            "status": "dead",
+            "error": null,
+            "opponents_status_before": {
+              "Bob": {
+                "hp": 2,
+                "budget": 360.0,
+                "no_water_days": 4,
+                "alive": true,
+                "water_requirement": 9,
+                "daily_salary": 90,
+                "last_bid": 85.5,
+                "last_status": "alive",
+                "last_hp_after": 2,
+                "last_budget_after": 270.0,
+                "previous_trace": {
+                  "day": 3,
+                  "bid": 85.5,
+                  "supply": 17.0,
+                  "hp_after": 2,
+                  "budget_after": 270.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 36.0,
+                    "supply": 18.0,
+                    "hp_after": 7,
+                    "budget_after": 90.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 2,
+                    "bid": 85.5,
+                    "supply": 16.0,
+                    "hp_after": 5,
+                    "budget_after": 180.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 3,
+                    "bid": 85.5,
+                    "supply": 17.0,
+                    "hp_after": 2,
+                    "budget_after": 270.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "Cindy": {
+                "hp": 10,
+                "budget": 159.0,
+                "no_water_days": 1,
+                "alive": true,
+                "water_requirement": 13,
+                "daily_salary": 150,
+                "last_bid": 147.0,
+                "last_status": "alive",
+                "last_hp_after": 10,
+                "last_budget_after": 9.0,
+                "previous_trace": {
+                  "day": 3,
+                  "bid": 147.0,
+                  "supply": 17.0,
+                  "hp_after": 10,
+                  "budget_after": 9.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 147.0,
+                    "supply": 18.0,
+                    "hp_after": 10,
+                    "budget_after": 3.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 2,
+                    "bid": 147.0,
+                    "supply": 16.0,
+                    "hp_after": 10,
+                    "budget_after": 6.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 3,
+                    "bid": 147.0,
+                    "supply": 17.0,
+                    "hp_after": 10,
+                    "budget_after": 9.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "David": {
+                "hp": 2,
+                "budget": 320.0,
+                "no_water_days": 4,
+                "alive": true,
+                "water_requirement": 7,
+                "daily_salary": 80,
+                "last_bid": 88.96124999999999,
+                "last_status": "alive",
+                "last_hp_after": 2,
+                "last_budget_after": 240.0,
+                "previous_trace": {
+                  "day": 3,
+                  "bid": 88.96124999999999,
+                  "supply": 17.0,
+                  "hp_after": 2,
+                  "budget_after": 240.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 1.0,
+                    "supply": 18.0,
+                    "hp_after": 7,
+                    "budget_after": 80.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 2,
+                    "bid": 69.5625,
+                    "supply": 16.0,
+                    "hp_after": 5,
+                    "budget_after": 160.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 3,
+                    "bid": 88.96124999999999,
+                    "supply": 17.0,
+                    "hp_after": 2,
+                    "budget_after": 240.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "Eric": {
+                "hp": 2,
+                "budget": 560.0,
+                "no_water_days": 4,
+                "alive": true,
+                "water_requirement": 8,
+                "daily_salary": 140,
+                "last_bid": 42.0,
+                "last_status": "alive",
+                "last_hp_after": 2,
+                "last_budget_after": 420.0,
+                "previous_trace": {
+                  "day": 3,
+                  "bid": 42.0,
+                  "supply": 17.0,
+                  "hp_after": 2,
+                  "budget_after": 420.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 56.0,
+                    "supply": 18.0,
+                    "hp_after": 7,
+                    "budget_after": 140.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 2,
+                    "bid": 42.0,
+                    "supply": 16.0,
+                    "hp_after": 5,
+                    "budget_after": 280.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 3,
+                    "bid": 42.0,
+                    "supply": 17.0,
+                    "hp_after": 2,
+                    "budget_after": 420.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "day": 5,
+            "bid": 0.0,
+            "supply": 18.0,
+            "hp_after": -2,
+            "budget_after": 0.0,
+            "status": "dead",
+            "error": null,
+            "opponents_status_before": {}
+          },
+          {
+            "day": 6,
+            "bid": 0.0,
+            "supply": 15.0,
+            "hp_after": -2,
+            "budget_after": 0.0,
+            "status": "dead",
+            "error": null,
+            "opponents_status_before": {}
+          },
+          {
+            "day": 7,
+            "bid": 0.0,
+            "supply": 24.0,
+            "hp_after": -2,
+            "budget_after": 0.0,
+            "status": "dead",
+            "error": null,
+            "opponents_status_before": {}
+          },
+          {
+            "day": 8,
+            "bid": 0.0,
+            "supply": 19.0,
+            "hp_after": -2,
+            "budget_after": 0.0,
+            "status": "dead",
+            "error": null,
+            "opponents_status_before": {}
+          },
+          {
+            "day": 9,
+            "bid": 0.0,
+            "supply": 24.0,
+            "hp_after": -2,
+            "budget_after": 0.0,
+            "status": "dead",
+            "error": null,
+            "opponents_status_before": {}
+          },
+          {
+            "day": 10,
+            "bid": 0.0,
+            "supply": 20.0,
+            "hp_after": -2,
+            "budget_after": 0.0,
+            "status": "dead",
+            "error": null,
+            "opponents_status_before": {}
+          }
+        ],
+        "metrics": {
+          "survival_days": 3,
+          "final_hp": -2,
+          "total_bid": 265.4,
+          "average_bid": 26.54,
+          "bid_variance": 1309.2144,
+          "bid_entropy": 1.5709505944546687,
+          "adaptation_score": 30.544444444444444,
+          "panic_score": 2,
+          "static_policy": false,
+          "opponent_awareness_score": 3,
+          "recovery_score": 0,
+          "supply_bid_correlation": -0.5313347752403349,
+          "compile_success": true,
+          "runtime_success": true,
+          "hallucinated_api_count": 0,
+          "strategy_complexity": 662,
+          "branch_count": 23,
+          "loop_count": 1,
+          "function_call_count": 32,
+          "utility_score": 127.30000000000001,
+          "survival_efficiency": 0.011303692539562924,
+          "failure_types": [
+            "inefficient_resource_usage"
+          ]
+        }
+      },
+      {
+        "agent_id": "Bob",
+        "reasoning_cot": "Yesterday Cindy outbid heavily and survived all 10 days, suggesting she is willing to spend to secure water. Alex and David died quickly, implying aggressive but inconsistent pressure. I\u2019ll bid moderately to ensure survival while avoiding Cindy\u2019s likely high-cost equilibrium, scaling with supply and my low HP risk.",
+        "strategy_code": "def get_bid(day_context, my_status, opponents_status):\n    WATER_REQ = 9\n    DAILY_SALARY = 90\n    MIN_SUPPLY = 15\n    MAX_SUPPLY = 25\n\n    supply = float(day_context.get('supply', 0.0))\n    day = day_context.get('day', 0)\n\n    my_hp = float(my_status.get('hp', 0))\n    my_budget = float(my_status.get('budget', 0))\n    my_no_water_days = int(my_status.get('no_water_days', 0))\n\n    alive_opps = []\n    for opp_id, opp in opponents_status.items():\n        if opp.get('alive', False):\n            alive_opps.append((opp_id, opp))\n\n    if not alive_opps:\n        return max(0.0, min(my_budget, DAILY_SALARY * 0.4))\n\n    # Read yesterday bids to infer who likely over-committed.\n    prev_bids = []\n    for _, opp in alive_opps:\n        prev = opp.get('previous_trace', {})\n        if isinstance(prev, dict) and prev.get('bid') is not None:\n            try:\n                prev_bids.append(float(prev['bid']))\n            except Exception:\n                pass\n\n    highest_prev_bid = max(prev_bids) if prev_bids else 0.0\n\n    # Estimate how many water units are available; use integer index safety.\n    # supply is float, but we only use it for thresholds.\n    units_available = int(supply / WATER_REQ)  # e.g., 19/9 -> 2\n\n    # Base bid: aim to beat typical medium bids without matching Cindy's extreme spending.\n    # If supply is tight (few units), bid higher.\n    tightness = 0.0\n    if units_available <= 1:\n        tightness = 1.0\n    elif units_available == 2:\n        tightness = 0.6\n    else:\n        tightness = 0.3\n\n    # If Cindy likely spent big yesterday (highest_prev_bid very high), avoid full race.\n    # If my HP is low or I already missed water, increase urgency.\n    urgency = 0.0\n    if my_hp <= 2.0:\n        urgency = 1.0\n    elif my_hp <= 4.0:\n        urgency = 0.7\n    else:\n        urgency = 0.3\n\n    if my_no_water_days >= 2:\n        urgency = max(urgency, 0.8)\n\n    # Construct target bid cap.\n    # When highest_prev_bid is huge, keep below it but still enough to secure.\n    if highest_prev_bid >= DAILY_SALARY * 1.2:\n        # Cindy-like behavior: spenders exist; I bid moderately.\n        target = DAILY_SALARY * (0.35 + 0.25 * tightness + 0.25 * urgency)\n        # Ensure not too low vs observed pressure.\n        target = min(target, highest_prev_bid * 0.55)\n    elif highest_prev_bid >= DAILY_SALARY * 0.85:\n        # High pressure but not extreme.\n        target = DAILY_SALARY * (0.45 + 0.2 * tightness + 0.25 * urgency)\n        target = min(target, highest_prev_bid * 0.75)\n    else:\n        # Low to moderate pressure: bid around a survival-oriented baseline.\n        target = DAILY_SALARY * (0.55 * tightness + 0.35 * urgency + 0.15)\n\n    # Convert to final bid with budget constraints.\n    # Also keep within a reasonable fraction of budget to avoid going to 0 too early.\n    max_affordable = max(0.0, my_budget)\n    # If budget is tiny, just bid what we can.\n    if max_affordable <= 1e-9:\n        return 0.0\n\n    # Fractional safety: if urgency high, allow higher fraction.\n    frac = 0.65 if urgency >= 0.8 else (0.5 if urgency >= 0.5 else 0.4)\n    bid = min(max_affordable * frac, target)\n\n    # If supply is extremely tight, nudge up slightly.\n    if units_available <= 1 and urgency >= 0.7:\n        bid = min(max_affordable, bid + DAILY_SALARY * 0.15)\n\n    # Final clamp.\n    if bid < 0.0:\n        bid = 0.0\n    if bid > max_affordable:\n        bid = max_affordable\n    return float(bid)",
+        "daily_trace": [
+          {
+            "day": 1,
+            "bid": 36.0,
+            "supply": 18.0,
+            "hp_after": 7,
+            "budget_after": 90.0,
+            "status": "alive",
+            "error": null,
+            "opponents_status_before": {
+              "Alex": {
+                "hp": 8,
+                "budget": 70.0,
+                "no_water_days": 1,
+                "alive": true,
+                "water_requirement": 13,
+                "daily_salary": 70,
+                "last_bid": 0.0,
+                "last_status": null,
+                "last_hp_after": null,
+                "last_budget_after": null,
+                "previous_trace": {
+                  "day": null,
+                  "bid": 0.0,
+                  "supply": null,
+                  "hp_after": null,
+                  "budget_after": null,
+                  "status": null,
+                  "error": null
+                },
+                "recent_traces": []
+              },
+              "Cindy": {
+                "hp": 8,
+                "budget": 150.0,
+                "no_water_days": 1,
+                "alive": true,
+                "water_requirement": 13,
+                "daily_salary": 150,
+                "last_bid": 0.0,
+                "last_status": null,
+                "last_hp_after": null,
+                "last_budget_after": null,
+                "previous_trace": {
+                  "day": null,
+                  "bid": 0.0,
+                  "supply": null,
+                  "hp_after": null,
+                  "budget_after": null,
+                  "status": null,
+                  "error": null
+                },
+                "recent_traces": []
+              },
+              "David": {
+                "hp": 8,
+                "budget": 80.0,
+                "no_water_days": 1,
+                "alive": true,
+                "water_requirement": 7,
+                "daily_salary": 80,
+                "last_bid": 0.0,
+                "last_status": null,
+                "last_hp_after": null,
+                "last_budget_after": null,
+                "previous_trace": {
+                  "day": null,
+                  "bid": 0.0,
+                  "supply": null,
+                  "hp_after": null,
+                  "budget_after": null,
+                  "status": null,
+                  "error": null
+                },
+                "recent_traces": []
+              },
+              "Eric": {
+                "hp": 8,
+                "budget": 140.0,
+                "no_water_days": 1,
+                "alive": true,
+                "water_requirement": 8,
+                "daily_salary": 140,
+                "last_bid": 0.0,
+                "last_status": null,
+                "last_hp_after": null,
+                "last_budget_after": null,
+                "previous_trace": {
+                  "day": null,
+                  "bid": 0.0,
+                  "supply": null,
+                  "hp_after": null,
+                  "budget_after": null,
+                  "status": null,
+                  "error": null
+                },
+                "recent_traces": []
+              }
+            }
+          },
+          {
+            "day": 2,
+            "bid": 85.5,
+            "supply": 16.0,
+            "hp_after": 5,
+            "budget_after": 180.0,
+            "status": "alive",
+            "error": null,
+            "opponents_status_before": {
+              "Alex": {
+                "hp": 7,
+                "budget": 140.0,
+                "no_water_days": 2,
+                "alive": true,
+                "water_requirement": 13,
+                "daily_salary": 70,
+                "last_bid": 26.0,
+                "last_status": "alive",
+                "last_hp_after": 7,
+                "last_budget_after": 70.0,
+                "previous_trace": {
+                  "day": 1,
+                  "bid": 26.0,
+                  "supply": 18.0,
+                  "hp_after": 7,
+                  "budget_after": 70.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 26.0,
+                    "supply": 18.0,
+                    "hp_after": 7,
+                    "budget_after": 70.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "Cindy": {
+                "hp": 10,
+                "budget": 153.0,
+                "no_water_days": 1,
+                "alive": true,
+                "water_requirement": 13,
+                "daily_salary": 150,
+                "last_bid": 147.0,
+                "last_status": "alive",
+                "last_hp_after": 10,
+                "last_budget_after": 3.0,
+                "previous_trace": {
+                  "day": 1,
+                  "bid": 147.0,
+                  "supply": 18.0,
+                  "hp_after": 10,
+                  "budget_after": 3.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 147.0,
+                    "supply": 18.0,
+                    "hp_after": 10,
+                    "budget_after": 3.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "David": {
+                "hp": 7,
+                "budget": 160.0,
+                "no_water_days": 2,
+                "alive": true,
+                "water_requirement": 7,
+                "daily_salary": 80,
+                "last_bid": 1.0,
+                "last_status": "alive",
+                "last_hp_after": 7,
+                "last_budget_after": 80.0,
+                "previous_trace": {
+                  "day": 1,
+                  "bid": 1.0,
+                  "supply": 18.0,
+                  "hp_after": 7,
+                  "budget_after": 80.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 1.0,
+                    "supply": 18.0,
+                    "hp_after": 7,
+                    "budget_after": 80.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "Eric": {
+                "hp": 7,
+                "budget": 280.0,
+                "no_water_days": 2,
+                "alive": true,
+                "water_requirement": 8,
+                "daily_salary": 140,
+                "last_bid": 56.0,
+                "last_status": "alive",
+                "last_hp_after": 7,
+                "last_budget_after": 140.0,
+                "previous_trace": {
+                  "day": 1,
+                  "bid": 56.0,
+                  "supply": 18.0,
+                  "hp_after": 7,
+                  "budget_after": 140.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 56.0,
+                    "supply": 18.0,
+                    "hp_after": 7,
+                    "budget_after": 140.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "day": 3,
+            "bid": 85.5,
+            "supply": 17.0,
+            "hp_after": 2,
+            "budget_after": 270.0,
+            "status": "alive",
+            "error": null,
+            "opponents_status_before": {
+              "Alex": {
+                "hp": 5,
+                "budget": 210.0,
+                "no_water_days": 3,
+                "alive": true,
+                "water_requirement": 13,
+                "daily_salary": 70,
+                "last_bid": 64.4,
+                "last_status": "alive",
+                "last_hp_after": 5,
+                "last_budget_after": 140.0,
+                "previous_trace": {
+                  "day": 2,
+                  "bid": 64.4,
+                  "supply": 16.0,
+                  "hp_after": 5,
+                  "budget_after": 140.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 26.0,
+                    "supply": 18.0,
+                    "hp_after": 7,
+                    "budget_after": 70.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 2,
+                    "bid": 64.4,
+                    "supply": 16.0,
+                    "hp_after": 5,
+                    "budget_after": 140.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "Cindy": {
+                "hp": 10,
+                "budget": 156.0,
+                "no_water_days": 1,
+                "alive": true,
+                "water_requirement": 13,
+                "daily_salary": 150,
+                "last_bid": 147.0,
+                "last_status": "alive",
+                "last_hp_after": 10,
+                "last_budget_after": 6.0,
+                "previous_trace": {
+                  "day": 2,
+                  "bid": 147.0,
+                  "supply": 16.0,
+                  "hp_after": 10,
+                  "budget_after": 6.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 147.0,
+                    "supply": 18.0,
+                    "hp_after": 10,
+                    "budget_after": 3.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 2,
+                    "bid": 147.0,
+                    "supply": 16.0,
+                    "hp_after": 10,
+                    "budget_after": 6.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "David": {
+                "hp": 5,
+                "budget": 240.0,
+                "no_water_days": 3,
+                "alive": true,
+                "water_requirement": 7,
+                "daily_salary": 80,
+                "last_bid": 69.5625,
+                "last_status": "alive",
+                "last_hp_after": 5,
+                "last_budget_after": 160.0,
+                "previous_trace": {
+                  "day": 2,
+                  "bid": 69.5625,
+                  "supply": 16.0,
+                  "hp_after": 5,
+                  "budget_after": 160.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 1.0,
+                    "supply": 18.0,
+                    "hp_after": 7,
+                    "budget_after": 80.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 2,
+                    "bid": 69.5625,
+                    "supply": 16.0,
+                    "hp_after": 5,
+                    "budget_after": 160.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "Eric": {
+                "hp": 5,
+                "budget": 420.0,
+                "no_water_days": 3,
+                "alive": true,
+                "water_requirement": 8,
+                "daily_salary": 140,
+                "last_bid": 42.0,
+                "last_status": "alive",
+                "last_hp_after": 5,
+                "last_budget_after": 280.0,
+                "previous_trace": {
+                  "day": 2,
+                  "bid": 42.0,
+                  "supply": 16.0,
+                  "hp_after": 5,
+                  "budget_after": 280.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 56.0,
+                    "supply": 18.0,
+                    "hp_after": 7,
+                    "budget_after": 140.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 2,
+                    "bid": 42.0,
+                    "supply": 16.0,
+                    "hp_after": 5,
+                    "budget_after": 280.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "day": 4,
+            "bid": 90.0,
+            "supply": 16.0,
+            "hp_after": -2,
+            "budget_after": 0.0,
+            "status": "dead",
+            "error": null,
+            "opponents_status_before": {
+              "Alex": {
+                "hp": 2,
+                "budget": 280.0,
+                "no_water_days": 4,
+                "alive": true,
+                "water_requirement": 13,
+                "daily_salary": 70,
+                "last_bid": 87.5,
+                "last_status": "alive",
+                "last_hp_after": 2,
+                "last_budget_after": 210.0,
+                "previous_trace": {
+                  "day": 3,
+                  "bid": 87.5,
+                  "supply": 17.0,
+                  "hp_after": 2,
+                  "budget_after": 210.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 26.0,
+                    "supply": 18.0,
+                    "hp_after": 7,
+                    "budget_after": 70.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 2,
+                    "bid": 64.4,
+                    "supply": 16.0,
+                    "hp_after": 5,
+                    "budget_after": 140.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 3,
+                    "bid": 87.5,
+                    "supply": 17.0,
+                    "hp_after": 2,
+                    "budget_after": 210.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "Cindy": {
+                "hp": 10,
+                "budget": 159.0,
+                "no_water_days": 1,
+                "alive": true,
+                "water_requirement": 13,
+                "daily_salary": 150,
+                "last_bid": 147.0,
+                "last_status": "alive",
+                "last_hp_after": 10,
+                "last_budget_after": 9.0,
+                "previous_trace": {
+                  "day": 3,
+                  "bid": 147.0,
+                  "supply": 17.0,
+                  "hp_after": 10,
+                  "budget_after": 9.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 147.0,
+                    "supply": 18.0,
+                    "hp_after": 10,
+                    "budget_after": 3.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 2,
+                    "bid": 147.0,
+                    "supply": 16.0,
+                    "hp_after": 10,
+                    "budget_after": 6.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 3,
+                    "bid": 147.0,
+                    "supply": 17.0,
+                    "hp_after": 10,
+                    "budget_after": 9.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "David": {
+                "hp": 2,
+                "budget": 320.0,
+                "no_water_days": 4,
+                "alive": true,
+                "water_requirement": 7,
+                "daily_salary": 80,
+                "last_bid": 88.96124999999999,
+                "last_status": "alive",
+                "last_hp_after": 2,
+                "last_budget_after": 240.0,
+                "previous_trace": {
+                  "day": 3,
+                  "bid": 88.96124999999999,
+                  "supply": 17.0,
+                  "hp_after": 2,
+                  "budget_after": 240.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 1.0,
+                    "supply": 18.0,
+                    "hp_after": 7,
+                    "budget_after": 80.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 2,
+                    "bid": 69.5625,
+                    "supply": 16.0,
+                    "hp_after": 5,
+                    "budget_after": 160.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 3,
+                    "bid": 88.96124999999999,
+                    "supply": 17.0,
+                    "hp_after": 2,
+                    "budget_after": 240.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "Eric": {
+                "hp": 2,
+                "budget": 560.0,
+                "no_water_days": 4,
+                "alive": true,
+                "water_requirement": 8,
+                "daily_salary": 140,
+                "last_bid": 42.0,
+                "last_status": "alive",
+                "last_hp_after": 2,
+                "last_budget_after": 420.0,
+                "previous_trace": {
+                  "day": 3,
+                  "bid": 42.0,
+                  "supply": 17.0,
+                  "hp_after": 2,
+                  "budget_after": 420.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 56.0,
+                    "supply": 18.0,
+                    "hp_after": 7,
+                    "budget_after": 140.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 2,
+                    "bid": 42.0,
+                    "supply": 16.0,
+                    "hp_after": 5,
+                    "budget_after": 280.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 3,
+                    "bid": 42.0,
+                    "supply": 17.0,
+                    "hp_after": 2,
+                    "budget_after": 420.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "day": 5,
+            "bid": 0.0,
+            "supply": 18.0,
+            "hp_after": -2,
+            "budget_after": 0.0,
+            "status": "dead",
+            "error": null,
+            "opponents_status_before": {}
+          },
+          {
+            "day": 6,
+            "bid": 0.0,
+            "supply": 15.0,
+            "hp_after": -2,
+            "budget_after": 0.0,
+            "status": "dead",
+            "error": null,
+            "opponents_status_before": {}
+          },
+          {
+            "day": 7,
+            "bid": 0.0,
+            "supply": 24.0,
+            "hp_after": -2,
+            "budget_after": 0.0,
+            "status": "dead",
+            "error": null,
+            "opponents_status_before": {}
+          },
+          {
+            "day": 8,
+            "bid": 0.0,
+            "supply": 19.0,
+            "hp_after": -2,
+            "budget_after": 0.0,
+            "status": "dead",
+            "error": null,
+            "opponents_status_before": {}
+          },
+          {
+            "day": 9,
+            "bid": 0.0,
+            "supply": 24.0,
+            "hp_after": -2,
+            "budget_after": 0.0,
+            "status": "dead",
+            "error": null,
+            "opponents_status_before": {}
+          },
+          {
+            "day": 10,
+            "bid": 0.0,
+            "supply": 20.0,
+            "hp_after": -2,
+            "budget_after": 0.0,
+            "status": "dead",
+            "error": null,
+            "opponents_status_before": {}
+          }
+        ],
+        "metrics": {
+          "survival_days": 3,
+          "final_hp": -2,
+          "total_bid": 297.0,
+          "average_bid": 29.7,
+          "bid_variance": 1519.56,
+          "bid_entropy": 1.5709505944546687,
+          "adaptation_score": 31.5,
+          "panic_score": 2,
+          "static_policy": false,
+          "opponent_awareness_score": 3,
+          "recovery_score": 0,
+          "supply_bid_correlation": -0.5507242622216075,
+          "compile_success": true,
+          "runtime_success": true,
+          "hallucinated_api_count": 0,
+          "strategy_complexity": 517,
+          "branch_count": 14,
+          "loop_count": 2,
+          "function_call_count": 28,
+          "utility_score": 111.5,
+          "survival_efficiency": 0.010101010101010102,
+          "failure_types": [
+            "inefficient_resource_usage"
+          ]
+        }
+      },
+      {
+        "agent_id": "Cindy",
+        "reasoning_cot": "Exploits opponent's yesterday bids and current supply scarcity. Prioritizes survival with aggressive bids when HP is low, otherwise balances winning with budget conservation, adjusting for end-game. Bids minimum if no active opponents.",
+        "strategy_code": "def get_bid(day_context, my_status, opponents_status):\n    WATER_REQ = 13\n    DAILY_SALARY = 150\n    EPISODE_DAYS = 10 # Assuming this is constant for the meta-round\n\n    alive_opponents = [o for o in opponents_status.values() if o['alive']]\n    num_alive_opponents = len(alive_opponents)\n\n    # If I'm the only agent alive, bid minimum to conserve budget\n    if num_alive_opponents == 0:\n        return min(my_status['budget'], 1)\n\n    # --- General Strategy for Competition ---\n\n    base_bid_percentage = 0.55 # Starting point for bid as a percentage of daily salary\n\n    # Adjust for perceived scarcity based on total water needed vs. available supply\n    total_water_needed_by_alive = (num_alive_opponents + 1) * WATER_REQ\n    available_supply = day_context['supply']\n\n    scarcity_factor = 1.0\n    if available_supply < total_water_needed_by_alive:\n        # Higher scarcity -> higher factor, capped at 1.5 to prevent extreme bids\n        scarcity_factor = 2.0 - available_supply / total_water_needed_by_alive\n        scarcity_factor = min(scarcity_factor, 1.5)\n    else:\n        # Abundant supply -> lower factor, min 0.5 to keep a base bid\n        scarcity_factor = max(0.5, 1.0 - (available_supply - total_water_needed_by_alive) / available_supply)\n    \n    base_bid_percentage *= scarcity_factor\n    base_bid_percentage = min(base_bid_percentage, 0.95) # Cap upper limit for base bid\n    base_bid_percentage = max(base_bid_percentage, 0.3) # Cap lower limit for base bid\n\n    bid = DAILY_SALARY * base_bid_percentage\n\n    # React to yesterday's highest bid from alive opponents\n    yesterday_bids = []\n    for opp in alive_opponents:\n        prev = opp.get('previous_trace', {})\n        # Only consider valid, positive bids from yesterday\n        if prev and prev.get('bid') is not None and prev.get('status') != 'error' and prev.get('bid') > 0:\n            yesterday_bids.append(prev['bid'])\n\n    if yesterday_bids:\n        highest_prev_bid = max(yesterday_bids)\n        # If highest previous bid was significant, adjust my bid to be competitive\n        if highest_prev_bid > DAILY_SALARY * 0.2: # Only react if it's a non-trivial bid\n            bid = max(bid, highest_prev_bid + 2) # Aim to slightly beat it\n            # More aggressive if my HP is low\n            if my_status['hp'] <= WATER_REQ: # Critical HP\n                bid = max(bid, highest_prev_bid + 5, DAILY_SALARY * 0.95)\n            elif my_status['hp'] <= WATER_REQ * 2: # Low HP\n                bid = max(bid, highest_prev_bid + 3, DAILY_SALARY * 0.8)\n        else: # Opponents bid very low or 0, try to save money if healthy\n            if my_status['hp'] > WATER_REQ * 2: \n                bid = min(bid, DAILY_SALARY * 0.45)\n            bid = max(bid, highest_prev_bid + 1) # Still aim to win if possible\n    else:\n        # No meaningful bids from opponents yesterday. Rely on base bid, adjust for HP.\n        if my_status['hp'] <= WATER_REQ: # Critical HP\n            bid = max(bid, DAILY_SALARY * 0.9)\n        elif my_status['hp'] <= WATER_REQ * 2: # Low HP\n            bid = max(bid, DAILY_SALARY * 0.7)\n        else:\n            bid = max(bid, DAILY_SALARY * 0.5) # Normal healthy bid\n\n    # Final adjustment based on my HP (override if critical for survival)\n    if my_status['hp'] <= WATER_REQ: # Critical HP, must get water at almost any cost\n        bid = max(bid, DAILY_SALARY * 0.98)\n    elif my_status['hp'] <= WATER_REQ * 2: # Low HP, need water\n        bid = max(bid, DAILY_SALARY * 0.85)\n\n    # Consider end game: Adjust strategy for the last few days\n    if day_context['day'] >= EPISODE_DAYS - 2: # Last 2 days of the episode\n        if my_status['hp'] <= WATER_REQ * 2: # Still need water to survive\n            bid = max(bid, DAILY_SALARY * 0.95)\n        else: # Healthy, try to secure win with minimal cost\n            bid = min(bid, DAILY_SALARY * 0.7)\n\n    # Ensure bid is at least 1 to participate\n    bid = max(1, bid)\n\n    # Ensure bid does not exceed available budget\n    final_bid = min(my_status['budget'], bid)\n\n    # If budget allows, always bid at least 1\n    if final_bid == 0 and my_status['budget'] > 0:\n        final_bid = 1\n\n    return final_bid",
+        "daily_trace": [
+          {
+            "day": 1,
+            "bid": 147.0,
+            "supply": 18.0,
+            "hp_after": 10,
+            "budget_after": 3.0,
+            "status": "alive",
+            "error": null,
+            "opponents_status_before": {
+              "Alex": {
+                "hp": 8,
+                "budget": 70.0,
+                "no_water_days": 1,
+                "alive": true,
+                "water_requirement": 13,
+                "daily_salary": 70,
+                "last_bid": 0.0,
+                "last_status": null,
+                "last_hp_after": null,
+                "last_budget_after": null,
+                "previous_trace": {
+                  "day": null,
+                  "bid": 0.0,
+                  "supply": null,
+                  "hp_after": null,
+                  "budget_after": null,
+                  "status": null,
+                  "error": null
+                },
+                "recent_traces": []
+              },
+              "Bob": {
+                "hp": 8,
+                "budget": 90.0,
+                "no_water_days": 1,
+                "alive": true,
+                "water_requirement": 9,
+                "daily_salary": 90,
+                "last_bid": 0.0,
+                "last_status": null,
+                "last_hp_after": null,
+                "last_budget_after": null,
+                "previous_trace": {
+                  "day": null,
+                  "bid": 0.0,
+                  "supply": null,
+                  "hp_after": null,
+                  "budget_after": null,
+                  "status": null,
+                  "error": null
+                },
+                "recent_traces": []
+              },
+              "David": {
+                "hp": 8,
+                "budget": 80.0,
+                "no_water_days": 1,
+                "alive": true,
+                "water_requirement": 7,
+                "daily_salary": 80,
+                "last_bid": 0.0,
+                "last_status": null,
+                "last_hp_after": null,
+                "last_budget_after": null,
+                "previous_trace": {
+                  "day": null,
+                  "bid": 0.0,
+                  "supply": null,
+                  "hp_after": null,
+                  "budget_after": null,
+                  "status": null,
+                  "error": null
+                },
+                "recent_traces": []
+              },
+              "Eric": {
+                "hp": 8,
+                "budget": 140.0,
+                "no_water_days": 1,
+                "alive": true,
+                "water_requirement": 8,
+                "daily_salary": 140,
+                "last_bid": 0.0,
+                "last_status": null,
+                "last_hp_after": null,
+                "last_budget_after": null,
+                "previous_trace": {
+                  "day": null,
+                  "bid": 0.0,
+                  "supply": null,
+                  "hp_after": null,
+                  "budget_after": null,
+                  "status": null,
+                  "error": null
+                },
+                "recent_traces": []
+              }
+            }
+          },
+          {
+            "day": 2,
+            "bid": 147.0,
+            "supply": 16.0,
+            "hp_after": 10,
+            "budget_after": 6.0,
+            "status": "alive",
+            "error": null,
+            "opponents_status_before": {
+              "Alex": {
+                "hp": 7,
+                "budget": 140.0,
+                "no_water_days": 2,
+                "alive": true,
+                "water_requirement": 13,
+                "daily_salary": 70,
+                "last_bid": 26.0,
+                "last_status": "alive",
+                "last_hp_after": 7,
+                "last_budget_after": 70.0,
+                "previous_trace": {
+                  "day": 1,
+                  "bid": 26.0,
+                  "supply": 18.0,
+                  "hp_after": 7,
+                  "budget_after": 70.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 26.0,
+                    "supply": 18.0,
+                    "hp_after": 7,
+                    "budget_after": 70.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "Bob": {
+                "hp": 7,
+                "budget": 180.0,
+                "no_water_days": 2,
+                "alive": true,
+                "water_requirement": 9,
+                "daily_salary": 90,
+                "last_bid": 36.0,
+                "last_status": "alive",
+                "last_hp_after": 7,
+                "last_budget_after": 90.0,
+                "previous_trace": {
+                  "day": 1,
+                  "bid": 36.0,
+                  "supply": 18.0,
+                  "hp_after": 7,
+                  "budget_after": 90.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 36.0,
+                    "supply": 18.0,
+                    "hp_after": 7,
+                    "budget_after": 90.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "David": {
+                "hp": 7,
+                "budget": 160.0,
+                "no_water_days": 2,
+                "alive": true,
+                "water_requirement": 7,
+                "daily_salary": 80,
+                "last_bid": 1.0,
+                "last_status": "alive",
+                "last_hp_after": 7,
+                "last_budget_after": 80.0,
+                "previous_trace": {
+                  "day": 1,
+                  "bid": 1.0,
+                  "supply": 18.0,
+                  "hp_after": 7,
+                  "budget_after": 80.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 1.0,
+                    "supply": 18.0,
+                    "hp_after": 7,
+                    "budget_after": 80.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "Eric": {
+                "hp": 7,
+                "budget": 280.0,
+                "no_water_days": 2,
+                "alive": true,
+                "water_requirement": 8,
+                "daily_salary": 140,
+                "last_bid": 56.0,
+                "last_status": "alive",
+                "last_hp_after": 7,
+                "last_budget_after": 140.0,
+                "previous_trace": {
+                  "day": 1,
+                  "bid": 56.0,
+                  "supply": 18.0,
+                  "hp_after": 7,
+                  "budget_after": 140.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 56.0,
+                    "supply": 18.0,
+                    "hp_after": 7,
+                    "budget_after": 140.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "day": 3,
+            "bid": 147.0,
+            "supply": 17.0,
+            "hp_after": 10,
+            "budget_after": 9.0,
+            "status": "alive",
+            "error": null,
+            "opponents_status_before": {
+              "Alex": {
+                "hp": 5,
+                "budget": 210.0,
+                "no_water_days": 3,
+                "alive": true,
+                "water_requirement": 13,
+                "daily_salary": 70,
+                "last_bid": 64.4,
+                "last_status": "alive",
+                "last_hp_after": 5,
+                "last_budget_after": 140.0,
+                "previous_trace": {
+                  "day": 2,
+                  "bid": 64.4,
+                  "supply": 16.0,
+                  "hp_after": 5,
+                  "budget_after": 140.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 26.0,
+                    "supply": 18.0,
+                    "hp_after": 7,
+                    "budget_after": 70.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 2,
+                    "bid": 64.4,
+                    "supply": 16.0,
+                    "hp_after": 5,
+                    "budget_after": 140.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "Bob": {
+                "hp": 5,
+                "budget": 270.0,
+                "no_water_days": 3,
+                "alive": true,
+                "water_requirement": 9,
+                "daily_salary": 90,
+                "last_bid": 85.5,
+                "last_status": "alive",
+                "last_hp_after": 5,
+                "last_budget_after": 180.0,
+                "previous_trace": {
+                  "day": 2,
+                  "bid": 85.5,
+                  "supply": 16.0,
+                  "hp_after": 5,
+                  "budget_after": 180.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 36.0,
+                    "supply": 18.0,
+                    "hp_after": 7,
+                    "budget_after": 90.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 2,
+                    "bid": 85.5,
+                    "supply": 16.0,
+                    "hp_after": 5,
+                    "budget_after": 180.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "David": {
+                "hp": 5,
+                "budget": 240.0,
+                "no_water_days": 3,
+                "alive": true,
+                "water_requirement": 7,
+                "daily_salary": 80,
+                "last_bid": 69.5625,
+                "last_status": "alive",
+                "last_hp_after": 5,
+                "last_budget_after": 160.0,
+                "previous_trace": {
+                  "day": 2,
+                  "bid": 69.5625,
+                  "supply": 16.0,
+                  "hp_after": 5,
+                  "budget_after": 160.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 1.0,
+                    "supply": 18.0,
+                    "hp_after": 7,
+                    "budget_after": 80.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 2,
+                    "bid": 69.5625,
+                    "supply": 16.0,
+                    "hp_after": 5,
+                    "budget_after": 160.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "Eric": {
+                "hp": 5,
+                "budget": 420.0,
+                "no_water_days": 3,
+                "alive": true,
+                "water_requirement": 8,
+                "daily_salary": 140,
+                "last_bid": 42.0,
+                "last_status": "alive",
+                "last_hp_after": 5,
+                "last_budget_after": 280.0,
+                "previous_trace": {
+                  "day": 2,
+                  "bid": 42.0,
+                  "supply": 16.0,
+                  "hp_after": 5,
+                  "budget_after": 280.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 56.0,
+                    "supply": 18.0,
+                    "hp_after": 7,
+                    "budget_after": 140.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 2,
+                    "bid": 42.0,
+                    "supply": 16.0,
+                    "hp_after": 5,
+                    "budget_after": 280.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "day": 4,
+            "bid": 147.0,
+            "supply": 16.0,
+            "hp_after": 10,
+            "budget_after": 12.0,
+            "status": "alive",
+            "error": null,
+            "opponents_status_before": {
+              "Alex": {
+                "hp": 2,
+                "budget": 280.0,
+                "no_water_days": 4,
+                "alive": true,
+                "water_requirement": 13,
+                "daily_salary": 70,
+                "last_bid": 87.5,
+                "last_status": "alive",
+                "last_hp_after": 2,
+                "last_budget_after": 210.0,
+                "previous_trace": {
+                  "day": 3,
+                  "bid": 87.5,
+                  "supply": 17.0,
+                  "hp_after": 2,
+                  "budget_after": 210.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 26.0,
+                    "supply": 18.0,
+                    "hp_after": 7,
+                    "budget_after": 70.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 2,
+                    "bid": 64.4,
+                    "supply": 16.0,
+                    "hp_after": 5,
+                    "budget_after": 140.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 3,
+                    "bid": 87.5,
+                    "supply": 17.0,
+                    "hp_after": 2,
+                    "budget_after": 210.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "Bob": {
+                "hp": 2,
+                "budget": 360.0,
+                "no_water_days": 4,
+                "alive": true,
+                "water_requirement": 9,
+                "daily_salary": 90,
+                "last_bid": 85.5,
+                "last_status": "alive",
+                "last_hp_after": 2,
+                "last_budget_after": 270.0,
+                "previous_trace": {
+                  "day": 3,
+                  "bid": 85.5,
+                  "supply": 17.0,
+                  "hp_after": 2,
+                  "budget_after": 270.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 36.0,
+                    "supply": 18.0,
+                    "hp_after": 7,
+                    "budget_after": 90.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 2,
+                    "bid": 85.5,
+                    "supply": 16.0,
+                    "hp_after": 5,
+                    "budget_after": 180.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 3,
+                    "bid": 85.5,
+                    "supply": 17.0,
+                    "hp_after": 2,
+                    "budget_after": 270.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "David": {
+                "hp": 2,
+                "budget": 320.0,
+                "no_water_days": 4,
+                "alive": true,
+                "water_requirement": 7,
+                "daily_salary": 80,
+                "last_bid": 88.96124999999999,
+                "last_status": "alive",
+                "last_hp_after": 2,
+                "last_budget_after": 240.0,
+                "previous_trace": {
+                  "day": 3,
+                  "bid": 88.96124999999999,
+                  "supply": 17.0,
+                  "hp_after": 2,
+                  "budget_after": 240.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 1.0,
+                    "supply": 18.0,
+                    "hp_after": 7,
+                    "budget_after": 80.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 2,
+                    "bid": 69.5625,
+                    "supply": 16.0,
+                    "hp_after": 5,
+                    "budget_after": 160.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 3,
+                    "bid": 88.96124999999999,
+                    "supply": 17.0,
+                    "hp_after": 2,
+                    "budget_after": 240.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "Eric": {
+                "hp": 2,
+                "budget": 560.0,
+                "no_water_days": 4,
+                "alive": true,
+                "water_requirement": 8,
+                "daily_salary": 140,
+                "last_bid": 42.0,
+                "last_status": "alive",
+                "last_hp_after": 2,
+                "last_budget_after": 420.0,
+                "previous_trace": {
+                  "day": 3,
+                  "bid": 42.0,
+                  "supply": 17.0,
+                  "hp_after": 2,
+                  "budget_after": 420.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 56.0,
+                    "supply": 18.0,
+                    "hp_after": 7,
+                    "budget_after": 140.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 2,
+                    "bid": 42.0,
+                    "supply": 16.0,
+                    "hp_after": 5,
+                    "budget_after": 280.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 3,
+                    "bid": 42.0,
+                    "supply": 17.0,
+                    "hp_after": 2,
+                    "budget_after": 420.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "day": 5,
+            "bid": 1.0,
+            "supply": 18.0,
+            "hp_after": 10,
+            "budget_after": 161.0,
+            "status": "alive",
+            "error": null,
+            "opponents_status_before": {
+              "Alex": {
+                "hp": -2,
+                "budget": 0.0,
+                "no_water_days": 5,
+                "alive": false,
+                "water_requirement": 13,
+                "daily_salary": 70,
+                "last_bid": 87.5,
+                "last_status": "dead",
+                "last_hp_after": -2,
+                "last_budget_after": 0.0,
+                "previous_trace": {
+                  "day": 4,
+                  "bid": 87.5,
+                  "supply": 16.0,
+                  "hp_after": -2,
+                  "budget_after": 0.0,
+                  "status": "dead",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 2,
+                    "bid": 64.4,
+                    "supply": 16.0,
+                    "hp_after": 5,
+                    "budget_after": 140.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 3,
+                    "bid": 87.5,
+                    "supply": 17.0,
+                    "hp_after": 2,
+                    "budget_after": 210.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 4,
+                    "bid": 87.5,
+                    "supply": 16.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  }
+                ]
+              },
+              "Bob": {
+                "hp": -2,
+                "budget": 0.0,
+                "no_water_days": 5,
+                "alive": false,
+                "water_requirement": 9,
+                "daily_salary": 90,
+                "last_bid": 90.0,
+                "last_status": "dead",
+                "last_hp_after": -2,
+                "last_budget_after": 0.0,
+                "previous_trace": {
+                  "day": 4,
+                  "bid": 90.0,
+                  "supply": 16.0,
+                  "hp_after": -2,
+                  "budget_after": 0.0,
+                  "status": "dead",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 2,
+                    "bid": 85.5,
+                    "supply": 16.0,
+                    "hp_after": 5,
+                    "budget_after": 180.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 3,
+                    "bid": 85.5,
+                    "supply": 17.0,
+                    "hp_after": 2,
+                    "budget_after": 270.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 4,
+                    "bid": 90.0,
+                    "supply": 16.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  }
+                ]
+              },
+              "David": {
+                "hp": -2,
+                "budget": 0.0,
+                "no_water_days": 5,
+                "alive": false,
+                "water_requirement": 7,
+                "daily_salary": 80,
+                "last_bid": 64.0,
+                "last_status": "dead",
+                "last_hp_after": -2,
+                "last_budget_after": 0.0,
+                "previous_trace": {
+                  "day": 4,
+                  "bid": 64.0,
+                  "supply": 16.0,
+                  "hp_after": -2,
+                  "budget_after": 0.0,
+                  "status": "dead",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 2,
+                    "bid": 69.5625,
+                    "supply": 16.0,
+                    "hp_after": 5,
+                    "budget_after": 160.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 3,
+                    "bid": 88.96124999999999,
+                    "supply": 17.0,
+                    "hp_after": 2,
+                    "budget_after": 240.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 4,
+                    "bid": 64.0,
+                    "supply": 16.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  }
+                ]
+              },
+              "Eric": {
+                "hp": -2,
+                "budget": 0.0,
+                "no_water_days": 5,
+                "alive": false,
+                "water_requirement": 8,
+                "daily_salary": 140,
+                "last_bid": 126.0,
+                "last_status": "dead",
+                "last_hp_after": -2,
+                "last_budget_after": 0.0,
+                "previous_trace": {
+                  "day": 4,
+                  "bid": 126.0,
+                  "supply": 16.0,
+                  "hp_after": -2,
+                  "budget_after": 0.0,
+                  "status": "dead",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 2,
+                    "bid": 42.0,
+                    "supply": 16.0,
+                    "hp_after": 5,
+                    "budget_after": 280.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 3,
+                    "bid": 42.0,
+                    "supply": 17.0,
+                    "hp_after": 2,
+                    "budget_after": 420.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 4,
+                    "bid": 126.0,
+                    "supply": 16.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "day": 6,
+            "bid": 1.0,
+            "supply": 15.0,
+            "hp_after": 10,
+            "budget_after": 310.0,
+            "status": "alive",
+            "error": null,
+            "opponents_status_before": {
+              "Alex": {
+                "hp": -2,
+                "budget": 0.0,
+                "no_water_days": 5,
+                "alive": false,
+                "water_requirement": 13,
+                "daily_salary": 70,
+                "last_bid": 0.0,
+                "last_status": "dead",
+                "last_hp_after": -2,
+                "last_budget_after": 0.0,
+                "previous_trace": {
+                  "day": 5,
+                  "bid": 0.0,
+                  "supply": 18.0,
+                  "hp_after": -2,
+                  "budget_after": 0.0,
+                  "status": "dead",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 3,
+                    "bid": 87.5,
+                    "supply": 17.0,
+                    "hp_after": 2,
+                    "budget_after": 210.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 4,
+                    "bid": 87.5,
+                    "supply": 16.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  },
+                  {
+                    "day": 5,
+                    "bid": 0.0,
+                    "supply": 18.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  }
+                ]
+              },
+              "Bob": {
+                "hp": -2,
+                "budget": 0.0,
+                "no_water_days": 5,
+                "alive": false,
+                "water_requirement": 9,
+                "daily_salary": 90,
+                "last_bid": 0.0,
+                "last_status": "dead",
+                "last_hp_after": -2,
+                "last_budget_after": 0.0,
+                "previous_trace": {
+                  "day": 5,
+                  "bid": 0.0,
+                  "supply": 18.0,
+                  "hp_after": -2,
+                  "budget_after": 0.0,
+                  "status": "dead",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 3,
+                    "bid": 85.5,
+                    "supply": 17.0,
+                    "hp_after": 2,
+                    "budget_after": 270.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 4,
+                    "bid": 90.0,
+                    "supply": 16.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  },
+                  {
+                    "day": 5,
+                    "bid": 0.0,
+                    "supply": 18.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  }
+                ]
+              },
+              "David": {
+                "hp": -2,
+                "budget": 0.0,
+                "no_water_days": 5,
+                "alive": false,
+                "water_requirement": 7,
+                "daily_salary": 80,
+                "last_bid": 0.0,
+                "last_status": "dead",
+                "last_hp_after": -2,
+                "last_budget_after": 0.0,
+                "previous_trace": {
+                  "day": 5,
+                  "bid": 0.0,
+                  "supply": 18.0,
+                  "hp_after": -2,
+                  "budget_after": 0.0,
+                  "status": "dead",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 3,
+                    "bid": 88.96124999999999,
+                    "supply": 17.0,
+                    "hp_after": 2,
+                    "budget_after": 240.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 4,
+                    "bid": 64.0,
+                    "supply": 16.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  },
+                  {
+                    "day": 5,
+                    "bid": 0.0,
+                    "supply": 18.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  }
+                ]
+              },
+              "Eric": {
+                "hp": -2,
+                "budget": 0.0,
+                "no_water_days": 5,
+                "alive": false,
+                "water_requirement": 8,
+                "daily_salary": 140,
+                "last_bid": 0.0,
+                "last_status": "dead",
+                "last_hp_after": -2,
+                "last_budget_after": 0.0,
+                "previous_trace": {
+                  "day": 5,
+                  "bid": 0.0,
+                  "supply": 18.0,
+                  "hp_after": -2,
+                  "budget_after": 0.0,
+                  "status": "dead",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 3,
+                    "bid": 42.0,
+                    "supply": 17.0,
+                    "hp_after": 2,
+                    "budget_after": 420.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 4,
+                    "bid": 126.0,
+                    "supply": 16.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  },
+                  {
+                    "day": 5,
+                    "bid": 0.0,
+                    "supply": 18.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "day": 7,
+            "bid": 1.0,
+            "supply": 24.0,
+            "hp_after": 10,
+            "budget_after": 459.0,
+            "status": "alive",
+            "error": null,
+            "opponents_status_before": {
+              "Alex": {
+                "hp": -2,
+                "budget": 0.0,
+                "no_water_days": 5,
+                "alive": false,
+                "water_requirement": 13,
+                "daily_salary": 70,
+                "last_bid": 0.0,
+                "last_status": "dead",
+                "last_hp_after": -2,
+                "last_budget_after": 0.0,
+                "previous_trace": {
+                  "day": 6,
+                  "bid": 0.0,
+                  "supply": 15.0,
+                  "hp_after": -2,
+                  "budget_after": 0.0,
+                  "status": "dead",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 4,
+                    "bid": 87.5,
+                    "supply": 16.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  },
+                  {
+                    "day": 5,
+                    "bid": 0.0,
+                    "supply": 18.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  },
+                  {
+                    "day": 6,
+                    "bid": 0.0,
+                    "supply": 15.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  }
+                ]
+              },
+              "Bob": {
+                "hp": -2,
+                "budget": 0.0,
+                "no_water_days": 5,
+                "alive": false,
+                "water_requirement": 9,
+                "daily_salary": 90,
+                "last_bid": 0.0,
+                "last_status": "dead",
+                "last_hp_after": -2,
+                "last_budget_after": 0.0,
+                "previous_trace": {
+                  "day": 6,
+                  "bid": 0.0,
+                  "supply": 15.0,
+                  "hp_after": -2,
+                  "budget_after": 0.0,
+                  "status": "dead",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 4,
+                    "bid": 90.0,
+                    "supply": 16.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  },
+                  {
+                    "day": 5,
+                    "bid": 0.0,
+                    "supply": 18.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  },
+                  {
+                    "day": 6,
+                    "bid": 0.0,
+                    "supply": 15.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  }
+                ]
+              },
+              "David": {
+                "hp": -2,
+                "budget": 0.0,
+                "no_water_days": 5,
+                "alive": false,
+                "water_requirement": 7,
+                "daily_salary": 80,
+                "last_bid": 0.0,
+                "last_status": "dead",
+                "last_hp_after": -2,
+                "last_budget_after": 0.0,
+                "previous_trace": {
+                  "day": 6,
+                  "bid": 0.0,
+                  "supply": 15.0,
+                  "hp_after": -2,
+                  "budget_after": 0.0,
+                  "status": "dead",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 4,
+                    "bid": 64.0,
+                    "supply": 16.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  },
+                  {
+                    "day": 5,
+                    "bid": 0.0,
+                    "supply": 18.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  },
+                  {
+                    "day": 6,
+                    "bid": 0.0,
+                    "supply": 15.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  }
+                ]
+              },
+              "Eric": {
+                "hp": -2,
+                "budget": 0.0,
+                "no_water_days": 5,
+                "alive": false,
+                "water_requirement": 8,
+                "daily_salary": 140,
+                "last_bid": 0.0,
+                "last_status": "dead",
+                "last_hp_after": -2,
+                "last_budget_after": 0.0,
+                "previous_trace": {
+                  "day": 6,
+                  "bid": 0.0,
+                  "supply": 15.0,
+                  "hp_after": -2,
+                  "budget_after": 0.0,
+                  "status": "dead",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 4,
+                    "bid": 126.0,
+                    "supply": 16.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  },
+                  {
+                    "day": 5,
+                    "bid": 0.0,
+                    "supply": 18.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  },
+                  {
+                    "day": 6,
+                    "bid": 0.0,
+                    "supply": 15.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "day": 8,
+            "bid": 1.0,
+            "supply": 19.0,
+            "hp_after": 10,
+            "budget_after": 608.0,
+            "status": "alive",
+            "error": null,
+            "opponents_status_before": {
+              "Alex": {
+                "hp": -2,
+                "budget": 0.0,
+                "no_water_days": 5,
+                "alive": false,
+                "water_requirement": 13,
+                "daily_salary": 70,
+                "last_bid": 0.0,
+                "last_status": "dead",
+                "last_hp_after": -2,
+                "last_budget_after": 0.0,
+                "previous_trace": {
+                  "day": 7,
+                  "bid": 0.0,
+                  "supply": 24.0,
+                  "hp_after": -2,
+                  "budget_after": 0.0,
+                  "status": "dead",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 5,
+                    "bid": 0.0,
+                    "supply": 18.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  },
+                  {
+                    "day": 6,
+                    "bid": 0.0,
+                    "supply": 15.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  },
+                  {
+                    "day": 7,
+                    "bid": 0.0,
+                    "supply": 24.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  }
+                ]
+              },
+              "Bob": {
+                "hp": -2,
+                "budget": 0.0,
+                "no_water_days": 5,
+                "alive": false,
+                "water_requirement": 9,
+                "daily_salary": 90,
+                "last_bid": 0.0,
+                "last_status": "dead",
+                "last_hp_after": -2,
+                "last_budget_after": 0.0,
+                "previous_trace": {
+                  "day": 7,
+                  "bid": 0.0,
+                  "supply": 24.0,
+                  "hp_after": -2,
+                  "budget_after": 0.0,
+                  "status": "dead",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 5,
+                    "bid": 0.0,
+                    "supply": 18.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  },
+                  {
+                    "day": 6,
+                    "bid": 0.0,
+                    "supply": 15.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  },
+                  {
+                    "day": 7,
+                    "bid": 0.0,
+                    "supply": 24.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  }
+                ]
+              },
+              "David": {
+                "hp": -2,
+                "budget": 0.0,
+                "no_water_days": 5,
+                "alive": false,
+                "water_requirement": 7,
+                "daily_salary": 80,
+                "last_bid": 0.0,
+                "last_status": "dead",
+                "last_hp_after": -2,
+                "last_budget_after": 0.0,
+                "previous_trace": {
+                  "day": 7,
+                  "bid": 0.0,
+                  "supply": 24.0,
+                  "hp_after": -2,
+                  "budget_after": 0.0,
+                  "status": "dead",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 5,
+                    "bid": 0.0,
+                    "supply": 18.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  },
+                  {
+                    "day": 6,
+                    "bid": 0.0,
+                    "supply": 15.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  },
+                  {
+                    "day": 7,
+                    "bid": 0.0,
+                    "supply": 24.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  }
+                ]
+              },
+              "Eric": {
+                "hp": -2,
+                "budget": 0.0,
+                "no_water_days": 5,
+                "alive": false,
+                "water_requirement": 8,
+                "daily_salary": 140,
+                "last_bid": 0.0,
+                "last_status": "dead",
+                "last_hp_after": -2,
+                "last_budget_after": 0.0,
+                "previous_trace": {
+                  "day": 7,
+                  "bid": 0.0,
+                  "supply": 24.0,
+                  "hp_after": -2,
+                  "budget_after": 0.0,
+                  "status": "dead",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 5,
+                    "bid": 0.0,
+                    "supply": 18.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  },
+                  {
+                    "day": 6,
+                    "bid": 0.0,
+                    "supply": 15.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  },
+                  {
+                    "day": 7,
+                    "bid": 0.0,
+                    "supply": 24.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "day": 9,
+            "bid": 1.0,
+            "supply": 24.0,
+            "hp_after": 10,
+            "budget_after": 757.0,
+            "status": "alive",
+            "error": null,
+            "opponents_status_before": {
+              "Alex": {
+                "hp": -2,
+                "budget": 0.0,
+                "no_water_days": 5,
+                "alive": false,
+                "water_requirement": 13,
+                "daily_salary": 70,
+                "last_bid": 0.0,
+                "last_status": "dead",
+                "last_hp_after": -2,
+                "last_budget_after": 0.0,
+                "previous_trace": {
+                  "day": 8,
+                  "bid": 0.0,
+                  "supply": 19.0,
+                  "hp_after": -2,
+                  "budget_after": 0.0,
+                  "status": "dead",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 6,
+                    "bid": 0.0,
+                    "supply": 15.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  },
+                  {
+                    "day": 7,
+                    "bid": 0.0,
+                    "supply": 24.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  },
+                  {
+                    "day": 8,
+                    "bid": 0.0,
+                    "supply": 19.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  }
+                ]
+              },
+              "Bob": {
+                "hp": -2,
+                "budget": 0.0,
+                "no_water_days": 5,
+                "alive": false,
+                "water_requirement": 9,
+                "daily_salary": 90,
+                "last_bid": 0.0,
+                "last_status": "dead",
+                "last_hp_after": -2,
+                "last_budget_after": 0.0,
+                "previous_trace": {
+                  "day": 8,
+                  "bid": 0.0,
+                  "supply": 19.0,
+                  "hp_after": -2,
+                  "budget_after": 0.0,
+                  "status": "dead",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 6,
+                    "bid": 0.0,
+                    "supply": 15.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  },
+                  {
+                    "day": 7,
+                    "bid": 0.0,
+                    "supply": 24.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  },
+                  {
+                    "day": 8,
+                    "bid": 0.0,
+                    "supply": 19.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  }
+                ]
+              },
+              "David": {
+                "hp": -2,
+                "budget": 0.0,
+                "no_water_days": 5,
+                "alive": false,
+                "water_requirement": 7,
+                "daily_salary": 80,
+                "last_bid": 0.0,
+                "last_status": "dead",
+                "last_hp_after": -2,
+                "last_budget_after": 0.0,
+                "previous_trace": {
+                  "day": 8,
+                  "bid": 0.0,
+                  "supply": 19.0,
+                  "hp_after": -2,
+                  "budget_after": 0.0,
+                  "status": "dead",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 6,
+                    "bid": 0.0,
+                    "supply": 15.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  },
+                  {
+                    "day": 7,
+                    "bid": 0.0,
+                    "supply": 24.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  },
+                  {
+                    "day": 8,
+                    "bid": 0.0,
+                    "supply": 19.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  }
+                ]
+              },
+              "Eric": {
+                "hp": -2,
+                "budget": 0.0,
+                "no_water_days": 5,
+                "alive": false,
+                "water_requirement": 8,
+                "daily_salary": 140,
+                "last_bid": 0.0,
+                "last_status": "dead",
+                "last_hp_after": -2,
+                "last_budget_after": 0.0,
+                "previous_trace": {
+                  "day": 8,
+                  "bid": 0.0,
+                  "supply": 19.0,
+                  "hp_after": -2,
+                  "budget_after": 0.0,
+                  "status": "dead",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 6,
+                    "bid": 0.0,
+                    "supply": 15.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  },
+                  {
+                    "day": 7,
+                    "bid": 0.0,
+                    "supply": 24.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  },
+                  {
+                    "day": 8,
+                    "bid": 0.0,
+                    "supply": 19.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "day": 10,
+            "bid": 1.0,
+            "supply": 20.0,
+            "hp_after": 10,
+            "budget_after": 906.0,
+            "status": "alive",
+            "error": null,
+            "opponents_status_before": {
+              "Alex": {
+                "hp": -2,
+                "budget": 0.0,
+                "no_water_days": 5,
+                "alive": false,
+                "water_requirement": 13,
+                "daily_salary": 70,
+                "last_bid": 0.0,
+                "last_status": "dead",
+                "last_hp_after": -2,
+                "last_budget_after": 0.0,
+                "previous_trace": {
+                  "day": 9,
+                  "bid": 0.0,
+                  "supply": 24.0,
+                  "hp_after": -2,
+                  "budget_after": 0.0,
+                  "status": "dead",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 7,
+                    "bid": 0.0,
+                    "supply": 24.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  },
+                  {
+                    "day": 8,
+                    "bid": 0.0,
+                    "supply": 19.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  },
+                  {
+                    "day": 9,
+                    "bid": 0.0,
+                    "supply": 24.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  }
+                ]
+              },
+              "Bob": {
+                "hp": -2,
+                "budget": 0.0,
+                "no_water_days": 5,
+                "alive": false,
+                "water_requirement": 9,
+                "daily_salary": 90,
+                "last_bid": 0.0,
+                "last_status": "dead",
+                "last_hp_after": -2,
+                "last_budget_after": 0.0,
+                "previous_trace": {
+                  "day": 9,
+                  "bid": 0.0,
+                  "supply": 24.0,
+                  "hp_after": -2,
+                  "budget_after": 0.0,
+                  "status": "dead",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 7,
+                    "bid": 0.0,
+                    "supply": 24.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  },
+                  {
+                    "day": 8,
+                    "bid": 0.0,
+                    "supply": 19.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  },
+                  {
+                    "day": 9,
+                    "bid": 0.0,
+                    "supply": 24.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  }
+                ]
+              },
+              "David": {
+                "hp": -2,
+                "budget": 0.0,
+                "no_water_days": 5,
+                "alive": false,
+                "water_requirement": 7,
+                "daily_salary": 80,
+                "last_bid": 0.0,
+                "last_status": "dead",
+                "last_hp_after": -2,
+                "last_budget_after": 0.0,
+                "previous_trace": {
+                  "day": 9,
+                  "bid": 0.0,
+                  "supply": 24.0,
+                  "hp_after": -2,
+                  "budget_after": 0.0,
+                  "status": "dead",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 7,
+                    "bid": 0.0,
+                    "supply": 24.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  },
+                  {
+                    "day": 8,
+                    "bid": 0.0,
+                    "supply": 19.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  },
+                  {
+                    "day": 9,
+                    "bid": 0.0,
+                    "supply": 24.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  }
+                ]
+              },
+              "Eric": {
+                "hp": -2,
+                "budget": 0.0,
+                "no_water_days": 5,
+                "alive": false,
+                "water_requirement": 8,
+                "daily_salary": 140,
+                "last_bid": 0.0,
+                "last_status": "dead",
+                "last_hp_after": -2,
+                "last_budget_after": 0.0,
+                "previous_trace": {
+                  "day": 9,
+                  "bid": 0.0,
+                  "supply": 24.0,
+                  "hp_after": -2,
+                  "budget_after": 0.0,
+                  "status": "dead",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 7,
+                    "bid": 0.0,
+                    "supply": 24.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  },
+                  {
+                    "day": 8,
+                    "bid": 0.0,
+                    "supply": 19.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  },
+                  {
+                    "day": 9,
+                    "bid": 0.0,
+                    "supply": 24.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  }
+                ]
+              }
+            }
+          }
+        ],
+        "metrics": {
+          "survival_days": 10,
+          "final_hp": 10,
+          "total_bid": 594.0,
+          "average_bid": 59.4,
+          "bid_variance": 5115.84,
+          "bid_entropy": 0.9709505944546686,
+          "adaptation_score": 32.44444444444444,
+          "panic_score": 0,
+          "static_policy": false,
+          "opponent_awareness_score": 6,
+          "recovery_score": 0,
+          "supply_bid_correlation": -0.5304281770931708,
+          "compile_success": true,
+          "runtime_success": true,
+          "hallucinated_api_count": 0,
+          "strategy_complexity": 573,
+          "branch_count": 15,
+          "loop_count": 1,
+          "function_call_count": 27,
+          "utility_score": 903.0,
+          "survival_efficiency": 0.016835016835016835,
+          "failure_types": [
+            "inefficient_resource_usage"
+          ]
+        }
+      },
+      {
+        "agent_id": "David",
+        "reasoning_cot": "Cindy and Bob are aggressive spenders. With supply fluctuating between 15-25 and my requirement being 7, I can likely secure water with a moderate bid. I will bid conservatively unless my health drops, targeting just above the average historical bid of mid-tier opponents to avoid overspending against Cindy.",
+        "strategy_code": "def get_bid(day_context, my_status, opponents_status):\n    DAILY_SALARY = 80\n    WATER_REQ = 7\n    alive_opponents = [o for o in opponents_status.values() if o['alive']]\n    \n    if not alive_opponents:\n        return min(my_status['budget'], 10.0)\n\n    yesterday_bids = [o['previous_trace']['bid'] for o in alive_opponents if o.get('previous_trace') and o['previous_trace'].get('bid') is not None]\n    \n    avg_bid = sum(yesterday_bids) / len(yesterday_bids) if yesterday_bids else 25.0\n    \n    if my_status['hp'] <= 3:\n        bid = min(my_status['budget'], DAILY_SALARY * 0.8)\n    elif my_status['hp'] >= 8:\n        bid = min(my_status['budget'], avg_bid * 0.8)\n    else:\n        bid = min(my_status['budget'], avg_bid * 1.05)\n\n    return float(max(1.0, bid))",
+        "daily_trace": [
+          {
+            "day": 1,
+            "bid": 1.0,
+            "supply": 18.0,
+            "hp_after": 7,
+            "budget_after": 80.0,
+            "status": "alive",
+            "error": null,
+            "opponents_status_before": {
+              "Alex": {
+                "hp": 8,
+                "budget": 70.0,
+                "no_water_days": 1,
+                "alive": true,
+                "water_requirement": 13,
+                "daily_salary": 70,
+                "last_bid": 0.0,
+                "last_status": null,
+                "last_hp_after": null,
+                "last_budget_after": null,
+                "previous_trace": {
+                  "day": null,
+                  "bid": 0.0,
+                  "supply": null,
+                  "hp_after": null,
+                  "budget_after": null,
+                  "status": null,
+                  "error": null
+                },
+                "recent_traces": []
+              },
+              "Bob": {
+                "hp": 8,
+                "budget": 90.0,
+                "no_water_days": 1,
+                "alive": true,
+                "water_requirement": 9,
+                "daily_salary": 90,
+                "last_bid": 0.0,
+                "last_status": null,
+                "last_hp_after": null,
+                "last_budget_after": null,
+                "previous_trace": {
+                  "day": null,
+                  "bid": 0.0,
+                  "supply": null,
+                  "hp_after": null,
+                  "budget_after": null,
+                  "status": null,
+                  "error": null
+                },
+                "recent_traces": []
+              },
+              "Cindy": {
+                "hp": 8,
+                "budget": 150.0,
+                "no_water_days": 1,
+                "alive": true,
+                "water_requirement": 13,
+                "daily_salary": 150,
+                "last_bid": 0.0,
+                "last_status": null,
+                "last_hp_after": null,
+                "last_budget_after": null,
+                "previous_trace": {
+                  "day": null,
+                  "bid": 0.0,
+                  "supply": null,
+                  "hp_after": null,
+                  "budget_after": null,
+                  "status": null,
+                  "error": null
+                },
+                "recent_traces": []
+              },
+              "Eric": {
+                "hp": 8,
+                "budget": 140.0,
+                "no_water_days": 1,
+                "alive": true,
+                "water_requirement": 8,
+                "daily_salary": 140,
+                "last_bid": 0.0,
+                "last_status": null,
+                "last_hp_after": null,
+                "last_budget_after": null,
+                "previous_trace": {
+                  "day": null,
+                  "bid": 0.0,
+                  "supply": null,
+                  "hp_after": null,
+                  "budget_after": null,
+                  "status": null,
+                  "error": null
+                },
+                "recent_traces": []
+              }
+            }
+          },
+          {
+            "day": 2,
+            "bid": 69.5625,
+            "supply": 16.0,
+            "hp_after": 5,
+            "budget_after": 160.0,
+            "status": "alive",
+            "error": null,
+            "opponents_status_before": {
+              "Alex": {
+                "hp": 7,
+                "budget": 140.0,
+                "no_water_days": 2,
+                "alive": true,
+                "water_requirement": 13,
+                "daily_salary": 70,
+                "last_bid": 26.0,
+                "last_status": "alive",
+                "last_hp_after": 7,
+                "last_budget_after": 70.0,
+                "previous_trace": {
+                  "day": 1,
+                  "bid": 26.0,
+                  "supply": 18.0,
+                  "hp_after": 7,
+                  "budget_after": 70.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 26.0,
+                    "supply": 18.0,
+                    "hp_after": 7,
+                    "budget_after": 70.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "Bob": {
+                "hp": 7,
+                "budget": 180.0,
+                "no_water_days": 2,
+                "alive": true,
+                "water_requirement": 9,
+                "daily_salary": 90,
+                "last_bid": 36.0,
+                "last_status": "alive",
+                "last_hp_after": 7,
+                "last_budget_after": 90.0,
+                "previous_trace": {
+                  "day": 1,
+                  "bid": 36.0,
+                  "supply": 18.0,
+                  "hp_after": 7,
+                  "budget_after": 90.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 36.0,
+                    "supply": 18.0,
+                    "hp_after": 7,
+                    "budget_after": 90.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "Cindy": {
+                "hp": 10,
+                "budget": 153.0,
+                "no_water_days": 1,
+                "alive": true,
+                "water_requirement": 13,
+                "daily_salary": 150,
+                "last_bid": 147.0,
+                "last_status": "alive",
+                "last_hp_after": 10,
+                "last_budget_after": 3.0,
+                "previous_trace": {
+                  "day": 1,
+                  "bid": 147.0,
+                  "supply": 18.0,
+                  "hp_after": 10,
+                  "budget_after": 3.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 147.0,
+                    "supply": 18.0,
+                    "hp_after": 10,
+                    "budget_after": 3.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "Eric": {
+                "hp": 7,
+                "budget": 280.0,
+                "no_water_days": 2,
+                "alive": true,
+                "water_requirement": 8,
+                "daily_salary": 140,
+                "last_bid": 56.0,
+                "last_status": "alive",
+                "last_hp_after": 7,
+                "last_budget_after": 140.0,
+                "previous_trace": {
+                  "day": 1,
+                  "bid": 56.0,
+                  "supply": 18.0,
+                  "hp_after": 7,
+                  "budget_after": 140.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 56.0,
+                    "supply": 18.0,
+                    "hp_after": 7,
+                    "budget_after": 140.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "day": 3,
+            "bid": 88.96124999999999,
+            "supply": 17.0,
+            "hp_after": 2,
+            "budget_after": 240.0,
+            "status": "alive",
+            "error": null,
+            "opponents_status_before": {
+              "Alex": {
+                "hp": 5,
+                "budget": 210.0,
+                "no_water_days": 3,
+                "alive": true,
+                "water_requirement": 13,
+                "daily_salary": 70,
+                "last_bid": 64.4,
+                "last_status": "alive",
+                "last_hp_after": 5,
+                "last_budget_after": 140.0,
+                "previous_trace": {
+                  "day": 2,
+                  "bid": 64.4,
+                  "supply": 16.0,
+                  "hp_after": 5,
+                  "budget_after": 140.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 26.0,
+                    "supply": 18.0,
+                    "hp_after": 7,
+                    "budget_after": 70.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 2,
+                    "bid": 64.4,
+                    "supply": 16.0,
+                    "hp_after": 5,
+                    "budget_after": 140.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "Bob": {
+                "hp": 5,
+                "budget": 270.0,
+                "no_water_days": 3,
+                "alive": true,
+                "water_requirement": 9,
+                "daily_salary": 90,
+                "last_bid": 85.5,
+                "last_status": "alive",
+                "last_hp_after": 5,
+                "last_budget_after": 180.0,
+                "previous_trace": {
+                  "day": 2,
+                  "bid": 85.5,
+                  "supply": 16.0,
+                  "hp_after": 5,
+                  "budget_after": 180.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 36.0,
+                    "supply": 18.0,
+                    "hp_after": 7,
+                    "budget_after": 90.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 2,
+                    "bid": 85.5,
+                    "supply": 16.0,
+                    "hp_after": 5,
+                    "budget_after": 180.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "Cindy": {
+                "hp": 10,
+                "budget": 156.0,
+                "no_water_days": 1,
+                "alive": true,
+                "water_requirement": 13,
+                "daily_salary": 150,
+                "last_bid": 147.0,
+                "last_status": "alive",
+                "last_hp_after": 10,
+                "last_budget_after": 6.0,
+                "previous_trace": {
+                  "day": 2,
+                  "bid": 147.0,
+                  "supply": 16.0,
+                  "hp_after": 10,
+                  "budget_after": 6.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 147.0,
+                    "supply": 18.0,
+                    "hp_after": 10,
+                    "budget_after": 3.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 2,
+                    "bid": 147.0,
+                    "supply": 16.0,
+                    "hp_after": 10,
+                    "budget_after": 6.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "Eric": {
+                "hp": 5,
+                "budget": 420.0,
+                "no_water_days": 3,
+                "alive": true,
+                "water_requirement": 8,
+                "daily_salary": 140,
+                "last_bid": 42.0,
+                "last_status": "alive",
+                "last_hp_after": 5,
+                "last_budget_after": 280.0,
+                "previous_trace": {
+                  "day": 2,
+                  "bid": 42.0,
+                  "supply": 16.0,
+                  "hp_after": 5,
+                  "budget_after": 280.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 56.0,
+                    "supply": 18.0,
+                    "hp_after": 7,
+                    "budget_after": 140.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 2,
+                    "bid": 42.0,
+                    "supply": 16.0,
+                    "hp_after": 5,
+                    "budget_after": 280.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "day": 4,
+            "bid": 64.0,
+            "supply": 16.0,
+            "hp_after": -2,
+            "budget_after": 0.0,
+            "status": "dead",
+            "error": null,
+            "opponents_status_before": {
+              "Alex": {
+                "hp": 2,
+                "budget": 280.0,
+                "no_water_days": 4,
+                "alive": true,
+                "water_requirement": 13,
+                "daily_salary": 70,
+                "last_bid": 87.5,
+                "last_status": "alive",
+                "last_hp_after": 2,
+                "last_budget_after": 210.0,
+                "previous_trace": {
+                  "day": 3,
+                  "bid": 87.5,
+                  "supply": 17.0,
+                  "hp_after": 2,
+                  "budget_after": 210.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 26.0,
+                    "supply": 18.0,
+                    "hp_after": 7,
+                    "budget_after": 70.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 2,
+                    "bid": 64.4,
+                    "supply": 16.0,
+                    "hp_after": 5,
+                    "budget_after": 140.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 3,
+                    "bid": 87.5,
+                    "supply": 17.0,
+                    "hp_after": 2,
+                    "budget_after": 210.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "Bob": {
+                "hp": 2,
+                "budget": 360.0,
+                "no_water_days": 4,
+                "alive": true,
+                "water_requirement": 9,
+                "daily_salary": 90,
+                "last_bid": 85.5,
+                "last_status": "alive",
+                "last_hp_after": 2,
+                "last_budget_after": 270.0,
+                "previous_trace": {
+                  "day": 3,
+                  "bid": 85.5,
+                  "supply": 17.0,
+                  "hp_after": 2,
+                  "budget_after": 270.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 36.0,
+                    "supply": 18.0,
+                    "hp_after": 7,
+                    "budget_after": 90.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 2,
+                    "bid": 85.5,
+                    "supply": 16.0,
+                    "hp_after": 5,
+                    "budget_after": 180.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 3,
+                    "bid": 85.5,
+                    "supply": 17.0,
+                    "hp_after": 2,
+                    "budget_after": 270.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "Cindy": {
+                "hp": 10,
+                "budget": 159.0,
+                "no_water_days": 1,
+                "alive": true,
+                "water_requirement": 13,
+                "daily_salary": 150,
+                "last_bid": 147.0,
+                "last_status": "alive",
+                "last_hp_after": 10,
+                "last_budget_after": 9.0,
+                "previous_trace": {
+                  "day": 3,
+                  "bid": 147.0,
+                  "supply": 17.0,
+                  "hp_after": 10,
+                  "budget_after": 9.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 147.0,
+                    "supply": 18.0,
+                    "hp_after": 10,
+                    "budget_after": 3.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 2,
+                    "bid": 147.0,
+                    "supply": 16.0,
+                    "hp_after": 10,
+                    "budget_after": 6.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 3,
+                    "bid": 147.0,
+                    "supply": 17.0,
+                    "hp_after": 10,
+                    "budget_after": 9.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "Eric": {
+                "hp": 2,
+                "budget": 560.0,
+                "no_water_days": 4,
+                "alive": true,
+                "water_requirement": 8,
+                "daily_salary": 140,
+                "last_bid": 42.0,
+                "last_status": "alive",
+                "last_hp_after": 2,
+                "last_budget_after": 420.0,
+                "previous_trace": {
+                  "day": 3,
+                  "bid": 42.0,
+                  "supply": 17.0,
+                  "hp_after": 2,
+                  "budget_after": 420.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 56.0,
+                    "supply": 18.0,
+                    "hp_after": 7,
+                    "budget_after": 140.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 2,
+                    "bid": 42.0,
+                    "supply": 16.0,
+                    "hp_after": 5,
+                    "budget_after": 280.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 3,
+                    "bid": 42.0,
+                    "supply": 17.0,
+                    "hp_after": 2,
+                    "budget_after": 420.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "day": 5,
+            "bid": 0.0,
+            "supply": 18.0,
+            "hp_after": -2,
+            "budget_after": 0.0,
+            "status": "dead",
+            "error": null,
+            "opponents_status_before": {}
+          },
+          {
+            "day": 6,
+            "bid": 0.0,
+            "supply": 15.0,
+            "hp_after": -2,
+            "budget_after": 0.0,
+            "status": "dead",
+            "error": null,
+            "opponents_status_before": {}
+          },
+          {
+            "day": 7,
+            "bid": 0.0,
+            "supply": 24.0,
+            "hp_after": -2,
+            "budget_after": 0.0,
+            "status": "dead",
+            "error": null,
+            "opponents_status_before": {}
+          },
+          {
+            "day": 8,
+            "bid": 0.0,
+            "supply": 19.0,
+            "hp_after": -2,
+            "budget_after": 0.0,
+            "status": "dead",
+            "error": null,
+            "opponents_status_before": {}
+          },
+          {
+            "day": 9,
+            "bid": 0.0,
+            "supply": 24.0,
+            "hp_after": -2,
+            "budget_after": 0.0,
+            "status": "dead",
+            "error": null,
+            "opponents_status_before": {}
+          },
+          {
+            "day": 10,
+            "bid": 0.0,
+            "supply": 20.0,
+            "hp_after": -2,
+            "budget_after": 0.0,
+            "status": "dead",
+            "error": null,
+            "opponents_status_before": {}
+          }
+        ],
+        "metrics": {
+          "survival_days": 3,
+          "final_hp": -2,
+          "total_bid": 223.52375,
+          "average_bid": 22.352375,
+          "bid_variance": 1185.375872640625,
+          "bid_entropy": 1.7709505944546686,
+          "adaptation_score": 34.38722222222222,
+          "panic_score": 2,
+          "static_policy": false,
+          "opponent_awareness_score": 6,
+          "recovery_score": 0,
+          "supply_bid_correlation": -0.4959618105552483,
+          "compile_success": true,
+          "runtime_success": true,
+          "hallucinated_api_count": 0,
+          "strategy_complexity": 180,
+          "branch_count": 3,
+          "loop_count": 0,
+          "function_call_count": 11,
+          "utility_score": 148.238125,
+          "survival_efficiency": 0.01342139258132525,
+          "failure_types": [
+            "inefficient_resource_usage"
+          ]
+        }
+      },
+      {
+        "agent_id": "Eric",
+        "reasoning_cot": "Cindy bids extremely high, so avoid competing when healthy. Bob bids moderately. Use yesterday's highest bid as reference; if dangerous, bid low to save. Escalate bid only when hp low.",
+        "strategy_code": "def get_bid(day_context, my_status, opponents_status):\n    DAILY_SALARY = 140\n    WATER_REQ = 8\n    supply = day_context['supply']\n    hp = my_status['hp']\n    budget = my_status['budget']\n    prev_bids = []\n    for opp_id, opp in opponents_status.items():\n        if opp['alive']:\n            prev_trace = opp.get('previous_trace')\n            if prev_trace and prev_trace.get('bid') is not None:\n                prev_bids.append(prev_trace['bid'])\n    if hp <= 2:\n        target = min(budget, DAILY_SALARY * 0.9)\n    elif hp <= 5:\n        target = min(budget, DAILY_SALARY * 0.6)\n    else:\n        target = min(budget, DAILY_SALARY * 0.4)\n    if prev_bids:\n        max_prev = max(prev_bids)\n        if max_prev < DAILY_SALARY * 0.5:\n            target = max(target, min(budget, max_prev + 1.0))\n        elif max_prev < DAILY_SALARY * 0.8:\n            target = max(target, min(budget, max_prev + 2.0))\n        else:\n            if hp > 3:\n                target = min(target, DAILY_SALARY * 0.3)\n            else:\n                target = max(target, min(budget, DAILY_SALARY * 0.8))\n    bid = max(0, min(budget, target))\n    return float(bid)",
+        "daily_trace": [
+          {
+            "day": 1,
+            "bid": 56.0,
+            "supply": 18.0,
+            "hp_after": 7,
+            "budget_after": 140.0,
+            "status": "alive",
+            "error": null,
+            "opponents_status_before": {
+              "Alex": {
+                "hp": 8,
+                "budget": 70.0,
+                "no_water_days": 1,
+                "alive": true,
+                "water_requirement": 13,
+                "daily_salary": 70,
+                "last_bid": 0.0,
+                "last_status": null,
+                "last_hp_after": null,
+                "last_budget_after": null,
+                "previous_trace": {
+                  "day": null,
+                  "bid": 0.0,
+                  "supply": null,
+                  "hp_after": null,
+                  "budget_after": null,
+                  "status": null,
+                  "error": null
+                },
+                "recent_traces": []
+              },
+              "Bob": {
+                "hp": 8,
+                "budget": 90.0,
+                "no_water_days": 1,
+                "alive": true,
+                "water_requirement": 9,
+                "daily_salary": 90,
+                "last_bid": 0.0,
+                "last_status": null,
+                "last_hp_after": null,
+                "last_budget_after": null,
+                "previous_trace": {
+                  "day": null,
+                  "bid": 0.0,
+                  "supply": null,
+                  "hp_after": null,
+                  "budget_after": null,
+                  "status": null,
+                  "error": null
+                },
+                "recent_traces": []
+              },
+              "Cindy": {
+                "hp": 8,
+                "budget": 150.0,
+                "no_water_days": 1,
+                "alive": true,
+                "water_requirement": 13,
+                "daily_salary": 150,
+                "last_bid": 0.0,
+                "last_status": null,
+                "last_hp_after": null,
+                "last_budget_after": null,
+                "previous_trace": {
+                  "day": null,
+                  "bid": 0.0,
+                  "supply": null,
+                  "hp_after": null,
+                  "budget_after": null,
+                  "status": null,
+                  "error": null
+                },
+                "recent_traces": []
+              },
+              "David": {
+                "hp": 8,
+                "budget": 80.0,
+                "no_water_days": 1,
+                "alive": true,
+                "water_requirement": 7,
+                "daily_salary": 80,
+                "last_bid": 0.0,
+                "last_status": null,
+                "last_hp_after": null,
+                "last_budget_after": null,
+                "previous_trace": {
+                  "day": null,
+                  "bid": 0.0,
+                  "supply": null,
+                  "hp_after": null,
+                  "budget_after": null,
+                  "status": null,
+                  "error": null
+                },
+                "recent_traces": []
+              }
+            }
+          },
+          {
+            "day": 2,
+            "bid": 42.0,
+            "supply": 16.0,
+            "hp_after": 5,
+            "budget_after": 280.0,
+            "status": "alive",
+            "error": null,
+            "opponents_status_before": {
+              "Alex": {
+                "hp": 7,
+                "budget": 140.0,
+                "no_water_days": 2,
+                "alive": true,
+                "water_requirement": 13,
+                "daily_salary": 70,
+                "last_bid": 26.0,
+                "last_status": "alive",
+                "last_hp_after": 7,
+                "last_budget_after": 70.0,
+                "previous_trace": {
+                  "day": 1,
+                  "bid": 26.0,
+                  "supply": 18.0,
+                  "hp_after": 7,
+                  "budget_after": 70.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 26.0,
+                    "supply": 18.0,
+                    "hp_after": 7,
+                    "budget_after": 70.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "Bob": {
+                "hp": 7,
+                "budget": 180.0,
+                "no_water_days": 2,
+                "alive": true,
+                "water_requirement": 9,
+                "daily_salary": 90,
+                "last_bid": 36.0,
+                "last_status": "alive",
+                "last_hp_after": 7,
+                "last_budget_after": 90.0,
+                "previous_trace": {
+                  "day": 1,
+                  "bid": 36.0,
+                  "supply": 18.0,
+                  "hp_after": 7,
+                  "budget_after": 90.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 36.0,
+                    "supply": 18.0,
+                    "hp_after": 7,
+                    "budget_after": 90.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "Cindy": {
+                "hp": 10,
+                "budget": 153.0,
+                "no_water_days": 1,
+                "alive": true,
+                "water_requirement": 13,
+                "daily_salary": 150,
+                "last_bid": 147.0,
+                "last_status": "alive",
+                "last_hp_after": 10,
+                "last_budget_after": 3.0,
+                "previous_trace": {
+                  "day": 1,
+                  "bid": 147.0,
+                  "supply": 18.0,
+                  "hp_after": 10,
+                  "budget_after": 3.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 147.0,
+                    "supply": 18.0,
+                    "hp_after": 10,
+                    "budget_after": 3.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "David": {
+                "hp": 7,
+                "budget": 160.0,
+                "no_water_days": 2,
+                "alive": true,
+                "water_requirement": 7,
+                "daily_salary": 80,
+                "last_bid": 1.0,
+                "last_status": "alive",
+                "last_hp_after": 7,
+                "last_budget_after": 80.0,
+                "previous_trace": {
+                  "day": 1,
+                  "bid": 1.0,
+                  "supply": 18.0,
+                  "hp_after": 7,
+                  "budget_after": 80.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 1.0,
+                    "supply": 18.0,
+                    "hp_after": 7,
+                    "budget_after": 80.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "day": 3,
+            "bid": 42.0,
+            "supply": 17.0,
+            "hp_after": 2,
+            "budget_after": 420.0,
+            "status": "alive",
+            "error": null,
+            "opponents_status_before": {
+              "Alex": {
+                "hp": 5,
+                "budget": 210.0,
+                "no_water_days": 3,
+                "alive": true,
+                "water_requirement": 13,
+                "daily_salary": 70,
+                "last_bid": 64.4,
+                "last_status": "alive",
+                "last_hp_after": 5,
+                "last_budget_after": 140.0,
+                "previous_trace": {
+                  "day": 2,
+                  "bid": 64.4,
+                  "supply": 16.0,
+                  "hp_after": 5,
+                  "budget_after": 140.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 26.0,
+                    "supply": 18.0,
+                    "hp_after": 7,
+                    "budget_after": 70.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 2,
+                    "bid": 64.4,
+                    "supply": 16.0,
+                    "hp_after": 5,
+                    "budget_after": 140.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "Bob": {
+                "hp": 5,
+                "budget": 270.0,
+                "no_water_days": 3,
+                "alive": true,
+                "water_requirement": 9,
+                "daily_salary": 90,
+                "last_bid": 85.5,
+                "last_status": "alive",
+                "last_hp_after": 5,
+                "last_budget_after": 180.0,
+                "previous_trace": {
+                  "day": 2,
+                  "bid": 85.5,
+                  "supply": 16.0,
+                  "hp_after": 5,
+                  "budget_after": 180.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 36.0,
+                    "supply": 18.0,
+                    "hp_after": 7,
+                    "budget_after": 90.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 2,
+                    "bid": 85.5,
+                    "supply": 16.0,
+                    "hp_after": 5,
+                    "budget_after": 180.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "Cindy": {
+                "hp": 10,
+                "budget": 156.0,
+                "no_water_days": 1,
+                "alive": true,
+                "water_requirement": 13,
+                "daily_salary": 150,
+                "last_bid": 147.0,
+                "last_status": "alive",
+                "last_hp_after": 10,
+                "last_budget_after": 6.0,
+                "previous_trace": {
+                  "day": 2,
+                  "bid": 147.0,
+                  "supply": 16.0,
+                  "hp_after": 10,
+                  "budget_after": 6.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 147.0,
+                    "supply": 18.0,
+                    "hp_after": 10,
+                    "budget_after": 3.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 2,
+                    "bid": 147.0,
+                    "supply": 16.0,
+                    "hp_after": 10,
+                    "budget_after": 6.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "David": {
+                "hp": 5,
+                "budget": 240.0,
+                "no_water_days": 3,
+                "alive": true,
+                "water_requirement": 7,
+                "daily_salary": 80,
+                "last_bid": 69.5625,
+                "last_status": "alive",
+                "last_hp_after": 5,
+                "last_budget_after": 160.0,
+                "previous_trace": {
+                  "day": 2,
+                  "bid": 69.5625,
+                  "supply": 16.0,
+                  "hp_after": 5,
+                  "budget_after": 160.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 1.0,
+                    "supply": 18.0,
+                    "hp_after": 7,
+                    "budget_after": 80.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 2,
+                    "bid": 69.5625,
+                    "supply": 16.0,
+                    "hp_after": 5,
+                    "budget_after": 160.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "day": 4,
+            "bid": 126.0,
+            "supply": 16.0,
+            "hp_after": -2,
+            "budget_after": 0.0,
+            "status": "dead",
+            "error": null,
+            "opponents_status_before": {
+              "Alex": {
+                "hp": 2,
+                "budget": 280.0,
+                "no_water_days": 4,
+                "alive": true,
+                "water_requirement": 13,
+                "daily_salary": 70,
+                "last_bid": 87.5,
+                "last_status": "alive",
+                "last_hp_after": 2,
+                "last_budget_after": 210.0,
+                "previous_trace": {
+                  "day": 3,
+                  "bid": 87.5,
+                  "supply": 17.0,
+                  "hp_after": 2,
+                  "budget_after": 210.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 26.0,
+                    "supply": 18.0,
+                    "hp_after": 7,
+                    "budget_after": 70.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 2,
+                    "bid": 64.4,
+                    "supply": 16.0,
+                    "hp_after": 5,
+                    "budget_after": 140.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 3,
+                    "bid": 87.5,
+                    "supply": 17.0,
+                    "hp_after": 2,
+                    "budget_after": 210.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "Bob": {
+                "hp": 2,
+                "budget": 360.0,
+                "no_water_days": 4,
+                "alive": true,
+                "water_requirement": 9,
+                "daily_salary": 90,
+                "last_bid": 85.5,
+                "last_status": "alive",
+                "last_hp_after": 2,
+                "last_budget_after": 270.0,
+                "previous_trace": {
+                  "day": 3,
+                  "bid": 85.5,
+                  "supply": 17.0,
+                  "hp_after": 2,
+                  "budget_after": 270.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 36.0,
+                    "supply": 18.0,
+                    "hp_after": 7,
+                    "budget_after": 90.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 2,
+                    "bid": 85.5,
+                    "supply": 16.0,
+                    "hp_after": 5,
+                    "budget_after": 180.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 3,
+                    "bid": 85.5,
+                    "supply": 17.0,
+                    "hp_after": 2,
+                    "budget_after": 270.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "Cindy": {
+                "hp": 10,
+                "budget": 159.0,
+                "no_water_days": 1,
+                "alive": true,
+                "water_requirement": 13,
+                "daily_salary": 150,
+                "last_bid": 147.0,
+                "last_status": "alive",
+                "last_hp_after": 10,
+                "last_budget_after": 9.0,
+                "previous_trace": {
+                  "day": 3,
+                  "bid": 147.0,
+                  "supply": 17.0,
+                  "hp_after": 10,
+                  "budget_after": 9.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 147.0,
+                    "supply": 18.0,
+                    "hp_after": 10,
+                    "budget_after": 3.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 2,
+                    "bid": 147.0,
+                    "supply": 16.0,
+                    "hp_after": 10,
+                    "budget_after": 6.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 3,
+                    "bid": 147.0,
+                    "supply": 17.0,
+                    "hp_after": 10,
+                    "budget_after": 9.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "David": {
+                "hp": 2,
+                "budget": 320.0,
+                "no_water_days": 4,
+                "alive": true,
+                "water_requirement": 7,
+                "daily_salary": 80,
+                "last_bid": 88.96124999999999,
+                "last_status": "alive",
+                "last_hp_after": 2,
+                "last_budget_after": 240.0,
+                "previous_trace": {
+                  "day": 3,
+                  "bid": 88.96124999999999,
+                  "supply": 17.0,
+                  "hp_after": 2,
+                  "budget_after": 240.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 1.0,
+                    "supply": 18.0,
+                    "hp_after": 7,
+                    "budget_after": 80.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 2,
+                    "bid": 69.5625,
+                    "supply": 16.0,
+                    "hp_after": 5,
+                    "budget_after": 160.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 3,
+                    "bid": 88.96124999999999,
+                    "supply": 17.0,
+                    "hp_after": 2,
+                    "budget_after": 240.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "day": 5,
+            "bid": 0.0,
+            "supply": 18.0,
+            "hp_after": -2,
+            "budget_after": 0.0,
+            "status": "dead",
+            "error": null,
+            "opponents_status_before": {}
+          },
+          {
+            "day": 6,
+            "bid": 0.0,
+            "supply": 15.0,
+            "hp_after": -2,
+            "budget_after": 0.0,
+            "status": "dead",
+            "error": null,
+            "opponents_status_before": {}
+          },
+          {
+            "day": 7,
+            "bid": 0.0,
+            "supply": 24.0,
+            "hp_after": -2,
+            "budget_after": 0.0,
+            "status": "dead",
+            "error": null,
+            "opponents_status_before": {}
+          },
+          {
+            "day": 8,
+            "bid": 0.0,
+            "supply": 19.0,
+            "hp_after": -2,
+            "budget_after": 0.0,
+            "status": "dead",
+            "error": null,
+            "opponents_status_before": {}
+          },
+          {
+            "day": 9,
+            "bid": 0.0,
+            "supply": 24.0,
+            "hp_after": -2,
+            "budget_after": 0.0,
+            "status": "dead",
+            "error": null,
+            "opponents_status_before": {}
+          },
+          {
+            "day": 10,
+            "bid": 0.0,
+            "supply": 20.0,
+            "hp_after": -2,
+            "budget_after": 0.0,
+            "status": "dead",
+            "error": null,
+            "opponents_status_before": {}
+          }
+        ],
+        "metrics": {
+          "survival_days": 3,
+          "final_hp": -2,
+          "total_bid": 266.0,
+          "average_bid": 26.6,
+          "bid_variance": 1546.44,
+          "bid_entropy": 1.5709505944546687,
+          "adaptation_score": 40.44444444444444,
+          "panic_score": 2,
+          "static_policy": false,
+          "opponent_awareness_score": 5,
+          "recovery_score": 0,
+          "supply_bid_correlation": -0.4779738632970976,
+          "compile_success": true,
+          "runtime_success": true,
+          "hallucinated_api_count": 0,
+          "strategy_complexity": 270,
+          "branch_count": 8,
+          "loop_count": 1,
+          "function_call_count": 18,
+          "utility_score": 127.0,
+          "survival_efficiency": 0.011278195488721804,
+          "failure_types": [
+            "inefficient_resource_usage"
+          ]
+        }
+      }
+    ]
+  }
+]

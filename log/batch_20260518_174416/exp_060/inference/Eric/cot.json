@@ -1,0 +1,47 @@
+{
+  "experiment_id": "exp_060",
+  "agent_id": "Eric",
+  "source_log": "exp_060",
+  "cot_history": [
+    {
+      "meta_round_id": 1,
+      "reasoning_cot": "No opponent history on day 1. I'll bid conservatively to preserve budget, but ensure survival by bidding high if HP is low. Use a fraction of salary based on HP threshold."
+    },
+    {
+      "meta_round_id": 2,
+      "reasoning_cot": "Alex and Cindy are strong bidders (avg 75-88). I need to secure water without overspending. Use their previous bid as reference, add a small margin. If low HP, bid aggressively."
+    },
+    {
+      "meta_round_id": 3,
+      "reasoning_cot": "Alex and Cindy bid high (140+) yesterday. Likely they will continue aggressive. I'll bid slightly above their max yesterday to secure water, but reduce when HP high to save budget. Use previous_trace to estimate their patterns."
+    },
+    {
+      "meta_round_id": 4,
+      "reasoning_cot": "Cindy and David survived with high average bids (115, 89). They likely will continue aggressive bidding. To secure water, we must outbid yesterday's max (135 from Cindy). Use previous_trace to get yesterday's max bid and add a margin, but ensure we don't exceed budget. If low HP, bid more aggressively."
+    },
+    {
+      "meta_round_id": 5,
+      "reasoning_cot": "Opponent patterns: Cindy bids extremely high (~160), David low (~22). Use yesterday's traces to detect if high bidders still alive. If urgent, bid above median past bid else conserve by undercutting low bidders."
+    },
+    {
+      "meta_round_id": 6,
+      "reasoning_cot": ""
+    },
+    {
+      "meta_round_id": 7,
+      "reasoning_cot": "Cindy and David survived with high bids; they are aggressive. Yesterday's bids suggest their current budgets are large. I will target slightly above the max of their previous bids to secure water when my hp is low, but conserve when hp is high. I'll also factor in supply scarcity."
+    },
+    {
+      "meta_round_id": 8,
+      "reasoning_cot": "Cindy and David averaged high bids (~150) and survived 10 days. They likely have large budgets. I'll use yesterday's max bid to decide: if very high and my HP is safe, bid low to conserve budget; if HP low, bid aggressively to secure water. Adjust based on supply scarcity."
+    },
+    {
+      "meta_round_id": 9,
+      "reasoning_cot": "Based on yesterday's final stats, Cindy and David bid aggressively (max 198, 165). I have salary 140, requirement 8. To survive, I must outbid when desperate but conserve when healthy. Look at previous traces to anticipate opponents' bids and slightly undercut or outbid as needed."
+    },
+    {
+      "meta_round_id": 10,
+      "reasoning_cot": "Cindy bids ~128 on average, Alex ~108 but can go to 145. Bob/David dead. To survive, bid slightly above Cindy's average when HP <= 3, else bid 0.6*140=84 to save budget."
+    }
+  ]
+}

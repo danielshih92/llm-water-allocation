@@ -1,0 +1,47 @@
+{
+  "experiment_id": "exp_097",
+  "agent_id": "Alex",
+  "source_log": "exp_097",
+  "cot_history": [
+    {
+      "meta_round_id": 1,
+      "reasoning_cot": "No opponent code or yesterday trace is provided, so exploit uncertainty with a survival-first adaptive bid: conserve when supply likely covers demand, escalate when HP/no-water risk is high, and slightly outbid any revealed yesterday pressure while avoiding budget burn."
+    },
+    {
+      "meta_round_id": 2,
+      "reasoning_cot": "Cindy and Eric overbid near 90–127 and survived; Bob and David are effectively non-threats. With supply 15–25 and our need 13, only 1 unit is guaranteed, so we should selectively contest when weak or supply is tight, but conserve by underbidding when healthy and yesterday showed expensive competition."
+    },
+    {
+      "meta_round_id": 3,
+      "reasoning_cot": "Cindy overbids massively yet keeps budget; Eric is moderate; Bob/David already showed self-destructive spikes and collapse. I exploit this by conserving on safe days, only contesting when low HP or supply is tight, and reacting mainly to yesterday’s highest live bid with a cap below Cindy’s wasteful extremes."
+    },
+    {
+      "meta_round_id": 4,
+      "reasoning_cot": "Exploit Cindy’s persistent overbidding and Eric’s stable mid-high bids by avoiding costly contests unless danger is high. Bob is bankrupt/dead, David irrelevant. Use yesterday’s bids only: conserve on comfortable days, bid just above Eric when supply is tight or our HP/no-water risk rises, and escalate sharply only near elimination."
+    },
+    {
+      "meta_round_id": 5,
+      "reasoning_cot": "Cindy and Eric overbid heavily and survive; Bob is broke/dead, David inert. I exploit this by bidding low when supply likely covers two winners, but spike when HP/no-water risk is high or supply is tight. I also react only to yesterday’s live bids, slightly topping moderate pressure and avoiding ruinous wars against extreme bids."
+    },
+    {
+      "meta_round_id": 6,
+      "reasoning_cot": "Opponents were expensive yesterday: Cindy/Bob overbid near 150-172 averages, David lower but budget-thin. With supply 15-25 and req 13, usually only 1 unit clears, so conserve when healthy and strike only under danger or low supply. I anchor to yesterday’s max bid, but avoid matching chronic overspend unless HP/no-water risk is high."
+    },
+    {
+      "meta_round_id": 7,
+      "reasoning_cot": "Cindy is the only durable threat and overbids heavily; Bob/David already showed unsustainable budgets and Eric is inert. I conserve on safer days, spike only when low HP/no-water or when supply is tight, and react to yesterday’s highest live bid with a small edge rather than matching Cindy’s wasteful extremes."
+    },
+    {
+      "meta_round_id": 8,
+      "reasoning_cot": "Cindy/David/Eric historically overbid and survive with large spends; Bob is weak. I exploit yesterday-only traces: shade bids low when supply likely covers two players or rivals just overpaid, but spike near salary/full budget when my HP/no-water risk is high or supply is too tight. This preserves budget while letting overbidders self-burn."
+    },
+    {
+      "meta_round_id": 9,
+      "reasoning_cot": "Field was hyper-aggressive yesterday; Bob/Cindy are broke/dead, while David/Eric survive by spending hard. I exploit by conserving on high-supply days, only contesting when scarcity is real or my HP/no-water risk is high. I anchor bids to yesterday’s top live bid, but avoid costly wars unless survival pressure demands it."
+    },
+    {
+      "meta_round_id": 10,
+      "reasoning_cot": "Opponents historically overbid near 108–116 average, with Bob/David especially budget-drained. I exploit this by bidding low when supply can satisfy two players and only escalating when scarcity is severe, my HP is risky, or yesterday’s traces show urgent opponent desperation. This preserves budget while letting aggressive rivals self-exhaust."
+    }
+  ]
+}

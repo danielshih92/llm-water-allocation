@@ -1,0 +1,47 @@
+{
+  "experiment_id": "exp_044",
+  "agent_id": "David",
+  "source_log": "exp_044",
+  "cot_history": [
+    {
+      "meta_round_id": 1,
+      "reasoning_cot": "Since supply is 15-25 and total demand is 7 per agent, competition is moderate. I will bid slightly above the average expected bid (half salary) to secure water, while saving budget for potential emergency needs if supply drops."
+    },
+    {
+      "meta_round_id": 2,
+      "reasoning_cot": "Alex and Bob are aggressive, bidding significantly above the salary. I will bid conservatively when supply is abundant to save budget, but match or slightly exceed their average historical bids if supply is scarce, ensuring I secure my 7 units while preserving budget for late-game survival."
+    },
+    {
+      "meta_round_id": 3,
+      "reasoning_cot": "Cindy and Eric are the only threats. Cindy bids aggressively (avg 126), while Eric is more conservative but well-funded. I will bid slightly above 80 if supply is scarce to secure water, but aim for efficiency when supply is high to preserve budget."
+    },
+    {
+      "meta_round_id": 4,
+      "reasoning_cot": "Cindy and Eric exhibit high, consistent bidding (approx 98). Alex is more volatile. Given the supply range (15-25) and my requirement (7), I must bid aggressively enough to secure water when supply is tight (15), but conserve budget when supply is abundant (25)."
+    },
+    {
+      "meta_round_id": 5,
+      "reasoning_cot": "Cindy and Eric are aggressive, high-budget survivors. I need to bid slightly above the average supply requirement to secure water while conserving budget, targeting a bid around 85-95 to outpace them when supply is tight, and dropping lower when supply is plentiful."
+    },
+    {
+      "meta_round_id": 6,
+      "reasoning_cot": "Eric and Alex are high spenders. Bob is conservative. I will target a bid slightly above the average supply-constrained baseline to secure water, while keeping bids under my daily salary to preserve long-term budget, adjusting for the supply-to-player ratio."
+    },
+    {
+      "meta_round_id": 7,
+      "reasoning_cot": "Cindy bids aggressively and high, while Bob plays conservatively with a large budget. I will monitor the supply level. If supply is tight, I will outbid the average of active opponents to secure water, while saving budget when supply is abundant to outlast Cindy's depletion."
+    },
+    {
+      "meta_round_id": 8,
+      "reasoning_cot": "Cindy and Eric are aggressive, bidding high regularly. I will bid slightly above the average historical bid when supply is tight to secure water, while saving budget when supply is abundant. I prioritize survival by aggressive bidding when HP is low."
+    },
+    {
+      "meta_round_id": 9,
+      "reasoning_cot": "Opponents like Cindy and Eric bid aggressively (130+). Given the supply (15-25) and my requirement (7), I need to bid high enough to secure water but avoid overspending. I will monitor the highest previous bid and bid slightly above or at the salary level to ensure survival while conserving budget."
+    },
+    {
+      "meta_round_id": 10,
+      "reasoning_cot": "Cindy and Eric are aggressive, high-budget bidders. I will maintain a moderate bid to ensure survival, leveraging the fact that they will likely overbid for limited supply. I'll prioritize staying alive while conserving budget against their high-spending patterns."
+    }
+  ]
+}

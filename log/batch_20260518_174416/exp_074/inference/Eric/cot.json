@@ -1,0 +1,47 @@
+{
+  "experiment_id": "exp_074",
+  "agent_id": "Eric",
+  "source_log": "exp_074",
+  "cot_history": [
+    {
+      "meta_round_id": 1,
+      "reasoning_cot": "I'll set my bid based on my HP and exploit opponents' yesterday bids to avoid overbidding. If opponents were aggressive yesterday, they may have lower budgets today. I'll bid moderately but ensure I get water when needed."
+    },
+    {
+      "meta_round_id": 2,
+      "reasoning_cot": "Aggressive opponents (Cindy,Alex) bid ~160-175. Conservative (Bob,David) low. Use previous_trace to adjust: if low HP, bid high; else undercut avg bid by small margin. Supply modulates aggressiveness."
+    },
+    {
+      "meta_round_id": 3,
+      "reasoning_cot": "Exploit opponents' past bids: bid slightly above their previous max if healthy, but save budget. If low HP, bid near salary to ensure water. Use previous_trace to react."
+    },
+    {
+      "meta_round_id": 4,
+      "reasoning_cot": "Exploit yesterday's opponent traces: Cindy very aggressive (max 220.75), Alex and David moderate. If Cindy alive, bid above her previous bid if possible. Supply adjusts multiplier. Preserve budget unless HP critical."
+    },
+    {
+      "meta_round_id": 5,
+      "reasoning_cot": "Exploit yesterday's opponent bids to anticipate today's aggression. If yesterday's max bid high, opponents likely desperate; adjust bid accordingly. Conserve budget when hp healthy, escalate when low."
+    },
+    {
+      "meta_round_id": 6,
+      "reasoning_cot": "Opponents Bob, Cindy, David bid high yesterday (130-161 avg), Alex low. To win water, I need to outbid the highest yesterday. Since my salary is 140 and water need is 8, I can bid up to my budget. I'll bid max(0.9*salary, max_prev_bid+1) but cap at budget. If HP low, bid higher."
+    },
+    {
+      "meta_round_id": 7,
+      "reasoning_cot": "Alex and Cindy are aggressive with average bids ~108, max >140. To win water, I must outbid them when HP is low, otherwise conserve. Use yesterday's highest bid from alive opponents as guide. Increase bid if my HP is critical. Since supply varies, bid proportionally to scarcity."
+    },
+    {
+      "meta_round_id": 8,
+      "reasoning_cot": "Exploit opponent styles: Cindy bids high (avg 140.6), Bob low with high max, Alex moderate. Start moderate, adjust based on previous highest bid: if very high, bid less; if low, bid slightly above. Keep within budget and hp urgency."
+    },
+    {
+      "meta_round_id": 9,
+      "reasoning_cot": "Focus on opponents' previous bid to adjust. If we need water (low hp), bid slightly above their max last bid up to salary. Otherwise, bid low to save. Use supply to moderate: low supply increases competition."
+    },
+    {
+      "meta_round_id": 10,
+      "reasoning_cot": "Exploit yesterday's high bids from Alex and Cindy; they likely bid aggressively again. Bid just above their previous max to secure water when needed, else save budget."
+    }
+  ]
+}

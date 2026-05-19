@@ -1,0 +1,47 @@
+{
+  "experiment_id": "exp_019",
+  "agent_id": "Eric",
+  "source_log": "exp_019",
+  "cot_history": [
+    {
+      "meta_round_id": 1,
+      "reasoning_cot": "No yesterday traces. Start conservatively but ensure survival. Base bid = 0.5*salary. If HP low (<=2) or supply very low (<18), increase bid. Use int() for safety."
+    },
+    {
+      "meta_round_id": 2,
+      "reasoning_cot": "Opponents have high budgets and bid ~100-115. To survive 10 days, I must win water often but conserve budget. I'll bid slightly above their previous max when my hp is low, else bid low to save for critical days."
+    },
+    {
+      "meta_round_id": 3,
+      "reasoning_cot": "Most opponents bid high in previous round; Cindy and David survived with high budgets. I'll use their previous trace to undercut if I'm healthy, or bid aggressively if low HP. Keep bid within 0.4-1.5x daily salary based on urgency."
+    },
+    {
+      "meta_round_id": 4,
+      "reasoning_cot": "Cindy and Alex have high max bids and survived long. To conserve budget, bid moderately (~50-60% salary) unless HP low. Use opponent previous_trace to detect recent aggression; if yesterday high, lower bid. Supply low => slightly increase aggression."
+    },
+    {
+      "meta_round_id": 5,
+      "reasoning_cot": "Exploit opponents' past high bidding (Alex/Bob) by budget-based counterbidding. Use my HP and no_water_days to gauge urgency. If HP low, bid aggressively; else bid slightly above their yesterday's max bid if affordable."
+    },
+    {
+      "meta_round_id": 6,
+      "reasoning_cot": ""
+    },
+    {
+      "meta_round_id": 7,
+      "reasoning_cot": "Cindy bids max (150) every day. Bob bids ~70. Early days: conserve budget; bid low unless low HP. Late days: increase bid if needed. Use yesterday's max bid to estimate competition. If supply high, can bid lower. Always ensure we get water when HP <= 2 or no_water_days > 0."
+    },
+    {
+      "meta_round_id": 8,
+      "reasoning_cot": "Cindy bid aggressively (max 155) in last meta-round, Bob moderate. Use yesterday's highest bid as anchor. On first day of new meta-round, assume similar aggressive behavior. If low HP, bid high to survive. Otherwise bid conservative around 0.5*DAILY_SALARY to preserve budget."
+    },
+    {
+      "meta_round_id": 9,
+      "reasoning_cot": "Focus on survival: bid enough to be in top 3. Use yesterday's max opponent bid as ceiling; exploit Alex's low budget by outbidding him. Conserve budget early, but bid high when low HP."
+    },
+    {
+      "meta_round_id": 10,
+      "reasoning_cot": "Bob and Cindy bid high; preserve budget early, increase when HP low. Use previous trace to undercut when possible."
+    }
+  ]
+}

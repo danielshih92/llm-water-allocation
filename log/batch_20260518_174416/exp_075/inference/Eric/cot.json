@@ -1,0 +1,47 @@
+{
+  "experiment_id": "exp_075",
+  "agent_id": "Eric",
+  "source_log": "exp_075",
+  "cot_history": [
+    {
+      "meta_round_id": 1,
+      "reasoning_cot": "No historical data: first day. Use supply-adaptive bid based on water requirement/salary ratio, scaled by HP urgency. Avoid overspending."
+    },
+    {
+      "meta_round_id": 2,
+      "reasoning_cot": "Alex and David survived with high bids (~100); Bob/Cindy died early with low bids. I'll estimate today's opponent bids from yesterday's max. If my hp is low, bid just above that max; otherwise bid ~75% of salary to save budget."
+    },
+    {
+      "meta_round_id": 3,
+      "reasoning_cot": "Opponents have varied budgets. Alex and Cindy spent heavily yesterday; Bob died early. I'll prioritize survival: if my hp is low or no_water_days>0, bid aggressively near salary. Otherwise, bid conservatively, undercutting yesterday's max bid by 10% to conserve budget."
+    },
+    {
+      "meta_round_id": 4,
+      "reasoning_cot": "Since Cindy has huge budget (689) and high avg bid, we avoid direct competition. Bob and David have moderate budgets (~120). When supply >=16 (2 winners), we bid modestly to secure second place. When supply <16 (only 1 winner), we bid aggressively if HP low, otherwise reduce. Use yesterday's traces to gauge opponent pressure."
+    },
+    {
+      "meta_round_id": 5,
+      "reasoning_cot": "Alex and Cindy are aggressive high bidders (average ~117 and 156). To survive, I need to outbid them when necessary. Use previous trace to gauge yesterday's peak. If my hp low, bid aggressively; otherwise bid just above their last bid to conserve budget."
+    },
+    {
+      "meta_round_id": 6,
+      "reasoning_cot": "Based on yesterday's traces, Cindy and Alex are aggressive bidders, while Bob and David died early. We need to secure water without overspending. Use opponent previous bid to set competitive bid; if low HP, bid higher. Cap at budget."
+    },
+    {
+      "meta_round_id": 7,
+      "reasoning_cot": "Based on yesterday's data, Bob and Cindy bid high (avg ~140-165) and survived. To win, bid slightly above their average yesterday, adjusting for hp. Conserve budget when hp is high."
+    },
+    {
+      "meta_round_id": 8,
+      "reasoning_cot": "Cindy and David have high average bids (166, 128) in previous meta-round. To survive, I'll bid conservatively when HP high, but ensure water when HP low. Use a dynamic threshold based on supply scarcity. For day 1, no trace, use cautious default."
+    },
+    {
+      "meta_round_id": 9,
+      "reasoning_cot": "Opponents (Bob, Cindy) bid very high (~125-138 avg). They likely have low remaining budgets. I'll bid slightly above my estimate of their current budget when supply is low, else save. Use previous_trace to see last bid and budget after to estimate remaining."
+    },
+    {
+      "meta_round_id": 10,
+      "reasoning_cot": "Leverage yesterday's opponent bid traces to gauge aggressive behavior. If opponents bid high, save budget unless HP critical. Use supply vs alive count to adjust minimum winning threshold. Always cap by budget and avoid float indices."
+    }
+  ]
+}

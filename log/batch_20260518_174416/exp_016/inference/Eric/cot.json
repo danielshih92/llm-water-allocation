@@ -1,0 +1,47 @@
+{
+  "experiment_id": "exp_016",
+  "agent_id": "Eric",
+  "source_log": "exp_016",
+  "cot_history": [
+    {
+      "meta_round_id": 1,
+      "reasoning_cot": "Exploit opponents' yesterday bids to adjust today's bid. If desperate (low HP), outbid highest previous; otherwise, bid average + small margin. No history: bid based on supply level. Ensures water with reasonable budget."
+    },
+    {
+      "meta_round_id": 2,
+      "reasoning_cot": ""
+    },
+    {
+      "meta_round_id": 3,
+      "reasoning_cot": "Alex and David died quickly with low HP, while Bob and Cindy survived 10 days with high bids. Yesterday's traces will show their recent bids. I will bid aggressively when my HP is low, otherwise I'll outbid the average of yesterday's alive opponents' bids to ensure water without overspending."
+    },
+    {
+      "meta_round_id": 4,
+      "reasoning_cot": "Cindy's high average bid (69) indicates aggressive bidding. Others died early with low bids. We need to secure water, especially on low supply days. Using yesterday's trace, we adjust bid: if any opponent bid over 100, we bid aggressively (80% salary) to outlast them; otherwise, bid conservatively (50%). Also consider hp: if hp low, bid higher."
+    },
+    {
+      "meta_round_id": 5,
+      "reasoning_cot": "No opponent previous traces for current episode. Use adaptive strategy based on supply scarcity and own HP. Start with moderate bid (0.5*salary) but increase if supply low or HP low. Avoid overbidding like Cindy to conserve budget."
+    },
+    {
+      "meta_round_id": 6,
+      "reasoning_cot": "Use adaptive bidding: low bid if supply high and HP good; high bid if HP low or supply low. Exploit Cindy's high bids by outbidding slightly when necessary; otherwise stay frugal. Use int() for index safety if needed."
+    },
+    {
+      "meta_round_id": 7,
+      "reasoning_cot": "Exploit aggressive opponents (Alex, David) by undercutting their previous bids when HP is safe; bid higher when HP low. Use yesterday's trace to estimate current pressure."
+    },
+    {
+      "meta_round_id": 8,
+      "reasoning_cot": "Cindy bids aggressively (max 232). Alex moderate. Bob/David dead. Exploit yesterday's bids: if my hp is high, bid low to save; if low, outbid their last bid if necessary. Budget management is key."
+    },
+    {
+      "meta_round_id": 9,
+      "reasoning_cot": "No previous day traces. Use opponent historical averages to estimate first-day competition. Bid high if HP low, otherwise low. Adjust based on current supply."
+    },
+    {
+      "meta_round_id": 10,
+      "reasoning_cot": "Alex has budget, Cindy broke. Bid moderately to conserve money for future days. Focus on surviving the whole episode. Use 60% salary as base, escalate if low HP."
+    }
+  ]
+}

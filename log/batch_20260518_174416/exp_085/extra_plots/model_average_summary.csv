@@ -1,0 +1,6 @@
+model,backend,sample_count,agent_count,exp_count,meta_round_record_count,avg_survival_days,avg_final_hp,avg_final_budget,avg_total_bid,avg_daily_bid,avg_bid_variance,avg_max_bid,avg_min_bid,avg_error_count,avg_compile_success,avg_runtime_success,avg_strategy_complexity,avg_status_alive,total_death_count,mortality_rate
+deepseek-v4-flash,deepseek,10,1,1,10,7.9,5.7,438.571,754.2443000000001,75.42443,330.456057141,98.06530000000001,52.870000000000005,0.4,0.9,1.0,172.3,0.7,3.0,30.0
+gemini-2.5-flash,gemini,10,1,1,10,8.8,6.1,566.516913,949.8539720000001,94.9853972,557.5550206079156,122.279287,65.55,0.4,1.0,0.9,342.8,0.7,3.0,30.0
+gemini-3.1-flash-lite,gemini,10,1,1,10,6.5,1.9,238.75416249999998,381.0214286666667,38.10214286666667,582.891847105386,64.4434125,6.5,1.6,0.6,1.0,103.4,0.5,5.0,50.0
+gpt-5.4,openai,10,1,1,10,6.2,3.0,26.840999999999998,615.4809875,61.548098749999994,1607.2454055801406,119.631,19.04,0.0,1.0,1.0,617.7,0.4,6.0,60.0
+gpt-5.4-nano,openai,10,1,1,10,5.5,1.4,55.50064,473.609429,47.360942900000005,756.836398810239,82.72002499999999,16.933,0.8,1.0,0.8,425.2,0.3,7.0,70.0

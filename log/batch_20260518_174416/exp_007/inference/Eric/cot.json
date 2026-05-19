@@ -1,0 +1,47 @@
+{
+  "experiment_id": "exp_007",
+  "agent_id": "Eric",
+  "source_log": "exp_007",
+  "cot_history": [
+    {
+      "meta_round_id": 1,
+      "reasoning_cot": "Exploit opponents' previous trace to anticipate high bids. If yesterday's max bid was high, bid slightly above; otherwise bid conservatively. Prioritize survival: bid high when hp low or no_water_days > 1. Always respect budget and use int() for safety."
+    },
+    {
+      "meta_round_id": 2,
+      "reasoning_cot": "Exploit yesterday's opponent bids: if yesterday's max bid was high (e.g., >120), they are aggressive; bid slightly above to secure water when needed. Save budget when hp is high and supply is ample. Use low bids to conserve money against moderate opponents."
+    },
+    {
+      "meta_round_id": 3,
+      "reasoning_cot": "Opponents bid high (avg 95-118). To win water in scarce supply (15-25 vs demand 32), we must match or slightly exceed their max previous bid. Use yesterday's max from alive opponents. If HP low or no water days, bid more aggressively. Cap at budget and salary to avoid bankruptcy."
+    },
+    {
+      "meta_round_id": 4,
+      "reasoning_cot": "Cindy is rich and bids high (~94 average). Bob moderate (~70). David dead, Alex dead. To survive, I need to outbid when my HP is low, but not overspend. Use their previous bid as a baseline, adjust based on my HP and today's supply. If supply low, bid higher. If my HP high, I can risk lower bid."
+    },
+    {
+      "meta_round_id": 5,
+      "reasoning_cot": "Focus on outbidding yesterday's highest alive opponent bid by a small margin, while ensuring we don't overspend. Adjust for urgency based on HP and no_water_days. Use supply to modulate: bid more if supply is low."
+    },
+    {
+      "meta_round_id": 6,
+      "reasoning_cot": ""
+    },
+    {
+      "meta_round_id": 7,
+      "reasoning_cot": "Opponents Alex and Cindy bid aggressively (avg 138, 167), likely near salary. To win water when needed, bid just above their expected max based on previous trace. Otherwise conserve budget by bidding low. HP urgency drives bid escalation."
+    },
+    {
+      "meta_round_id": 8,
+      "reasoning_cot": ""
+    },
+    {
+      "meta_round_id": 9,
+      "reasoning_cot": "Exploit high previous bids from Alex and Bob by undercutting when hp is sufficient; bid aggressively only when low hp or supply is scarce. Use yesterday's highest bid to calibrate."
+    },
+    {
+      "meta_round_id": 10,
+      "reasoning_cot": "Use yesterday's bids from opponents' previous_trace to adjust today's bid. If they bid high, underbid to conserve; if low, overbid slightly. Also consider own HP: bid high if desperate. Ensure floor division result is cast to int."
+    }
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "experiment_id": "exp_018",
+  "agent_id": "Eric",
+  "source_log": "exp_018",
+  "cot_history": [
+    {
+      "meta_round_id": 1,
+      "reasoning_cot": "Without opponent source code, use adaptive bidding. If HP low (<=2), bid up to 90% of salary to survive. Otherwise, undercut the highest previous bid or default to 50% salary, ensuring we don't overpay. Use int() for any indices (none here)."
+    },
+    {
+      "meta_round_id": 2,
+      "reasoning_cot": "Alex and Cindy had high bids yesterday (~109-114). They likely continue high. Bid slightly above their max to secure water, but conserve if my HP is high. Use previous_trace to get last bids."
+    },
+    {
+      "meta_round_id": 3,
+      "reasoning_cot": "Opponents: Cindy bid high (max 140) and saved budget, Alex moderate, Bob/David dead. Use yesterday's highest bid as baseline; if supply low and Cindy alive, bid aggressively. Early days save budget, later days secure water. Ensure survival by bidding enough."
+    },
+    {
+      "meta_round_id": 4,
+      "reasoning_cot": ""
+    },
+    {
+      "meta_round_id": 5,
+      "reasoning_cot": "Exploit yesterday's data: Cindy bid 150 consistently (likely high water requirement, survived entire round). Others died early. To conserve budget, I'll bid 60-80% of salary adjusted by HP and supply, outbidding the max previous opponent bid by a small margin when my HP is low."
+    },
+    {
+      "meta_round_id": 6,
+      "reasoning_cot": ""
+    },
+    {
+      "meta_round_id": 7,
+      "reasoning_cot": "Exploit opponents' previous trace to estimate today's bids. If supply yields few winners, bid just above the third highest previous bid. Protect HP by bidding higher when low."
+    },
+    {
+      "meta_round_id": 8,
+      "reasoning_cot": "Exploit yesterday's opponent behavior: Alex & David high bidders; use their previous max bid to decide today's bid. If low HP, bid high; else match or undercut. Also increase bid if supply is low."
+    },
+    {
+      "meta_round_id": 9,
+      "reasoning_cot": "Exploit yesterday's max bid: if my hp low or no_water_days>0, bid slightly above max to secure water; otherwise bid low to save. Adjust for current supply scarcity."
+    },
+    {
+      "meta_round_id": 10,
+      "reasoning_cot": "Alex historically bids ~123 (88% of salary). Others bid lower. Start moderate, then escalate if hp low or if opponents bid high. Use previous_trace to detect aggression."
+    }
+  ]
+}

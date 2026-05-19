@@ -1,0 +1,47 @@
+{
+  "experiment_id": "exp_105",
+  "agent_id": "Eric",
+  "source_log": "exp_105",
+  "cot_history": [
+    {
+      "meta_round_id": 1,
+      "reasoning_cot": "Day 1 of medium scenario: no prior traces. Bid moderate to conserve budget while ensuring survival. Base bid on HP: if HP>5, bid ~0.5*salary (70); else bid ~0.8*salary (112). Adjust if opponents from trace show aggression, but none yet. This balances risk across 10 days."
+    },
+    {
+      "meta_round_id": 2,
+      "reasoning_cot": ""
+    },
+    {
+      "meta_round_id": 3,
+      "reasoning_cot": "Cindy dominated by bidding max (150) daily; others died early. Expect aggressive opponents. We will bid just above a safety threshold when HP low, otherwise undercut to preserve budget. Use previous_trace to detect high bidders."
+    },
+    {
+      "meta_round_id": 4,
+      "reasoning_cot": "Cindy and David survived with high budgets, likely to bid aggressively. To survive, we must secure water early. Use their previous bid as benchmark, increase if low HP. Stay within budget."
+    },
+    {
+      "meta_round_id": 5,
+      "reasoning_cot": "Exploit Alex's high bids from yesterday to anticipate aggression; bid just above his prior max if HP low. Otherwise, bid conservatively to save budget."
+    },
+    {
+      "meta_round_id": 6,
+      "reasoning_cot": ""
+    },
+    {
+      "meta_round_id": 7,
+      "reasoning_cot": "Bob's high avg bid (103) suggests aggression; Cindy fixed at 150. I'll bid just above 150 when HP <= 2 or no_water_days>0, else bid low to conserve budget. Use supply to adjust: if supply high, lower bid by 10%. Ensure bid does not exceed budget and is integer."
+    },
+    {
+      "meta_round_id": 8,
+      "reasoning_cot": "Exploit opponents' aggressive behavior from yesterday's high bids (Bob avg 145, Cindy avg 153). Bid conservatively when healthy, but escalate when HP low or no water. Increase bid if opponents previously aggressive to secure water."
+    },
+    {
+      "meta_round_id": 9,
+      "reasoning_cot": ""
+    },
+    {
+      "meta_round_id": 10,
+      "reasoning_cot": "Opponents had high average bids (Cindy 109.9, Alex 94.8). Use previous_trace to react to yesterday's max bid. If they overspent, undercut to save budget; if desperate, beat by small margin. Adjust for supply and health."
+    }
+  ]
+}

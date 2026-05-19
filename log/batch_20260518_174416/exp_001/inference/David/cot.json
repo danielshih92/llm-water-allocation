@@ -1,0 +1,47 @@
+{
+  "experiment_id": "exp_001",
+  "agent_id": "David",
+  "source_log": "exp_001",
+  "cot_history": [
+    {
+      "meta_round_id": 1,
+      "reasoning_cot": "Since this is the first day, I will bid slightly above the fair share of 80/num_players to secure water early, ensuring my HP remains high while preserving budget for later days."
+    },
+    {
+      "meta_round_id": 2,
+      "reasoning_cot": "Opponents (Bob, Cindy, Eric) are aggressive, consistently bidding near or above salary. I must prioritize survival by bidding competitively against their high averages (76-88) while keeping enough budget for later days. I will bid slightly above their expected average if my HP is low, otherwise stay moderate."
+    },
+    {
+      "meta_round_id": 3,
+      "reasoning_cot": "Cindy and Alex are aggressive bidders. I will maintain a competitive bid around 90-100 to ensure water security while conserving budget, adjusting slightly higher if supplies are low or if my HP drops below 4."
+    },
+    {
+      "meta_round_id": 4,
+      "reasoning_cot": "Cindy is the primary threat with high budget and consistent bidding. Others burn out quickly. I will bid slightly above the median of yesterday's bids to secure water while conserving budget for late-game survival, prioritizing survival over aggressive overbidding."
+    },
+    {
+      "meta_round_id": 5,
+      "reasoning_cot": "Alex and Bob bid around 87-88 on average, slightly above salary. Cindy bids aggressively high. I will bid slightly above the salary to secure water while conserving budget, adjusting up if my HP drops below 4 to ensure survival."
+    },
+    {
+      "meta_round_id": 6,
+      "reasoning_cot": "Alex and Cindy bid aggressively (~95-98). Given the supply range (15-25) and 4 agents, the average water per agent is ~5. Since I need 7, I must outbid one of them. I will target a bid slightly above their average to secure supply while conserving budget."
+    },
+    {
+      "meta_round_id": 7,
+      "reasoning_cot": "Alex and Cindy bid aggressively (avg ~110). Since supply is 15-25 and demand is 7, I need to compete for the 2-3 slots available. I will bid slightly above the salary average to secure water while preserving budget, adjusting upwards if my HP drops below 5."
+    },
+    {
+      "meta_round_id": 8,
+      "reasoning_cot": "Eric and Alex are aggressive bidders. Bob is cautious. I will target a bid slightly above the median of recent bids to secure water while conserving budget, adjusting upward if my HP drops below 4."
+    },
+    {
+      "meta_round_id": 9,
+      "reasoning_cot": "Cindy bids high consistently, while Alex and Bob vary. With a supply of 15-25 and 4 players, the average supply is 5-6 units per person, meaning water is scarce. I will bid aggressively (near daily salary) to ensure survival, prioritizing budget retention only if my HP is high."
+    },
+    {
+      "meta_round_id": 10,
+      "reasoning_cot": "Eric and Alex are high-budget, aggressive bidders. Cindy failed due to low budget management. I will bid slightly above the average historical bids of active opponents (110-120 range) to ensure survival while maintaining my budget, adjusting upward if my HP drops below 5."
+    }
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "experiment_id": "exp_059",
+  "agent_id": "Eric",
+  "source_log": "exp_059",
+  "cot_history": [
+    {
+      "meta_round_id": 1,
+      "reasoning_cot": "No previous trace data. Default to adaptive bidding based on own HP and budget. Start moderate to conserve budget, escalate when low HP. Use min to avoid overspend."
+    },
+    {
+      "meta_round_id": 2,
+      "reasoning_cot": ""
+    },
+    {
+      "meta_round_id": 3,
+      "reasoning_cot": ""
+    },
+    {
+      "meta_round_id": 4,
+      "reasoning_cot": "Bob and Cindy bid very high (avg >130) yesterday, indicating aggressive budget. To survive, I must bid significantly, but not waste money. I'll use their previous high bid as anchor: if they bid high yesterday, I'll bid around 0.8*salary to stay competitive; otherwise lower. Also consider my HP: if low, increase bid slightly."
+    },
+    {
+      "meta_round_id": 5,
+      "reasoning_cot": "Exploit opponents' high average bids by gradually increasing our bid across days, while undercutting yesterday's max if possible. If low HP, bid more aggressively. Avoid overbidding early to conserve budget for late days."
+    },
+    {
+      "meta_round_id": 6,
+      "reasoning_cot": "Exploit yesterday's high bids: Alex 165, Cindy 127, Bob 108. To survive, bid slightly above yesterday's max when health low, else save budget. Use previous_trace for immediate reaction."
+    },
+    {
+      "meta_round_id": 7,
+      "reasoning_cot": ""
+    },
+    {
+      "meta_round_id": 8,
+      "reasoning_cot": "Opponents Alex, Cindy, David bid high (~95 avg) and survived. Bob died early with low bids. To win water in tight supply (15-25, need 8 each), we must bid aggressively when low on HP or no_water_days. Use previous traces to estimate opponent bids, then outbid the threshold for top N winners. Conserve budget when safe."
+    },
+    {
+      "meta_round_id": 9,
+      "reasoning_cot": "Exploit predicted high bids from Cindy (avg 126) and Bob (93) by bidding a bit less to save budget, but ensure water. If low HP or many opponents, bid more. Use previous_trace for dynamic adjustment."
+    },
+    {
+      "meta_round_id": 10,
+      "reasoning_cot": "Moderate strategy adapting to opponents' previous bids. Bid low when healthy and opponents high, else outbid slightly. Conserve budget for dear days."
+    }
+  ]
+}

@@ -1,0 +1,4848 @@
+[
+  {
+    "meta_round_id": 6,
+    "environment": {
+      "scenario": "medium",
+      "supply_range": [
+        15,
+        25
+      ],
+      "seed": null,
+      "episode_days": 10,
+      "players": [
+        {
+          "agent_id": "Alex",
+          "water_requirement": 13,
+          "daily_salary": 70
+        },
+        {
+          "agent_id": "Bob",
+          "water_requirement": 9,
+          "daily_salary": 90
+        },
+        {
+          "agent_id": "Cindy",
+          "water_requirement": 13,
+          "daily_salary": 150
+        },
+        {
+          "agent_id": "David",
+          "water_requirement": 7,
+          "daily_salary": 80
+        },
+        {
+          "agent_id": "Eric",
+          "water_requirement": 8,
+          "daily_salary": 140
+        }
+      ],
+      "supply_list": [
+        16,
+        16,
+        17,
+        15,
+        20,
+        17,
+        19,
+        23,
+        17,
+        25
+      ]
+    },
+    "agents": [
+      {
+        "agent_id": "Alex",
+        "reasoning_cot": "Exploit Eric\u2019s fixed low bid (~15) and Cindy\u2019s high but sustainable aggression. With 10-day horizon and medium supply, survival needs selective wins: conserve on safe/high-supply days, spike when low HP, low supply, or when opponents show weakness yesterday. Ignore dead/passive Bob and David.",
+        "strategy_code": "def get_bid(day_context, my_status, opponents_status):\n    WATER_REQ = 13\n    DAILY_SALARY = 70\n    MIN_SUPPLY = 15\n    MAX_SUPPLY = 25\n\n    supply = float(day_context['supply'])\n    day = int(day_context['day'])\n    hp = my_status['hp']\n    budget = my_status['budget']\n    no_water = my_status['no_water_days']\n\n    if budget <= 0:\n        return 0.0\n\n    alive = []\n    for agent_id, opp in opponents_status.items():\n        if opp.get('alive'):\n            alive.append((agent_id, opp))\n\n    if not alive:\n        return float(min(budget, 12.0))\n\n    prev_bids = []\n    cindy_bid = None\n    eric_bid = None\n    weak_opponents = 0\n\n    for agent_id, opp in alive:\n        prev = opp.get('previous_trace') or {}\n        bid = prev.get('bid')\n        if bid is not None:\n            prev_bids.append(float(bid))\n        if agent_id == 'Cindy' and bid is not None:\n            cindy_bid = float(bid)\n        if agent_id == 'Eric' and bid is not None:\n            eric_bid = float(bid)\n        if opp.get('hp', 10) <= 3 or opp.get('budget', 0) < 40:\n            weak_opponents += 1\n\n    highest_prev = max(prev_bids) if prev_bids else 0.0\n    low_supply = supply <= 17.0\n    high_supply = supply >= 22.0\n    urgent = (hp <= 4) or (no_water >= 1)\n    endgame = day >= 8\n\n    bid = 0.0\n\n    if urgent:\n        if low_supply:\n            bid = 96.0\n        else:\n            bid = 78.0\n    elif endgame:\n        if hp >= 7 and high_supply:\n            bid = 18.0\n        elif low_supply:\n            bid = 72.0\n        else:\n            bid = 38.0\n    else:\n        if high_supply:\n            bid = 16.0\n        elif low_supply:\n            bid = 54.0\n        else:\n            bid = 28.0\n\n    if cindy_bid is not None:\n        if cindy_bid >= 120.0 and not urgent and hp >= 6 and not low_supply:\n            bid = min(bid, 22.0)\n        elif cindy_bid <= 90.0 and (low_supply or weak_opponents > 0):\n            bid = max(bid, 62.0)\n\n    if eric_bid is not None and eric_bid <= 16.0 and high_supply and hp >= 6:\n        bid = min(bid, 17.0)\n\n    if weak_opponents >= 2 and not urgent:\n        bid = min(bid, 20.0)\n\n    if highest_prev < 20.0 and low_supply:\n        bid = max(bid, 36.0)\n\n    reserve = 0.0\n    if day <= 7:\n        reserve = max(0.0, (10 - day) * 8.0)\n    max_affordable = max(0.0, budget - reserve)\n    if urgent or endgame:\n        max_affordable = budget\n\n    bid = min(bid, max_affordable)\n    bid = min(bid, budget)\n    bid = max(0.0, bid)\n    return float(round(bid, 2))",
+        "daily_trace": [
+          {
+            "day": 1,
+            "bid": 70.0,
+            "supply": 16.0,
+            "hp_after": 7,
+            "budget_after": 70.0,
+            "status": "alive",
+            "error": null,
+            "opponents_status_before": {
+              "Bob": {
+                "hp": 8,
+                "budget": 90.0,
+                "no_water_days": 1,
+                "alive": true,
+                "water_requirement": 9,
+                "daily_salary": 90,
+                "last_bid": 0.0,
+                "last_status": null,
+                "last_hp_after": null,
+                "last_budget_after": null,
+                "previous_trace": {
+                  "day": null,
+                  "bid": 0.0,
+                  "supply": null,
+                  "hp_after": null,
+                  "budget_after": null,
+                  "status": null,
+                  "error": null
+                },
+                "recent_traces": []
+              },
+              "Cindy": {
+                "hp": 8,
+                "budget": 150.0,
+                "no_water_days": 1,
+                "alive": true,
+                "water_requirement": 13,
+                "daily_salary": 150,
+                "last_bid": 0.0,
+                "last_status": null,
+                "last_hp_after": null,
+                "last_budget_after": null,
+                "previous_trace": {
+                  "day": null,
+                  "bid": 0.0,
+                  "supply": null,
+                  "hp_after": null,
+                  "budget_after": null,
+                  "status": null,
+                  "error": null
+                },
+                "recent_traces": []
+              },
+              "David": {
+                "hp": 8,
+                "budget": 80.0,
+                "no_water_days": 1,
+                "alive": true,
+                "water_requirement": 7,
+                "daily_salary": 80,
+                "last_bid": 0.0,
+                "last_status": null,
+                "last_hp_after": null,
+                "last_budget_after": null,
+                "previous_trace": {
+                  "day": null,
+                  "bid": 0.0,
+                  "supply": null,
+                  "hp_after": null,
+                  "budget_after": null,
+                  "status": null,
+                  "error": null
+                },
+                "recent_traces": []
+              },
+              "Eric": {
+                "hp": 8,
+                "budget": 140.0,
+                "no_water_days": 1,
+                "alive": true,
+                "water_requirement": 8,
+                "daily_salary": 140,
+                "last_bid": 0.0,
+                "last_status": null,
+                "last_hp_after": null,
+                "last_budget_after": null,
+                "previous_trace": {
+                  "day": null,
+                  "bid": 0.0,
+                  "supply": null,
+                  "hp_after": null,
+                  "budget_after": null,
+                  "status": null,
+                  "error": null
+                },
+                "recent_traces": []
+              }
+            }
+          },
+          {
+            "day": 2,
+            "bid": 96.0,
+            "supply": 16.0,
+            "hp_after": 5,
+            "budget_after": 140.0,
+            "status": "alive",
+            "error": null,
+            "opponents_status_before": {
+              "Bob": {
+                "hp": 7,
+                "budget": 180.0,
+                "no_water_days": 2,
+                "alive": true,
+                "water_requirement": 9,
+                "daily_salary": 90,
+                "last_bid": 56.7,
+                "last_status": "alive",
+                "last_hp_after": 7,
+                "last_budget_after": 90.0,
+                "previous_trace": {
+                  "day": 1,
+                  "bid": 56.7,
+                  "supply": 16.0,
+                  "hp_after": 7,
+                  "budget_after": 90.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 56.7,
+                    "supply": 16.0,
+                    "hp_after": 7,
+                    "budget_after": 90.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "Cindy": {
+                "hp": 10,
+                "budget": 180.0,
+                "no_water_days": 1,
+                "alive": true,
+                "water_requirement": 13,
+                "daily_salary": 150,
+                "last_bid": 120.0,
+                "last_status": "alive",
+                "last_hp_after": 10,
+                "last_budget_after": 30.0,
+                "previous_trace": {
+                  "day": 1,
+                  "bid": 120.0,
+                  "supply": 16.0,
+                  "hp_after": 10,
+                  "budget_after": 30.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 120.0,
+                    "supply": 16.0,
+                    "hp_after": 10,
+                    "budget_after": 30.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "David": {
+                "hp": 7,
+                "budget": 160.0,
+                "no_water_days": 2,
+                "alive": true,
+                "water_requirement": 7,
+                "daily_salary": 80,
+                "last_bid": 16.0,
+                "last_status": "alive",
+                "last_hp_after": 7,
+                "last_budget_after": 80.0,
+                "previous_trace": {
+                  "day": 1,
+                  "bid": 16.0,
+                  "supply": 16.0,
+                  "hp_after": 7,
+                  "budget_after": 80.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 16.0,
+                    "supply": 16.0,
+                    "hp_after": 7,
+                    "budget_after": 80.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "Eric": {
+                "hp": 7,
+                "budget": 280.0,
+                "no_water_days": 2,
+                "alive": true,
+                "water_requirement": 8,
+                "daily_salary": 140,
+                "last_bid": 0.0,
+                "last_status": "alive",
+                "last_hp_after": 7,
+                "last_budget_after": 140.0,
+                "previous_trace": {
+                  "day": 1,
+                  "bid": 0.0,
+                  "supply": 16.0,
+                  "hp_after": 7,
+                  "budget_after": 140.0,
+                  "status": "alive",
+                  "error": "compile_error: expected an indented block after 'else' statement on line 41 (<string>, line 41)"
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 0.0,
+                    "supply": 16.0,
+                    "hp_after": 7,
+                    "budget_after": 140.0,
+                    "status": "alive",
+                    "error": "compile_error: expected an indented block after 'else' statement on line 41 (<string>, line 41)"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "day": 3,
+            "bid": 96.0,
+            "supply": 17.0,
+            "hp_after": 2,
+            "budget_after": 210.0,
+            "status": "alive",
+            "error": null,
+            "opponents_status_before": {
+              "Bob": {
+                "hp": 5,
+                "budget": 270.0,
+                "no_water_days": 3,
+                "alive": true,
+                "water_requirement": 9,
+                "daily_salary": 90,
+                "last_bid": 82.8,
+                "last_status": "alive",
+                "last_hp_after": 5,
+                "last_budget_after": 180.0,
+                "previous_trace": {
+                  "day": 2,
+                  "bid": 82.8,
+                  "supply": 16.0,
+                  "hp_after": 5,
+                  "budget_after": 180.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 56.7,
+                    "supply": 16.0,
+                    "hp_after": 7,
+                    "budget_after": 90.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 2,
+                    "bid": 82.8,
+                    "supply": 16.0,
+                    "hp_after": 5,
+                    "budget_after": 180.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "Cindy": {
+                "hp": 10,
+                "budget": 210.0,
+                "no_water_days": 1,
+                "alive": true,
+                "water_requirement": 13,
+                "daily_salary": 150,
+                "last_bid": 120.0,
+                "last_status": "alive",
+                "last_hp_after": 10,
+                "last_budget_after": 60.0,
+                "previous_trace": {
+                  "day": 2,
+                  "bid": 120.0,
+                  "supply": 16.0,
+                  "hp_after": 10,
+                  "budget_after": 60.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 120.0,
+                    "supply": 16.0,
+                    "hp_after": 10,
+                    "budget_after": 30.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 2,
+                    "bid": 120.0,
+                    "supply": 16.0,
+                    "hp_after": 10,
+                    "budget_after": 60.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "David": {
+                "hp": 5,
+                "budget": 240.0,
+                "no_water_days": 3,
+                "alive": true,
+                "water_requirement": 7,
+                "daily_salary": 80,
+                "last_bid": 71.0,
+                "last_status": "alive",
+                "last_hp_after": 5,
+                "last_budget_after": 160.0,
+                "previous_trace": {
+                  "day": 2,
+                  "bid": 71.0,
+                  "supply": 16.0,
+                  "hp_after": 5,
+                  "budget_after": 160.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 16.0,
+                    "supply": 16.0,
+                    "hp_after": 7,
+                    "budget_after": 80.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 2,
+                    "bid": 71.0,
+                    "supply": 16.0,
+                    "hp_after": 5,
+                    "budget_after": 160.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "Eric": {
+                "hp": 5,
+                "budget": 420.0,
+                "no_water_days": 3,
+                "alive": true,
+                "water_requirement": 8,
+                "daily_salary": 140,
+                "last_bid": 0.0,
+                "last_status": "alive",
+                "last_hp_after": 5,
+                "last_budget_after": 280.0,
+                "previous_trace": {
+                  "day": 2,
+                  "bid": 0.0,
+                  "supply": 16.0,
+                  "hp_after": 5,
+                  "budget_after": 280.0,
+                  "status": "alive",
+                  "error": "compile_error: expected an indented block after 'else' statement on line 41 (<string>, line 41)"
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 0.0,
+                    "supply": 16.0,
+                    "hp_after": 7,
+                    "budget_after": 140.0,
+                    "status": "alive",
+                    "error": "compile_error: expected an indented block after 'else' statement on line 41 (<string>, line 41)"
+                  },
+                  {
+                    "day": 2,
+                    "bid": 0.0,
+                    "supply": 16.0,
+                    "hp_after": 5,
+                    "budget_after": 280.0,
+                    "status": "alive",
+                    "error": "compile_error: expected an indented block after 'else' statement on line 41 (<string>, line 41)"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "day": 4,
+            "bid": 96.0,
+            "supply": 15.0,
+            "hp_after": -2,
+            "budget_after": 0.0,
+            "status": "dead",
+            "error": null,
+            "opponents_status_before": {
+              "Bob": {
+                "hp": 2,
+                "budget": 360.0,
+                "no_water_days": 4,
+                "alive": true,
+                "water_requirement": 9,
+                "daily_salary": 90,
+                "last_bid": 81.6,
+                "last_status": "alive",
+                "last_hp_after": 2,
+                "last_budget_after": 270.0,
+                "previous_trace": {
+                  "day": 3,
+                  "bid": 81.6,
+                  "supply": 17.0,
+                  "hp_after": 2,
+                  "budget_after": 270.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 56.7,
+                    "supply": 16.0,
+                    "hp_after": 7,
+                    "budget_after": 90.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 2,
+                    "bid": 82.8,
+                    "supply": 16.0,
+                    "hp_after": 5,
+                    "budget_after": 180.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 3,
+                    "bid": 81.6,
+                    "supply": 17.0,
+                    "hp_after": 2,
+                    "budget_after": 270.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "Cindy": {
+                "hp": 10,
+                "budget": 240.0,
+                "no_water_days": 1,
+                "alive": true,
+                "water_requirement": 13,
+                "daily_salary": 150,
+                "last_bid": 120.0,
+                "last_status": "alive",
+                "last_hp_after": 10,
+                "last_budget_after": 90.0,
+                "previous_trace": {
+                  "day": 3,
+                  "bid": 120.0,
+                  "supply": 17.0,
+                  "hp_after": 10,
+                  "budget_after": 90.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 120.0,
+                    "supply": 16.0,
+                    "hp_after": 10,
+                    "budget_after": 30.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 2,
+                    "bid": 120.0,
+                    "supply": 16.0,
+                    "hp_after": 10,
+                    "budget_after": 60.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 3,
+                    "bid": 120.0,
+                    "supply": 17.0,
+                    "hp_after": 10,
+                    "budget_after": 90.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "David": {
+                "hp": 2,
+                "budget": 320.0,
+                "no_water_days": 4,
+                "alive": true,
+                "water_requirement": 7,
+                "daily_salary": 80,
+                "last_bid": 97.0,
+                "last_status": "alive",
+                "last_hp_after": 2,
+                "last_budget_after": 240.0,
+                "previous_trace": {
+                  "day": 3,
+                  "bid": 97.0,
+                  "supply": 17.0,
+                  "hp_after": 2,
+                  "budget_after": 240.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 16.0,
+                    "supply": 16.0,
+                    "hp_after": 7,
+                    "budget_after": 80.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 2,
+                    "bid": 71.0,
+                    "supply": 16.0,
+                    "hp_after": 5,
+                    "budget_after": 160.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 3,
+                    "bid": 97.0,
+                    "supply": 17.0,
+                    "hp_after": 2,
+                    "budget_after": 240.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "Eric": {
+                "hp": 2,
+                "budget": 560.0,
+                "no_water_days": 4,
+                "alive": true,
+                "water_requirement": 8,
+                "daily_salary": 140,
+                "last_bid": 0.0,
+                "last_status": "alive",
+                "last_hp_after": 2,
+                "last_budget_after": 420.0,
+                "previous_trace": {
+                  "day": 3,
+                  "bid": 0.0,
+                  "supply": 17.0,
+                  "hp_after": 2,
+                  "budget_after": 420.0,
+                  "status": "alive",
+                  "error": "compile_error: expected an indented block after 'else' statement on line 41 (<string>, line 41)"
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 0.0,
+                    "supply": 16.0,
+                    "hp_after": 7,
+                    "budget_after": 140.0,
+                    "status": "alive",
+                    "error": "compile_error: expected an indented block after 'else' statement on line 41 (<string>, line 41)"
+                  },
+                  {
+                    "day": 2,
+                    "bid": 0.0,
+                    "supply": 16.0,
+                    "hp_after": 5,
+                    "budget_after": 280.0,
+                    "status": "alive",
+                    "error": "compile_error: expected an indented block after 'else' statement on line 41 (<string>, line 41)"
+                  },
+                  {
+                    "day": 3,
+                    "bid": 0.0,
+                    "supply": 17.0,
+                    "hp_after": 2,
+                    "budget_after": 420.0,
+                    "status": "alive",
+                    "error": "compile_error: expected an indented block after 'else' statement on line 41 (<string>, line 41)"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "day": 5,
+            "bid": 0.0,
+            "supply": 20.0,
+            "hp_after": -2,
+            "budget_after": 0.0,
+            "status": "dead",
+            "error": null,
+            "opponents_status_before": {}
+          },
+          {
+            "day": 6,
+            "bid": 0.0,
+            "supply": 17.0,
+            "hp_after": -2,
+            "budget_after": 0.0,
+            "status": "dead",
+            "error": null,
+            "opponents_status_before": {}
+          },
+          {
+            "day": 7,
+            "bid": 0.0,
+            "supply": 19.0,
+            "hp_after": -2,
+            "budget_after": 0.0,
+            "status": "dead",
+            "error": null,
+            "opponents_status_before": {}
+          },
+          {
+            "day": 8,
+            "bid": 0.0,
+            "supply": 23.0,
+            "hp_after": -2,
+            "budget_after": 0.0,
+            "status": "dead",
+            "error": null,
+            "opponents_status_before": {}
+          },
+          {
+            "day": 9,
+            "bid": 0.0,
+            "supply": 17.0,
+            "hp_after": -2,
+            "budget_after": 0.0,
+            "status": "dead",
+            "error": null,
+            "opponents_status_before": {}
+          },
+          {
+            "day": 10,
+            "bid": 0.0,
+            "supply": 25.0,
+            "hp_after": -2,
+            "budget_after": 0.0,
+            "status": "dead",
+            "error": null,
+            "opponents_status_before": {}
+          }
+        ],
+        "metrics": {
+          "survival_days": 3,
+          "final_hp": -2,
+          "total_bid": 358.0,
+          "average_bid": 35.8,
+          "bid_variance": 1973.16,
+          "bid_entropy": 1.295461844238322,
+          "adaptation_score": 53.333333333333336,
+          "panic_score": 2,
+          "static_policy": false,
+          "opponent_awareness_score": 2,
+          "recovery_score": 0,
+          "supply_bid_correlation": -0.648601915939479,
+          "compile_success": true,
+          "runtime_success": true,
+          "hallucinated_api_count": 0,
+          "strategy_complexity": 596,
+          "branch_count": 22,
+          "loop_count": 2,
+          "function_call_count": 28,
+          "utility_score": 81.0,
+          "survival_efficiency": 0.008379888268156424,
+          "failure_types": [
+            "inefficient_resource_usage"
+          ]
+        }
+      },
+      {
+        "agent_id": "Bob",
+        "reasoning_cot": "Yesterday shows Cindy survived 10 with high average bid (~124.5), while Alex/David died quickly (avg bids 35.35 and 0). This suggests Cindy is the main water-seeker. I should undercut her by bidding enough to secure water when supply is moderate, but conserve budget since others may fail to bid.",
+        "strategy_code": "def get_bid(day_context, my_status, opponents_status):\n    WATER_REQ = 9\n    DAILY_SALARY = 90\n\n    supply = float(day_context['supply'])\n    day = int(day_context['day'])\n\n    # Identify alive opponents and their yesterday bids\n    alive_opps = []\n    for oid, o in opponents_status.items():\n        if o.get('alive', False):\n            alive_opps.append((oid, o))\n\n    if not alive_opps:\n        return min(my_status['budget'], DAILY_SALARY * 0.4)\n\n    yesterday_bids = []\n    for oid, o in alive_opps:\n        prev = o.get('previous_trace', {}) or {}\n        b = prev.get('bid', None)\n        if b is not None:\n            try:\n                yesterday_bids.append(float(b))\n            except Exception:\n                pass\n\n    # Estimate how contested this is: Cindy likely high bidder (survived 10 with high avg)\n    # Use yesterday max as proxy for pressure.\n    pressure = max(yesterday_bids) if yesterday_bids else 0.0\n\n    # Budget-aware target: if Cindy is bidding high, we undercut slightly.\n    # If pressure is low, we bid moderately.\n    # Also react to our HP: if low, bid aggressively.\n    my_hp = float(my_status['hp'])\n    my_budget = float(my_status['budget'])\n\n    # Supply heuristic: with supply in [15,25], at most 2 units of WATER_REQ fit.\n    # When supply is closer to 15, competition is tighter.\n    tightness = (25.0 - supply) / 10.0  # 0 at 25, 1 at 15\n    tightness = max(0.0, min(1.0, tightness))\n\n    # Base bid\n    if my_hp <= 2.0:\n        base = DAILY_SALARY * (0.9 + 0.05 * tightness)\n    elif my_hp <= 4.0:\n        base = DAILY_SALARY * (0.65 + 0.15 * tightness)\n    else:\n        base = DAILY_SALARY * (0.45 + 0.20 * tightness)\n\n    # If yesterday pressure was high, raise to just below pressure to steal marginal water.\n    # If pressure is extremely high, still cap by budget and salary scale.\n    if pressure > 0.0:\n        # Undercut by a small amount; ensure we don't go too low.\n        target = min(base, pressure - 5.0) if pressure - 5.0 > 0 else base\n        # If our base is too low relative to pressure, bump up near pressure but not exceed.\n        if target < pressure * 0.55:\n            target = pressure * (0.60 + 0.10 * tightness)\n    else:\n        target = base\n\n    # Keep within reasonable bounds and budget\n    # Also avoid bidding above what we can afford.\n    bid = min(my_budget, max(0.0, target))\n\n    # If budget is tiny, bid what we can (still non-negative)\n    if bid <= 0.0:\n        return 0.0\n\n    return float(bid)",
+        "daily_trace": [
+          {
+            "day": 1,
+            "bid": 56.7,
+            "supply": 16.0,
+            "hp_after": 7,
+            "budget_after": 90.0,
+            "status": "alive",
+            "error": null,
+            "opponents_status_before": {
+              "Alex": {
+                "hp": 8,
+                "budget": 70.0,
+                "no_water_days": 1,
+                "alive": true,
+                "water_requirement": 13,
+                "daily_salary": 70,
+                "last_bid": 0.0,
+                "last_status": null,
+                "last_hp_after": null,
+                "last_budget_after": null,
+                "previous_trace": {
+                  "day": null,
+                  "bid": 0.0,
+                  "supply": null,
+                  "hp_after": null,
+                  "budget_after": null,
+                  "status": null,
+                  "error": null
+                },
+                "recent_traces": []
+              },
+              "Cindy": {
+                "hp": 8,
+                "budget": 150.0,
+                "no_water_days": 1,
+                "alive": true,
+                "water_requirement": 13,
+                "daily_salary": 150,
+                "last_bid": 0.0,
+                "last_status": null,
+                "last_hp_after": null,
+                "last_budget_after": null,
+                "previous_trace": {
+                  "day": null,
+                  "bid": 0.0,
+                  "supply": null,
+                  "hp_after": null,
+                  "budget_after": null,
+                  "status": null,
+                  "error": null
+                },
+                "recent_traces": []
+              },
+              "David": {
+                "hp": 8,
+                "budget": 80.0,
+                "no_water_days": 1,
+                "alive": true,
+                "water_requirement": 7,
+                "daily_salary": 80,
+                "last_bid": 0.0,
+                "last_status": null,
+                "last_hp_after": null,
+                "last_budget_after": null,
+                "previous_trace": {
+                  "day": null,
+                  "bid": 0.0,
+                  "supply": null,
+                  "hp_after": null,
+                  "budget_after": null,
+                  "status": null,
+                  "error": null
+                },
+                "recent_traces": []
+              },
+              "Eric": {
+                "hp": 8,
+                "budget": 140.0,
+                "no_water_days": 1,
+                "alive": true,
+                "water_requirement": 8,
+                "daily_salary": 140,
+                "last_bid": 0.0,
+                "last_status": null,
+                "last_hp_after": null,
+                "last_budget_after": null,
+                "previous_trace": {
+                  "day": null,
+                  "bid": 0.0,
+                  "supply": null,
+                  "hp_after": null,
+                  "budget_after": null,
+                  "status": null,
+                  "error": null
+                },
+                "recent_traces": []
+              }
+            }
+          },
+          {
+            "day": 2,
+            "bid": 82.8,
+            "supply": 16.0,
+            "hp_after": 5,
+            "budget_after": 180.0,
+            "status": "alive",
+            "error": null,
+            "opponents_status_before": {
+              "Alex": {
+                "hp": 7,
+                "budget": 140.0,
+                "no_water_days": 2,
+                "alive": true,
+                "water_requirement": 13,
+                "daily_salary": 70,
+                "last_bid": 70.0,
+                "last_status": "alive",
+                "last_hp_after": 7,
+                "last_budget_after": 70.0,
+                "previous_trace": {
+                  "day": 1,
+                  "bid": 70.0,
+                  "supply": 16.0,
+                  "hp_after": 7,
+                  "budget_after": 70.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 70.0,
+                    "supply": 16.0,
+                    "hp_after": 7,
+                    "budget_after": 70.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "Cindy": {
+                "hp": 10,
+                "budget": 180.0,
+                "no_water_days": 1,
+                "alive": true,
+                "water_requirement": 13,
+                "daily_salary": 150,
+                "last_bid": 120.0,
+                "last_status": "alive",
+                "last_hp_after": 10,
+                "last_budget_after": 30.0,
+                "previous_trace": {
+                  "day": 1,
+                  "bid": 120.0,
+                  "supply": 16.0,
+                  "hp_after": 10,
+                  "budget_after": 30.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 120.0,
+                    "supply": 16.0,
+                    "hp_after": 10,
+                    "budget_after": 30.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "David": {
+                "hp": 7,
+                "budget": 160.0,
+                "no_water_days": 2,
+                "alive": true,
+                "water_requirement": 7,
+                "daily_salary": 80,
+                "last_bid": 16.0,
+                "last_status": "alive",
+                "last_hp_after": 7,
+                "last_budget_after": 80.0,
+                "previous_trace": {
+                  "day": 1,
+                  "bid": 16.0,
+                  "supply": 16.0,
+                  "hp_after": 7,
+                  "budget_after": 80.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 16.0,
+                    "supply": 16.0,
+                    "hp_after": 7,
+                    "budget_after": 80.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "Eric": {
+                "hp": 7,
+                "budget": 280.0,
+                "no_water_days": 2,
+                "alive": true,
+                "water_requirement": 8,
+                "daily_salary": 140,
+                "last_bid": 0.0,
+                "last_status": "alive",
+                "last_hp_after": 7,
+                "last_budget_after": 140.0,
+                "previous_trace": {
+                  "day": 1,
+                  "bid": 0.0,
+                  "supply": 16.0,
+                  "hp_after": 7,
+                  "budget_after": 140.0,
+                  "status": "alive",
+                  "error": "compile_error: expected an indented block after 'else' statement on line 41 (<string>, line 41)"
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 0.0,
+                    "supply": 16.0,
+                    "hp_after": 7,
+                    "budget_after": 140.0,
+                    "status": "alive",
+                    "error": "compile_error: expected an indented block after 'else' statement on line 41 (<string>, line 41)"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "day": 3,
+            "bid": 81.6,
+            "supply": 17.0,
+            "hp_after": 2,
+            "budget_after": 270.0,
+            "status": "alive",
+            "error": null,
+            "opponents_status_before": {
+              "Alex": {
+                "hp": 5,
+                "budget": 210.0,
+                "no_water_days": 3,
+                "alive": true,
+                "water_requirement": 13,
+                "daily_salary": 70,
+                "last_bid": 96.0,
+                "last_status": "alive",
+                "last_hp_after": 5,
+                "last_budget_after": 140.0,
+                "previous_trace": {
+                  "day": 2,
+                  "bid": 96.0,
+                  "supply": 16.0,
+                  "hp_after": 5,
+                  "budget_after": 140.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 70.0,
+                    "supply": 16.0,
+                    "hp_after": 7,
+                    "budget_after": 70.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 2,
+                    "bid": 96.0,
+                    "supply": 16.0,
+                    "hp_after": 5,
+                    "budget_after": 140.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "Cindy": {
+                "hp": 10,
+                "budget": 210.0,
+                "no_water_days": 1,
+                "alive": true,
+                "water_requirement": 13,
+                "daily_salary": 150,
+                "last_bid": 120.0,
+                "last_status": "alive",
+                "last_hp_after": 10,
+                "last_budget_after": 60.0,
+                "previous_trace": {
+                  "day": 2,
+                  "bid": 120.0,
+                  "supply": 16.0,
+                  "hp_after": 10,
+                  "budget_after": 60.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 120.0,
+                    "supply": 16.0,
+                    "hp_after": 10,
+                    "budget_after": 30.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 2,
+                    "bid": 120.0,
+                    "supply": 16.0,
+                    "hp_after": 10,
+                    "budget_after": 60.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "David": {
+                "hp": 5,
+                "budget": 240.0,
+                "no_water_days": 3,
+                "alive": true,
+                "water_requirement": 7,
+                "daily_salary": 80,
+                "last_bid": 71.0,
+                "last_status": "alive",
+                "last_hp_after": 5,
+                "last_budget_after": 160.0,
+                "previous_trace": {
+                  "day": 2,
+                  "bid": 71.0,
+                  "supply": 16.0,
+                  "hp_after": 5,
+                  "budget_after": 160.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 16.0,
+                    "supply": 16.0,
+                    "hp_after": 7,
+                    "budget_after": 80.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 2,
+                    "bid": 71.0,
+                    "supply": 16.0,
+                    "hp_after": 5,
+                    "budget_after": 160.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "Eric": {
+                "hp": 5,
+                "budget": 420.0,
+                "no_water_days": 3,
+                "alive": true,
+                "water_requirement": 8,
+                "daily_salary": 140,
+                "last_bid": 0.0,
+                "last_status": "alive",
+                "last_hp_after": 5,
+                "last_budget_after": 280.0,
+                "previous_trace": {
+                  "day": 2,
+                  "bid": 0.0,
+                  "supply": 16.0,
+                  "hp_after": 5,
+                  "budget_after": 280.0,
+                  "status": "alive",
+                  "error": "compile_error: expected an indented block after 'else' statement on line 41 (<string>, line 41)"
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 0.0,
+                    "supply": 16.0,
+                    "hp_after": 7,
+                    "budget_after": 140.0,
+                    "status": "alive",
+                    "error": "compile_error: expected an indented block after 'else' statement on line 41 (<string>, line 41)"
+                  },
+                  {
+                    "day": 2,
+                    "bid": 0.0,
+                    "supply": 16.0,
+                    "hp_after": 5,
+                    "budget_after": 280.0,
+                    "status": "alive",
+                    "error": "compile_error: expected an indented block after 'else' statement on line 41 (<string>, line 41)"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "day": 4,
+            "bid": 85.5,
+            "supply": 15.0,
+            "hp_after": -2,
+            "budget_after": 0.0,
+            "status": "dead",
+            "error": null,
+            "opponents_status_before": {
+              "Alex": {
+                "hp": 2,
+                "budget": 280.0,
+                "no_water_days": 4,
+                "alive": true,
+                "water_requirement": 13,
+                "daily_salary": 70,
+                "last_bid": 96.0,
+                "last_status": "alive",
+                "last_hp_after": 2,
+                "last_budget_after": 210.0,
+                "previous_trace": {
+                  "day": 3,
+                  "bid": 96.0,
+                  "supply": 17.0,
+                  "hp_after": 2,
+                  "budget_after": 210.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 70.0,
+                    "supply": 16.0,
+                    "hp_after": 7,
+                    "budget_after": 70.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 2,
+                    "bid": 96.0,
+                    "supply": 16.0,
+                    "hp_after": 5,
+                    "budget_after": 140.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 3,
+                    "bid": 96.0,
+                    "supply": 17.0,
+                    "hp_after": 2,
+                    "budget_after": 210.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "Cindy": {
+                "hp": 10,
+                "budget": 240.0,
+                "no_water_days": 1,
+                "alive": true,
+                "water_requirement": 13,
+                "daily_salary": 150,
+                "last_bid": 120.0,
+                "last_status": "alive",
+                "last_hp_after": 10,
+                "last_budget_after": 90.0,
+                "previous_trace": {
+                  "day": 3,
+                  "bid": 120.0,
+                  "supply": 17.0,
+                  "hp_after": 10,
+                  "budget_after": 90.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 120.0,
+                    "supply": 16.0,
+                    "hp_after": 10,
+                    "budget_after": 30.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 2,
+                    "bid": 120.0,
+                    "supply": 16.0,
+                    "hp_after": 10,
+                    "budget_after": 60.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 3,
+                    "bid": 120.0,
+                    "supply": 17.0,
+                    "hp_after": 10,
+                    "budget_after": 90.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "David": {
+                "hp": 2,
+                "budget": 320.0,
+                "no_water_days": 4,
+                "alive": true,
+                "water_requirement": 7,
+                "daily_salary": 80,
+                "last_bid": 97.0,
+                "last_status": "alive",
+                "last_hp_after": 2,
+                "last_budget_after": 240.0,
+                "previous_trace": {
+                  "day": 3,
+                  "bid": 97.0,
+                  "supply": 17.0,
+                  "hp_after": 2,
+                  "budget_after": 240.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 16.0,
+                    "supply": 16.0,
+                    "hp_after": 7,
+                    "budget_after": 80.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 2,
+                    "bid": 71.0,
+                    "supply": 16.0,
+                    "hp_after": 5,
+                    "budget_after": 160.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 3,
+                    "bid": 97.0,
+                    "supply": 17.0,
+                    "hp_after": 2,
+                    "budget_after": 240.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "Eric": {
+                "hp": 2,
+                "budget": 560.0,
+                "no_water_days": 4,
+                "alive": true,
+                "water_requirement": 8,
+                "daily_salary": 140,
+                "last_bid": 0.0,
+                "last_status": "alive",
+                "last_hp_after": 2,
+                "last_budget_after": 420.0,
+                "previous_trace": {
+                  "day": 3,
+                  "bid": 0.0,
+                  "supply": 17.0,
+                  "hp_after": 2,
+                  "budget_after": 420.0,
+                  "status": "alive",
+                  "error": "compile_error: expected an indented block after 'else' statement on line 41 (<string>, line 41)"
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 0.0,
+                    "supply": 16.0,
+                    "hp_after": 7,
+                    "budget_after": 140.0,
+                    "status": "alive",
+                    "error": "compile_error: expected an indented block after 'else' statement on line 41 (<string>, line 41)"
+                  },
+                  {
+                    "day": 2,
+                    "bid": 0.0,
+                    "supply": 16.0,
+                    "hp_after": 5,
+                    "budget_after": 280.0,
+                    "status": "alive",
+                    "error": "compile_error: expected an indented block after 'else' statement on line 41 (<string>, line 41)"
+                  },
+                  {
+                    "day": 3,
+                    "bid": 0.0,
+                    "supply": 17.0,
+                    "hp_after": 2,
+                    "budget_after": 420.0,
+                    "status": "alive",
+                    "error": "compile_error: expected an indented block after 'else' statement on line 41 (<string>, line 41)"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "day": 5,
+            "bid": 0.0,
+            "supply": 20.0,
+            "hp_after": -2,
+            "budget_after": 0.0,
+            "status": "dead",
+            "error": null,
+            "opponents_status_before": {}
+          },
+          {
+            "day": 6,
+            "bid": 0.0,
+            "supply": 17.0,
+            "hp_after": -2,
+            "budget_after": 0.0,
+            "status": "dead",
+            "error": null,
+            "opponents_status_before": {}
+          },
+          {
+            "day": 7,
+            "bid": 0.0,
+            "supply": 19.0,
+            "hp_after": -2,
+            "budget_after": 0.0,
+            "status": "dead",
+            "error": null,
+            "opponents_status_before": {}
+          },
+          {
+            "day": 8,
+            "bid": 0.0,
+            "supply": 23.0,
+            "hp_after": -2,
+            "budget_after": 0.0,
+            "status": "dead",
+            "error": null,
+            "opponents_status_before": {}
+          },
+          {
+            "day": 9,
+            "bid": 0.0,
+            "supply": 17.0,
+            "hp_after": -2,
+            "budget_after": 0.0,
+            "status": "dead",
+            "error": null,
+            "opponents_status_before": {}
+          },
+          {
+            "day": 10,
+            "bid": 0.0,
+            "supply": 25.0,
+            "hp_after": -2,
+            "budget_after": 0.0,
+            "status": "dead",
+            "error": null,
+            "opponents_status_before": {}
+          }
+        ],
+        "metrics": {
+          "survival_days": 3,
+          "final_hp": -2,
+          "total_bid": 306.6,
+          "average_bid": 30.66,
+          "bid_variance": 1463.9184,
+          "bid_entropy": 1.7709505944546686,
+          "adaptation_score": 48.5,
+          "panic_score": 2,
+          "static_policy": false,
+          "opponent_awareness_score": 4,
+          "recovery_score": 0,
+          "supply_bid_correlation": -0.6481778451992682,
+          "compile_success": true,
+          "runtime_success": true,
+          "hallucinated_api_count": 0,
+          "strategy_complexity": 354,
+          "branch_count": 8,
+          "loop_count": 2,
+          "function_call_count": 19,
+          "utility_score": 106.69999999999999,
+          "survival_efficiency": 0.009784735812133072,
+          "failure_types": [
+            "inefficient_resource_usage"
+          ]
+        }
+      },
+      {
+        "agent_id": "Cindy",
+        "reasoning_cot": "I analyze immediate opponent bids from 'previous_trace' to adapt my strategy. I bid high when supply is scarce or my HP is low to ensure survival. When supply is abundant, I conserve budget by bidding lower, adjusting based on opponent's lowest previous bids.",
+        "strategy_code": "def get_bid(day_context, my_status, opponents_status):\n    WATER_REQ = 13\n    DAILY_SALARY = 150\n    EPISODE_DAYS = 10\n    LOW_HP_THRESHOLD = 3\n\n    alive_opponents = [o for o in opponents_status.values() if o['alive']]\n    num_alive_opponents = len(alive_opponents)\n\n    if num_alive_opponents == 0:\n        return min(my_status['budget'], DAILY_SALARY * 0.1)\n\n    yesterday_bids = []\n    for opp in alive_opponents:\n        prev = opp.get('previous_trace', {})\n        if prev and prev.get('bid') is not None:\n            yesterday_bids.append(prev['bid'])\n\n    current_supply = day_context['supply']\n    num_units_available = int(current_supply // WATER_REQ)\n\n    num_players_needing_water = num_alive_opponents + 1\n\n    is_supply_scarce = num_units_available < num_players_needing_water\n    is_supply_very_scarce = num_units_available <= num_alive_opponents\n\n    bid = DAILY_SALARY * 0.5\n\n    if my_status['hp'] <= LOW_HP_THRESHOLD:\n        bid = DAILY_SALARY * 0.95\n        return min(my_status['budget'], bid)\n\n    if my_status['no_water_days'] > 0:\n        bid = DAILY_SALARY * 0.8\n        return min(my_status['budget'], bid)\n\n    if yesterday_bids:\n        highest_prev_bid = max(yesterday_bids)\n        avg_prev_bid = sum(yesterday_bids) / len(yesterday_bids)\n\n        if is_supply_very_scarce:\n            if highest_prev_bid >= DAILY_SALARY * 0.8:\n                bid = highest_prev_bid + 1.0\n            else:\n                bid = max(highest_prev_bid + 1.0, DAILY_SALARY * 0.7)\n        elif is_supply_scarce:\n            if highest_prev_bid >= DAILY_SALARY * 0.6:\n                if my_status['hp'] > LOW_HP_THRESHOLD + 1:\n                    bid = DAILY_SALARY * 0.5\n                else:\n                    bid = highest_prev_bid + 1.0\n            else:\n                bid = max(avg_prev_bid + 1.0, DAILY_SALARY * 0.55)\n        else:\n            lowest_prev_bid = min(yesterday_bids)\n            if lowest_prev_bid < DAILY_SALARY * 0.3:\n                bid = DAILY_SALARY * 0.25\n            else:\n                bid = DAILY_SALARY * 0.35\n    else:\n        if is_supply_very_scarce:\n            bid = DAILY_SALARY * 0.7\n        elif is_supply_scarce:\n            bid = DAILY_SALARY * 0.55\n        else:\n            bid = DAILY_SALARY * 0.3\n\n    final_bid = min(my_status['budget'], bid)\n    if final_bid <= 0 and my_status['budget'] > 0:\n        final_bid = min(my_status['budget'], DAILY_SALARY * 0.05)\n    elif final_bid <= 0:\n        final_bid = 0.0\n\n    return final_bid",
+        "daily_trace": [
+          {
+            "day": 1,
+            "bid": 120.0,
+            "supply": 16.0,
+            "hp_after": 10,
+            "budget_after": 30.0,
+            "status": "alive",
+            "error": null,
+            "opponents_status_before": {
+              "Alex": {
+                "hp": 8,
+                "budget": 70.0,
+                "no_water_days": 1,
+                "alive": true,
+                "water_requirement": 13,
+                "daily_salary": 70,
+                "last_bid": 0.0,
+                "last_status": null,
+                "last_hp_after": null,
+                "last_budget_after": null,
+                "previous_trace": {
+                  "day": null,
+                  "bid": 0.0,
+                  "supply": null,
+                  "hp_after": null,
+                  "budget_after": null,
+                  "status": null,
+                  "error": null
+                },
+                "recent_traces": []
+              },
+              "Bob": {
+                "hp": 8,
+                "budget": 90.0,
+                "no_water_days": 1,
+                "alive": true,
+                "water_requirement": 9,
+                "daily_salary": 90,
+                "last_bid": 0.0,
+                "last_status": null,
+                "last_hp_after": null,
+                "last_budget_after": null,
+                "previous_trace": {
+                  "day": null,
+                  "bid": 0.0,
+                  "supply": null,
+                  "hp_after": null,
+                  "budget_after": null,
+                  "status": null,
+                  "error": null
+                },
+                "recent_traces": []
+              },
+              "David": {
+                "hp": 8,
+                "budget": 80.0,
+                "no_water_days": 1,
+                "alive": true,
+                "water_requirement": 7,
+                "daily_salary": 80,
+                "last_bid": 0.0,
+                "last_status": null,
+                "last_hp_after": null,
+                "last_budget_after": null,
+                "previous_trace": {
+                  "day": null,
+                  "bid": 0.0,
+                  "supply": null,
+                  "hp_after": null,
+                  "budget_after": null,
+                  "status": null,
+                  "error": null
+                },
+                "recent_traces": []
+              },
+              "Eric": {
+                "hp": 8,
+                "budget": 140.0,
+                "no_water_days": 1,
+                "alive": true,
+                "water_requirement": 8,
+                "daily_salary": 140,
+                "last_bid": 0.0,
+                "last_status": null,
+                "last_hp_after": null,
+                "last_budget_after": null,
+                "previous_trace": {
+                  "day": null,
+                  "bid": 0.0,
+                  "supply": null,
+                  "hp_after": null,
+                  "budget_after": null,
+                  "status": null,
+                  "error": null
+                },
+                "recent_traces": []
+              }
+            }
+          },
+          {
+            "day": 2,
+            "bid": 120.0,
+            "supply": 16.0,
+            "hp_after": 10,
+            "budget_after": 60.0,
+            "status": "alive",
+            "error": null,
+            "opponents_status_before": {
+              "Alex": {
+                "hp": 7,
+                "budget": 140.0,
+                "no_water_days": 2,
+                "alive": true,
+                "water_requirement": 13,
+                "daily_salary": 70,
+                "last_bid": 70.0,
+                "last_status": "alive",
+                "last_hp_after": 7,
+                "last_budget_after": 70.0,
+                "previous_trace": {
+                  "day": 1,
+                  "bid": 70.0,
+                  "supply": 16.0,
+                  "hp_after": 7,
+                  "budget_after": 70.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 70.0,
+                    "supply": 16.0,
+                    "hp_after": 7,
+                    "budget_after": 70.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "Bob": {
+                "hp": 7,
+                "budget": 180.0,
+                "no_water_days": 2,
+                "alive": true,
+                "water_requirement": 9,
+                "daily_salary": 90,
+                "last_bid": 56.7,
+                "last_status": "alive",
+                "last_hp_after": 7,
+                "last_budget_after": 90.0,
+                "previous_trace": {
+                  "day": 1,
+                  "bid": 56.7,
+                  "supply": 16.0,
+                  "hp_after": 7,
+                  "budget_after": 90.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 56.7,
+                    "supply": 16.0,
+                    "hp_after": 7,
+                    "budget_after": 90.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "David": {
+                "hp": 7,
+                "budget": 160.0,
+                "no_water_days": 2,
+                "alive": true,
+                "water_requirement": 7,
+                "daily_salary": 80,
+                "last_bid": 16.0,
+                "last_status": "alive",
+                "last_hp_after": 7,
+                "last_budget_after": 80.0,
+                "previous_trace": {
+                  "day": 1,
+                  "bid": 16.0,
+                  "supply": 16.0,
+                  "hp_after": 7,
+                  "budget_after": 80.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 16.0,
+                    "supply": 16.0,
+                    "hp_after": 7,
+                    "budget_after": 80.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "Eric": {
+                "hp": 7,
+                "budget": 280.0,
+                "no_water_days": 2,
+                "alive": true,
+                "water_requirement": 8,
+                "daily_salary": 140,
+                "last_bid": 0.0,
+                "last_status": "alive",
+                "last_hp_after": 7,
+                "last_budget_after": 140.0,
+                "previous_trace": {
+                  "day": 1,
+                  "bid": 0.0,
+                  "supply": 16.0,
+                  "hp_after": 7,
+                  "budget_after": 140.0,
+                  "status": "alive",
+                  "error": "compile_error: expected an indented block after 'else' statement on line 41 (<string>, line 41)"
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 0.0,
+                    "supply": 16.0,
+                    "hp_after": 7,
+                    "budget_after": 140.0,
+                    "status": "alive",
+                    "error": "compile_error: expected an indented block after 'else' statement on line 41 (<string>, line 41)"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "day": 3,
+            "bid": 120.0,
+            "supply": 17.0,
+            "hp_after": 10,
+            "budget_after": 90.0,
+            "status": "alive",
+            "error": null,
+            "opponents_status_before": {
+              "Alex": {
+                "hp": 5,
+                "budget": 210.0,
+                "no_water_days": 3,
+                "alive": true,
+                "water_requirement": 13,
+                "daily_salary": 70,
+                "last_bid": 96.0,
+                "last_status": "alive",
+                "last_hp_after": 5,
+                "last_budget_after": 140.0,
+                "previous_trace": {
+                  "day": 2,
+                  "bid": 96.0,
+                  "supply": 16.0,
+                  "hp_after": 5,
+                  "budget_after": 140.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 70.0,
+                    "supply": 16.0,
+                    "hp_after": 7,
+                    "budget_after": 70.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 2,
+                    "bid": 96.0,
+                    "supply": 16.0,
+                    "hp_after": 5,
+                    "budget_after": 140.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "Bob": {
+                "hp": 5,
+                "budget": 270.0,
+                "no_water_days": 3,
+                "alive": true,
+                "water_requirement": 9,
+                "daily_salary": 90,
+                "last_bid": 82.8,
+                "last_status": "alive",
+                "last_hp_after": 5,
+                "last_budget_after": 180.0,
+                "previous_trace": {
+                  "day": 2,
+                  "bid": 82.8,
+                  "supply": 16.0,
+                  "hp_after": 5,
+                  "budget_after": 180.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 56.7,
+                    "supply": 16.0,
+                    "hp_after": 7,
+                    "budget_after": 90.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 2,
+                    "bid": 82.8,
+                    "supply": 16.0,
+                    "hp_after": 5,
+                    "budget_after": 180.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "David": {
+                "hp": 5,
+                "budget": 240.0,
+                "no_water_days": 3,
+                "alive": true,
+                "water_requirement": 7,
+                "daily_salary": 80,
+                "last_bid": 71.0,
+                "last_status": "alive",
+                "last_hp_after": 5,
+                "last_budget_after": 160.0,
+                "previous_trace": {
+                  "day": 2,
+                  "bid": 71.0,
+                  "supply": 16.0,
+                  "hp_after": 5,
+                  "budget_after": 160.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 16.0,
+                    "supply": 16.0,
+                    "hp_after": 7,
+                    "budget_after": 80.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 2,
+                    "bid": 71.0,
+                    "supply": 16.0,
+                    "hp_after": 5,
+                    "budget_after": 160.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "Eric": {
+                "hp": 5,
+                "budget": 420.0,
+                "no_water_days": 3,
+                "alive": true,
+                "water_requirement": 8,
+                "daily_salary": 140,
+                "last_bid": 0.0,
+                "last_status": "alive",
+                "last_hp_after": 5,
+                "last_budget_after": 280.0,
+                "previous_trace": {
+                  "day": 2,
+                  "bid": 0.0,
+                  "supply": 16.0,
+                  "hp_after": 5,
+                  "budget_after": 280.0,
+                  "status": "alive",
+                  "error": "compile_error: expected an indented block after 'else' statement on line 41 (<string>, line 41)"
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 0.0,
+                    "supply": 16.0,
+                    "hp_after": 7,
+                    "budget_after": 140.0,
+                    "status": "alive",
+                    "error": "compile_error: expected an indented block after 'else' statement on line 41 (<string>, line 41)"
+                  },
+                  {
+                    "day": 2,
+                    "bid": 0.0,
+                    "supply": 16.0,
+                    "hp_after": 5,
+                    "budget_after": 280.0,
+                    "status": "alive",
+                    "error": "compile_error: expected an indented block after 'else' statement on line 41 (<string>, line 41)"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "day": 4,
+            "bid": 120.0,
+            "supply": 15.0,
+            "hp_after": 10,
+            "budget_after": 120.0,
+            "status": "alive",
+            "error": null,
+            "opponents_status_before": {
+              "Alex": {
+                "hp": 2,
+                "budget": 280.0,
+                "no_water_days": 4,
+                "alive": true,
+                "water_requirement": 13,
+                "daily_salary": 70,
+                "last_bid": 96.0,
+                "last_status": "alive",
+                "last_hp_after": 2,
+                "last_budget_after": 210.0,
+                "previous_trace": {
+                  "day": 3,
+                  "bid": 96.0,
+                  "supply": 17.0,
+                  "hp_after": 2,
+                  "budget_after": 210.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 70.0,
+                    "supply": 16.0,
+                    "hp_after": 7,
+                    "budget_after": 70.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 2,
+                    "bid": 96.0,
+                    "supply": 16.0,
+                    "hp_after": 5,
+                    "budget_after": 140.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 3,
+                    "bid": 96.0,
+                    "supply": 17.0,
+                    "hp_after": 2,
+                    "budget_after": 210.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "Bob": {
+                "hp": 2,
+                "budget": 360.0,
+                "no_water_days": 4,
+                "alive": true,
+                "water_requirement": 9,
+                "daily_salary": 90,
+                "last_bid": 81.6,
+                "last_status": "alive",
+                "last_hp_after": 2,
+                "last_budget_after": 270.0,
+                "previous_trace": {
+                  "day": 3,
+                  "bid": 81.6,
+                  "supply": 17.0,
+                  "hp_after": 2,
+                  "budget_after": 270.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 56.7,
+                    "supply": 16.0,
+                    "hp_after": 7,
+                    "budget_after": 90.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 2,
+                    "bid": 82.8,
+                    "supply": 16.0,
+                    "hp_after": 5,
+                    "budget_after": 180.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 3,
+                    "bid": 81.6,
+                    "supply": 17.0,
+                    "hp_after": 2,
+                    "budget_after": 270.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "David": {
+                "hp": 2,
+                "budget": 320.0,
+                "no_water_days": 4,
+                "alive": true,
+                "water_requirement": 7,
+                "daily_salary": 80,
+                "last_bid": 97.0,
+                "last_status": "alive",
+                "last_hp_after": 2,
+                "last_budget_after": 240.0,
+                "previous_trace": {
+                  "day": 3,
+                  "bid": 97.0,
+                  "supply": 17.0,
+                  "hp_after": 2,
+                  "budget_after": 240.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 16.0,
+                    "supply": 16.0,
+                    "hp_after": 7,
+                    "budget_after": 80.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 2,
+                    "bid": 71.0,
+                    "supply": 16.0,
+                    "hp_after": 5,
+                    "budget_after": 160.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 3,
+                    "bid": 97.0,
+                    "supply": 17.0,
+                    "hp_after": 2,
+                    "budget_after": 240.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "Eric": {
+                "hp": 2,
+                "budget": 560.0,
+                "no_water_days": 4,
+                "alive": true,
+                "water_requirement": 8,
+                "daily_salary": 140,
+                "last_bid": 0.0,
+                "last_status": "alive",
+                "last_hp_after": 2,
+                "last_budget_after": 420.0,
+                "previous_trace": {
+                  "day": 3,
+                  "bid": 0.0,
+                  "supply": 17.0,
+                  "hp_after": 2,
+                  "budget_after": 420.0,
+                  "status": "alive",
+                  "error": "compile_error: expected an indented block after 'else' statement on line 41 (<string>, line 41)"
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 0.0,
+                    "supply": 16.0,
+                    "hp_after": 7,
+                    "budget_after": 140.0,
+                    "status": "alive",
+                    "error": "compile_error: expected an indented block after 'else' statement on line 41 (<string>, line 41)"
+                  },
+                  {
+                    "day": 2,
+                    "bid": 0.0,
+                    "supply": 16.0,
+                    "hp_after": 5,
+                    "budget_after": 280.0,
+                    "status": "alive",
+                    "error": "compile_error: expected an indented block after 'else' statement on line 41 (<string>, line 41)"
+                  },
+                  {
+                    "day": 3,
+                    "bid": 0.0,
+                    "supply": 17.0,
+                    "hp_after": 2,
+                    "budget_after": 420.0,
+                    "status": "alive",
+                    "error": "compile_error: expected an indented block after 'else' statement on line 41 (<string>, line 41)"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "day": 5,
+            "bid": 15.0,
+            "supply": 20.0,
+            "hp_after": 10,
+            "budget_after": 255.0,
+            "status": "alive",
+            "error": null,
+            "opponents_status_before": {
+              "Alex": {
+                "hp": -2,
+                "budget": 0.0,
+                "no_water_days": 5,
+                "alive": false,
+                "water_requirement": 13,
+                "daily_salary": 70,
+                "last_bid": 96.0,
+                "last_status": "dead",
+                "last_hp_after": -2,
+                "last_budget_after": 0.0,
+                "previous_trace": {
+                  "day": 4,
+                  "bid": 96.0,
+                  "supply": 15.0,
+                  "hp_after": -2,
+                  "budget_after": 0.0,
+                  "status": "dead",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 2,
+                    "bid": 96.0,
+                    "supply": 16.0,
+                    "hp_after": 5,
+                    "budget_after": 140.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 3,
+                    "bid": 96.0,
+                    "supply": 17.0,
+                    "hp_after": 2,
+                    "budget_after": 210.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 4,
+                    "bid": 96.0,
+                    "supply": 15.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  }
+                ]
+              },
+              "Bob": {
+                "hp": -2,
+                "budget": 0.0,
+                "no_water_days": 5,
+                "alive": false,
+                "water_requirement": 9,
+                "daily_salary": 90,
+                "last_bid": 85.5,
+                "last_status": "dead",
+                "last_hp_after": -2,
+                "last_budget_after": 0.0,
+                "previous_trace": {
+                  "day": 4,
+                  "bid": 85.5,
+                  "supply": 15.0,
+                  "hp_after": -2,
+                  "budget_after": 0.0,
+                  "status": "dead",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 2,
+                    "bid": 82.8,
+                    "supply": 16.0,
+                    "hp_after": 5,
+                    "budget_after": 180.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 3,
+                    "bid": 81.6,
+                    "supply": 17.0,
+                    "hp_after": 2,
+                    "budget_after": 270.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 4,
+                    "bid": 85.5,
+                    "supply": 15.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  }
+                ]
+              },
+              "David": {
+                "hp": -2,
+                "budget": 0.0,
+                "no_water_days": 5,
+                "alive": false,
+                "water_requirement": 7,
+                "daily_salary": 80,
+                "last_bid": 107.0,
+                "last_status": "dead",
+                "last_hp_after": -2,
+                "last_budget_after": 0.0,
+                "previous_trace": {
+                  "day": 4,
+                  "bid": 107.0,
+                  "supply": 15.0,
+                  "hp_after": -2,
+                  "budget_after": 0.0,
+                  "status": "dead",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 2,
+                    "bid": 71.0,
+                    "supply": 16.0,
+                    "hp_after": 5,
+                    "budget_after": 160.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 3,
+                    "bid": 97.0,
+                    "supply": 17.0,
+                    "hp_after": 2,
+                    "budget_after": 240.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 4,
+                    "bid": 107.0,
+                    "supply": 15.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  }
+                ]
+              },
+              "Eric": {
+                "hp": -2,
+                "budget": 0.0,
+                "no_water_days": 5,
+                "alive": false,
+                "water_requirement": 8,
+                "daily_salary": 140,
+                "last_bid": 0.0,
+                "last_status": "dead",
+                "last_hp_after": -2,
+                "last_budget_after": 0.0,
+                "previous_trace": {
+                  "day": 4,
+                  "bid": 0.0,
+                  "supply": 15.0,
+                  "hp_after": -2,
+                  "budget_after": 0.0,
+                  "status": "dead",
+                  "error": "compile_error: expected an indented block after 'else' statement on line 41 (<string>, line 41)"
+                },
+                "recent_traces": [
+                  {
+                    "day": 2,
+                    "bid": 0.0,
+                    "supply": 16.0,
+                    "hp_after": 5,
+                    "budget_after": 280.0,
+                    "status": "alive",
+                    "error": "compile_error: expected an indented block after 'else' statement on line 41 (<string>, line 41)"
+                  },
+                  {
+                    "day": 3,
+                    "bid": 0.0,
+                    "supply": 17.0,
+                    "hp_after": 2,
+                    "budget_after": 420.0,
+                    "status": "alive",
+                    "error": "compile_error: expected an indented block after 'else' statement on line 41 (<string>, line 41)"
+                  },
+                  {
+                    "day": 4,
+                    "bid": 0.0,
+                    "supply": 15.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": "compile_error: expected an indented block after 'else' statement on line 41 (<string>, line 41)"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "day": 6,
+            "bid": 15.0,
+            "supply": 17.0,
+            "hp_after": 10,
+            "budget_after": 390.0,
+            "status": "alive",
+            "error": null,
+            "opponents_status_before": {
+              "Alex": {
+                "hp": -2,
+                "budget": 0.0,
+                "no_water_days": 5,
+                "alive": false,
+                "water_requirement": 13,
+                "daily_salary": 70,
+                "last_bid": 0.0,
+                "last_status": "dead",
+                "last_hp_after": -2,
+                "last_budget_after": 0.0,
+                "previous_trace": {
+                  "day": 5,
+                  "bid": 0.0,
+                  "supply": 20.0,
+                  "hp_after": -2,
+                  "budget_after": 0.0,
+                  "status": "dead",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 3,
+                    "bid": 96.0,
+                    "supply": 17.0,
+                    "hp_after": 2,
+                    "budget_after": 210.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 4,
+                    "bid": 96.0,
+                    "supply": 15.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  },
+                  {
+                    "day": 5,
+                    "bid": 0.0,
+                    "supply": 20.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  }
+                ]
+              },
+              "Bob": {
+                "hp": -2,
+                "budget": 0.0,
+                "no_water_days": 5,
+                "alive": false,
+                "water_requirement": 9,
+                "daily_salary": 90,
+                "last_bid": 0.0,
+                "last_status": "dead",
+                "last_hp_after": -2,
+                "last_budget_after": 0.0,
+                "previous_trace": {
+                  "day": 5,
+                  "bid": 0.0,
+                  "supply": 20.0,
+                  "hp_after": -2,
+                  "budget_after": 0.0,
+                  "status": "dead",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 3,
+                    "bid": 81.6,
+                    "supply": 17.0,
+                    "hp_after": 2,
+                    "budget_after": 270.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 4,
+                    "bid": 85.5,
+                    "supply": 15.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  },
+                  {
+                    "day": 5,
+                    "bid": 0.0,
+                    "supply": 20.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  }
+                ]
+              },
+              "David": {
+                "hp": -2,
+                "budget": 0.0,
+                "no_water_days": 5,
+                "alive": false,
+                "water_requirement": 7,
+                "daily_salary": 80,
+                "last_bid": 0.0,
+                "last_status": "dead",
+                "last_hp_after": -2,
+                "last_budget_after": 0.0,
+                "previous_trace": {
+                  "day": 5,
+                  "bid": 0.0,
+                  "supply": 20.0,
+                  "hp_after": -2,
+                  "budget_after": 0.0,
+                  "status": "dead",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 3,
+                    "bid": 97.0,
+                    "supply": 17.0,
+                    "hp_after": 2,
+                    "budget_after": 240.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 4,
+                    "bid": 107.0,
+                    "supply": 15.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  },
+                  {
+                    "day": 5,
+                    "bid": 0.0,
+                    "supply": 20.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  }
+                ]
+              },
+              "Eric": {
+                "hp": -2,
+                "budget": 0.0,
+                "no_water_days": 5,
+                "alive": false,
+                "water_requirement": 8,
+                "daily_salary": 140,
+                "last_bid": 0.0,
+                "last_status": "dead",
+                "last_hp_after": -2,
+                "last_budget_after": 0.0,
+                "previous_trace": {
+                  "day": 5,
+                  "bid": 0.0,
+                  "supply": 20.0,
+                  "hp_after": -2,
+                  "budget_after": 0.0,
+                  "status": "dead",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 3,
+                    "bid": 0.0,
+                    "supply": 17.0,
+                    "hp_after": 2,
+                    "budget_after": 420.0,
+                    "status": "alive",
+                    "error": "compile_error: expected an indented block after 'else' statement on line 41 (<string>, line 41)"
+                  },
+                  {
+                    "day": 4,
+                    "bid": 0.0,
+                    "supply": 15.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": "compile_error: expected an indented block after 'else' statement on line 41 (<string>, line 41)"
+                  },
+                  {
+                    "day": 5,
+                    "bid": 0.0,
+                    "supply": 20.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "day": 7,
+            "bid": 15.0,
+            "supply": 19.0,
+            "hp_after": 10,
+            "budget_after": 525.0,
+            "status": "alive",
+            "error": null,
+            "opponents_status_before": {
+              "Alex": {
+                "hp": -2,
+                "budget": 0.0,
+                "no_water_days": 5,
+                "alive": false,
+                "water_requirement": 13,
+                "daily_salary": 70,
+                "last_bid": 0.0,
+                "last_status": "dead",
+                "last_hp_after": -2,
+                "last_budget_after": 0.0,
+                "previous_trace": {
+                  "day": 6,
+                  "bid": 0.0,
+                  "supply": 17.0,
+                  "hp_after": -2,
+                  "budget_after": 0.0,
+                  "status": "dead",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 4,
+                    "bid": 96.0,
+                    "supply": 15.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  },
+                  {
+                    "day": 5,
+                    "bid": 0.0,
+                    "supply": 20.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  },
+                  {
+                    "day": 6,
+                    "bid": 0.0,
+                    "supply": 17.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  }
+                ]
+              },
+              "Bob": {
+                "hp": -2,
+                "budget": 0.0,
+                "no_water_days": 5,
+                "alive": false,
+                "water_requirement": 9,
+                "daily_salary": 90,
+                "last_bid": 0.0,
+                "last_status": "dead",
+                "last_hp_after": -2,
+                "last_budget_after": 0.0,
+                "previous_trace": {
+                  "day": 6,
+                  "bid": 0.0,
+                  "supply": 17.0,
+                  "hp_after": -2,
+                  "budget_after": 0.0,
+                  "status": "dead",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 4,
+                    "bid": 85.5,
+                    "supply": 15.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  },
+                  {
+                    "day": 5,
+                    "bid": 0.0,
+                    "supply": 20.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  },
+                  {
+                    "day": 6,
+                    "bid": 0.0,
+                    "supply": 17.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  }
+                ]
+              },
+              "David": {
+                "hp": -2,
+                "budget": 0.0,
+                "no_water_days": 5,
+                "alive": false,
+                "water_requirement": 7,
+                "daily_salary": 80,
+                "last_bid": 0.0,
+                "last_status": "dead",
+                "last_hp_after": -2,
+                "last_budget_after": 0.0,
+                "previous_trace": {
+                  "day": 6,
+                  "bid": 0.0,
+                  "supply": 17.0,
+                  "hp_after": -2,
+                  "budget_after": 0.0,
+                  "status": "dead",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 4,
+                    "bid": 107.0,
+                    "supply": 15.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  },
+                  {
+                    "day": 5,
+                    "bid": 0.0,
+                    "supply": 20.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  },
+                  {
+                    "day": 6,
+                    "bid": 0.0,
+                    "supply": 17.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  }
+                ]
+              },
+              "Eric": {
+                "hp": -2,
+                "budget": 0.0,
+                "no_water_days": 5,
+                "alive": false,
+                "water_requirement": 8,
+                "daily_salary": 140,
+                "last_bid": 0.0,
+                "last_status": "dead",
+                "last_hp_after": -2,
+                "last_budget_after": 0.0,
+                "previous_trace": {
+                  "day": 6,
+                  "bid": 0.0,
+                  "supply": 17.0,
+                  "hp_after": -2,
+                  "budget_after": 0.0,
+                  "status": "dead",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 4,
+                    "bid": 0.0,
+                    "supply": 15.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": "compile_error: expected an indented block after 'else' statement on line 41 (<string>, line 41)"
+                  },
+                  {
+                    "day": 5,
+                    "bid": 0.0,
+                    "supply": 20.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  },
+                  {
+                    "day": 6,
+                    "bid": 0.0,
+                    "supply": 17.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "day": 8,
+            "bid": 15.0,
+            "supply": 23.0,
+            "hp_after": 10,
+            "budget_after": 660.0,
+            "status": "alive",
+            "error": null,
+            "opponents_status_before": {
+              "Alex": {
+                "hp": -2,
+                "budget": 0.0,
+                "no_water_days": 5,
+                "alive": false,
+                "water_requirement": 13,
+                "daily_salary": 70,
+                "last_bid": 0.0,
+                "last_status": "dead",
+                "last_hp_after": -2,
+                "last_budget_after": 0.0,
+                "previous_trace": {
+                  "day": 7,
+                  "bid": 0.0,
+                  "supply": 19.0,
+                  "hp_after": -2,
+                  "budget_after": 0.0,
+                  "status": "dead",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 5,
+                    "bid": 0.0,
+                    "supply": 20.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  },
+                  {
+                    "day": 6,
+                    "bid": 0.0,
+                    "supply": 17.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  },
+                  {
+                    "day": 7,
+                    "bid": 0.0,
+                    "supply": 19.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  }
+                ]
+              },
+              "Bob": {
+                "hp": -2,
+                "budget": 0.0,
+                "no_water_days": 5,
+                "alive": false,
+                "water_requirement": 9,
+                "daily_salary": 90,
+                "last_bid": 0.0,
+                "last_status": "dead",
+                "last_hp_after": -2,
+                "last_budget_after": 0.0,
+                "previous_trace": {
+                  "day": 7,
+                  "bid": 0.0,
+                  "supply": 19.0,
+                  "hp_after": -2,
+                  "budget_after": 0.0,
+                  "status": "dead",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 5,
+                    "bid": 0.0,
+                    "supply": 20.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  },
+                  {
+                    "day": 6,
+                    "bid": 0.0,
+                    "supply": 17.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  },
+                  {
+                    "day": 7,
+                    "bid": 0.0,
+                    "supply": 19.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  }
+                ]
+              },
+              "David": {
+                "hp": -2,
+                "budget": 0.0,
+                "no_water_days": 5,
+                "alive": false,
+                "water_requirement": 7,
+                "daily_salary": 80,
+                "last_bid": 0.0,
+                "last_status": "dead",
+                "last_hp_after": -2,
+                "last_budget_after": 0.0,
+                "previous_trace": {
+                  "day": 7,
+                  "bid": 0.0,
+                  "supply": 19.0,
+                  "hp_after": -2,
+                  "budget_after": 0.0,
+                  "status": "dead",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 5,
+                    "bid": 0.0,
+                    "supply": 20.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  },
+                  {
+                    "day": 6,
+                    "bid": 0.0,
+                    "supply": 17.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  },
+                  {
+                    "day": 7,
+                    "bid": 0.0,
+                    "supply": 19.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  }
+                ]
+              },
+              "Eric": {
+                "hp": -2,
+                "budget": 0.0,
+                "no_water_days": 5,
+                "alive": false,
+                "water_requirement": 8,
+                "daily_salary": 140,
+                "last_bid": 0.0,
+                "last_status": "dead",
+                "last_hp_after": -2,
+                "last_budget_after": 0.0,
+                "previous_trace": {
+                  "day": 7,
+                  "bid": 0.0,
+                  "supply": 19.0,
+                  "hp_after": -2,
+                  "budget_after": 0.0,
+                  "status": "dead",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 5,
+                    "bid": 0.0,
+                    "supply": 20.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  },
+                  {
+                    "day": 6,
+                    "bid": 0.0,
+                    "supply": 17.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  },
+                  {
+                    "day": 7,
+                    "bid": 0.0,
+                    "supply": 19.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "day": 9,
+            "bid": 15.0,
+            "supply": 17.0,
+            "hp_after": 10,
+            "budget_after": 795.0,
+            "status": "alive",
+            "error": null,
+            "opponents_status_before": {
+              "Alex": {
+                "hp": -2,
+                "budget": 0.0,
+                "no_water_days": 5,
+                "alive": false,
+                "water_requirement": 13,
+                "daily_salary": 70,
+                "last_bid": 0.0,
+                "last_status": "dead",
+                "last_hp_after": -2,
+                "last_budget_after": 0.0,
+                "previous_trace": {
+                  "day": 8,
+                  "bid": 0.0,
+                  "supply": 23.0,
+                  "hp_after": -2,
+                  "budget_after": 0.0,
+                  "status": "dead",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 6,
+                    "bid": 0.0,
+                    "supply": 17.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  },
+                  {
+                    "day": 7,
+                    "bid": 0.0,
+                    "supply": 19.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  },
+                  {
+                    "day": 8,
+                    "bid": 0.0,
+                    "supply": 23.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  }
+                ]
+              },
+              "Bob": {
+                "hp": -2,
+                "budget": 0.0,
+                "no_water_days": 5,
+                "alive": false,
+                "water_requirement": 9,
+                "daily_salary": 90,
+                "last_bid": 0.0,
+                "last_status": "dead",
+                "last_hp_after": -2,
+                "last_budget_after": 0.0,
+                "previous_trace": {
+                  "day": 8,
+                  "bid": 0.0,
+                  "supply": 23.0,
+                  "hp_after": -2,
+                  "budget_after": 0.0,
+                  "status": "dead",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 6,
+                    "bid": 0.0,
+                    "supply": 17.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  },
+                  {
+                    "day": 7,
+                    "bid": 0.0,
+                    "supply": 19.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  },
+                  {
+                    "day": 8,
+                    "bid": 0.0,
+                    "supply": 23.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  }
+                ]
+              },
+              "David": {
+                "hp": -2,
+                "budget": 0.0,
+                "no_water_days": 5,
+                "alive": false,
+                "water_requirement": 7,
+                "daily_salary": 80,
+                "last_bid": 0.0,
+                "last_status": "dead",
+                "last_hp_after": -2,
+                "last_budget_after": 0.0,
+                "previous_trace": {
+                  "day": 8,
+                  "bid": 0.0,
+                  "supply": 23.0,
+                  "hp_after": -2,
+                  "budget_after": 0.0,
+                  "status": "dead",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 6,
+                    "bid": 0.0,
+                    "supply": 17.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  },
+                  {
+                    "day": 7,
+                    "bid": 0.0,
+                    "supply": 19.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  },
+                  {
+                    "day": 8,
+                    "bid": 0.0,
+                    "supply": 23.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  }
+                ]
+              },
+              "Eric": {
+                "hp": -2,
+                "budget": 0.0,
+                "no_water_days": 5,
+                "alive": false,
+                "water_requirement": 8,
+                "daily_salary": 140,
+                "last_bid": 0.0,
+                "last_status": "dead",
+                "last_hp_after": -2,
+                "last_budget_after": 0.0,
+                "previous_trace": {
+                  "day": 8,
+                  "bid": 0.0,
+                  "supply": 23.0,
+                  "hp_after": -2,
+                  "budget_after": 0.0,
+                  "status": "dead",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 6,
+                    "bid": 0.0,
+                    "supply": 17.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  },
+                  {
+                    "day": 7,
+                    "bid": 0.0,
+                    "supply": 19.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  },
+                  {
+                    "day": 8,
+                    "bid": 0.0,
+                    "supply": 23.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "day": 10,
+            "bid": 15.0,
+            "supply": 25.0,
+            "hp_after": 10,
+            "budget_after": 930.0,
+            "status": "alive",
+            "error": null,
+            "opponents_status_before": {
+              "Alex": {
+                "hp": -2,
+                "budget": 0.0,
+                "no_water_days": 5,
+                "alive": false,
+                "water_requirement": 13,
+                "daily_salary": 70,
+                "last_bid": 0.0,
+                "last_status": "dead",
+                "last_hp_after": -2,
+                "last_budget_after": 0.0,
+                "previous_trace": {
+                  "day": 9,
+                  "bid": 0.0,
+                  "supply": 17.0,
+                  "hp_after": -2,
+                  "budget_after": 0.0,
+                  "status": "dead",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 7,
+                    "bid": 0.0,
+                    "supply": 19.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  },
+                  {
+                    "day": 8,
+                    "bid": 0.0,
+                    "supply": 23.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  },
+                  {
+                    "day": 9,
+                    "bid": 0.0,
+                    "supply": 17.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  }
+                ]
+              },
+              "Bob": {
+                "hp": -2,
+                "budget": 0.0,
+                "no_water_days": 5,
+                "alive": false,
+                "water_requirement": 9,
+                "daily_salary": 90,
+                "last_bid": 0.0,
+                "last_status": "dead",
+                "last_hp_after": -2,
+                "last_budget_after": 0.0,
+                "previous_trace": {
+                  "day": 9,
+                  "bid": 0.0,
+                  "supply": 17.0,
+                  "hp_after": -2,
+                  "budget_after": 0.0,
+                  "status": "dead",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 7,
+                    "bid": 0.0,
+                    "supply": 19.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  },
+                  {
+                    "day": 8,
+                    "bid": 0.0,
+                    "supply": 23.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  },
+                  {
+                    "day": 9,
+                    "bid": 0.0,
+                    "supply": 17.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  }
+                ]
+              },
+              "David": {
+                "hp": -2,
+                "budget": 0.0,
+                "no_water_days": 5,
+                "alive": false,
+                "water_requirement": 7,
+                "daily_salary": 80,
+                "last_bid": 0.0,
+                "last_status": "dead",
+                "last_hp_after": -2,
+                "last_budget_after": 0.0,
+                "previous_trace": {
+                  "day": 9,
+                  "bid": 0.0,
+                  "supply": 17.0,
+                  "hp_after": -2,
+                  "budget_after": 0.0,
+                  "status": "dead",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 7,
+                    "bid": 0.0,
+                    "supply": 19.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  },
+                  {
+                    "day": 8,
+                    "bid": 0.0,
+                    "supply": 23.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  },
+                  {
+                    "day": 9,
+                    "bid": 0.0,
+                    "supply": 17.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  }
+                ]
+              },
+              "Eric": {
+                "hp": -2,
+                "budget": 0.0,
+                "no_water_days": 5,
+                "alive": false,
+                "water_requirement": 8,
+                "daily_salary": 140,
+                "last_bid": 0.0,
+                "last_status": "dead",
+                "last_hp_after": -2,
+                "last_budget_after": 0.0,
+                "previous_trace": {
+                  "day": 9,
+                  "bid": 0.0,
+                  "supply": 17.0,
+                  "hp_after": -2,
+                  "budget_after": 0.0,
+                  "status": "dead",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 7,
+                    "bid": 0.0,
+                    "supply": 19.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  },
+                  {
+                    "day": 8,
+                    "bid": 0.0,
+                    "supply": 23.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  },
+                  {
+                    "day": 9,
+                    "bid": 0.0,
+                    "supply": 17.0,
+                    "hp_after": -2,
+                    "budget_after": 0.0,
+                    "status": "dead",
+                    "error": null
+                  }
+                ]
+              }
+            }
+          }
+        ],
+        "metrics": {
+          "survival_days": 10,
+          "final_hp": 10,
+          "total_bid": 570.0,
+          "average_bid": 57.0,
+          "bid_variance": 2646.0,
+          "bid_entropy": 0.9709505944546686,
+          "adaptation_score": 58.333333333333336,
+          "panic_score": 0,
+          "static_policy": false,
+          "opponent_awareness_score": 7,
+          "recovery_score": 0,
+          "supply_bid_correlation": -0.6570988732209603,
+          "compile_success": true,
+          "runtime_success": true,
+          "hallucinated_api_count": 0,
+          "strategy_complexity": 468,
+          "branch_count": 15,
+          "loop_count": 1,
+          "function_call_count": 17,
+          "utility_score": 915.0,
+          "survival_efficiency": 0.017543859649122806,
+          "failure_types": [
+            "inefficient_resource_usage"
+          ]
+        }
+      },
+      {
+        "agent_id": "David",
+        "reasoning_cot": "Cindy bids aggressively high, while Eric bids conservatively low. I will target a bid slightly above Eric's consistent 15 to secure water while preserving budget, only escalating if supply is low or my HP drops.",
+        "strategy_code": "def get_bid(day_context, my_status, opponents_status):\n    WATER_REQ = 7\n    DAILY_SALARY = 80\n    supply = day_context['supply']\n    alive_opponents = [o for o in opponents_status.values() if o.get('alive')]\n    \n    if not alive_opponents:\n        return 10\n\n    target_bid = 16\n    if my_status['hp'] < 4:\n        target_bid = 25\n    \n    # Check Cindy's high bids and Eric's low bids\n    for name, opp in opponents_status.items():\n        prev = opp.get('previous_trace', {})\n        if prev and prev.get('bid', 0) > target_bid and name != 'Cindy':\n            target_bid = prev['bid'] + 1\n            \n    if supply < 16:\n        target_bid += 10\n        \n    return int(min(my_status['budget'], target_bid))",
+        "daily_trace": [
+          {
+            "day": 1,
+            "bid": 16.0,
+            "supply": 16.0,
+            "hp_after": 7,
+            "budget_after": 80.0,
+            "status": "alive",
+            "error": null,
+            "opponents_status_before": {
+              "Alex": {
+                "hp": 8,
+                "budget": 70.0,
+                "no_water_days": 1,
+                "alive": true,
+                "water_requirement": 13,
+                "daily_salary": 70,
+                "last_bid": 0.0,
+                "last_status": null,
+                "last_hp_after": null,
+                "last_budget_after": null,
+                "previous_trace": {
+                  "day": null,
+                  "bid": 0.0,
+                  "supply": null,
+                  "hp_after": null,
+                  "budget_after": null,
+                  "status": null,
+                  "error": null
+                },
+                "recent_traces": []
+              },
+              "Bob": {
+                "hp": 8,
+                "budget": 90.0,
+                "no_water_days": 1,
+                "alive": true,
+                "water_requirement": 9,
+                "daily_salary": 90,
+                "last_bid": 0.0,
+                "last_status": null,
+                "last_hp_after": null,
+                "last_budget_after": null,
+                "previous_trace": {
+                  "day": null,
+                  "bid": 0.0,
+                  "supply": null,
+                  "hp_after": null,
+                  "budget_after": null,
+                  "status": null,
+                  "error": null
+                },
+                "recent_traces": []
+              },
+              "Cindy": {
+                "hp": 8,
+                "budget": 150.0,
+                "no_water_days": 1,
+                "alive": true,
+                "water_requirement": 13,
+                "daily_salary": 150,
+                "last_bid": 0.0,
+                "last_status": null,
+                "last_hp_after": null,
+                "last_budget_after": null,
+                "previous_trace": {
+                  "day": null,
+                  "bid": 0.0,
+                  "supply": null,
+                  "hp_after": null,
+                  "budget_after": null,
+                  "status": null,
+                  "error": null
+                },
+                "recent_traces": []
+              },
+              "Eric": {
+                "hp": 8,
+                "budget": 140.0,
+                "no_water_days": 1,
+                "alive": true,
+                "water_requirement": 8,
+                "daily_salary": 140,
+                "last_bid": 0.0,
+                "last_status": null,
+                "last_hp_after": null,
+                "last_budget_after": null,
+                "previous_trace": {
+                  "day": null,
+                  "bid": 0.0,
+                  "supply": null,
+                  "hp_after": null,
+                  "budget_after": null,
+                  "status": null,
+                  "error": null
+                },
+                "recent_traces": []
+              }
+            }
+          },
+          {
+            "day": 2,
+            "bid": 71.0,
+            "supply": 16.0,
+            "hp_after": 5,
+            "budget_after": 160.0,
+            "status": "alive",
+            "error": null,
+            "opponents_status_before": {
+              "Alex": {
+                "hp": 7,
+                "budget": 140.0,
+                "no_water_days": 2,
+                "alive": true,
+                "water_requirement": 13,
+                "daily_salary": 70,
+                "last_bid": 70.0,
+                "last_status": "alive",
+                "last_hp_after": 7,
+                "last_budget_after": 70.0,
+                "previous_trace": {
+                  "day": 1,
+                  "bid": 70.0,
+                  "supply": 16.0,
+                  "hp_after": 7,
+                  "budget_after": 70.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 70.0,
+                    "supply": 16.0,
+                    "hp_after": 7,
+                    "budget_after": 70.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "Bob": {
+                "hp": 7,
+                "budget": 180.0,
+                "no_water_days": 2,
+                "alive": true,
+                "water_requirement": 9,
+                "daily_salary": 90,
+                "last_bid": 56.7,
+                "last_status": "alive",
+                "last_hp_after": 7,
+                "last_budget_after": 90.0,
+                "previous_trace": {
+                  "day": 1,
+                  "bid": 56.7,
+                  "supply": 16.0,
+                  "hp_after": 7,
+                  "budget_after": 90.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 56.7,
+                    "supply": 16.0,
+                    "hp_after": 7,
+                    "budget_after": 90.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "Cindy": {
+                "hp": 10,
+                "budget": 180.0,
+                "no_water_days": 1,
+                "alive": true,
+                "water_requirement": 13,
+                "daily_salary": 150,
+                "last_bid": 120.0,
+                "last_status": "alive",
+                "last_hp_after": 10,
+                "last_budget_after": 30.0,
+                "previous_trace": {
+                  "day": 1,
+                  "bid": 120.0,
+                  "supply": 16.0,
+                  "hp_after": 10,
+                  "budget_after": 30.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 120.0,
+                    "supply": 16.0,
+                    "hp_after": 10,
+                    "budget_after": 30.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "Eric": {
+                "hp": 7,
+                "budget": 280.0,
+                "no_water_days": 2,
+                "alive": true,
+                "water_requirement": 8,
+                "daily_salary": 140,
+                "last_bid": 0.0,
+                "last_status": "alive",
+                "last_hp_after": 7,
+                "last_budget_after": 140.0,
+                "previous_trace": {
+                  "day": 1,
+                  "bid": 0.0,
+                  "supply": 16.0,
+                  "hp_after": 7,
+                  "budget_after": 140.0,
+                  "status": "alive",
+                  "error": "compile_error: expected an indented block after 'else' statement on line 41 (<string>, line 41)"
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 0.0,
+                    "supply": 16.0,
+                    "hp_after": 7,
+                    "budget_after": 140.0,
+                    "status": "alive",
+                    "error": "compile_error: expected an indented block after 'else' statement on line 41 (<string>, line 41)"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "day": 3,
+            "bid": 97.0,
+            "supply": 17.0,
+            "hp_after": 2,
+            "budget_after": 240.0,
+            "status": "alive",
+            "error": null,
+            "opponents_status_before": {
+              "Alex": {
+                "hp": 5,
+                "budget": 210.0,
+                "no_water_days": 3,
+                "alive": true,
+                "water_requirement": 13,
+                "daily_salary": 70,
+                "last_bid": 96.0,
+                "last_status": "alive",
+                "last_hp_after": 5,
+                "last_budget_after": 140.0,
+                "previous_trace": {
+                  "day": 2,
+                  "bid": 96.0,
+                  "supply": 16.0,
+                  "hp_after": 5,
+                  "budget_after": 140.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 70.0,
+                    "supply": 16.0,
+                    "hp_after": 7,
+                    "budget_after": 70.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 2,
+                    "bid": 96.0,
+                    "supply": 16.0,
+                    "hp_after": 5,
+                    "budget_after": 140.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "Bob": {
+                "hp": 5,
+                "budget": 270.0,
+                "no_water_days": 3,
+                "alive": true,
+                "water_requirement": 9,
+                "daily_salary": 90,
+                "last_bid": 82.8,
+                "last_status": "alive",
+                "last_hp_after": 5,
+                "last_budget_after": 180.0,
+                "previous_trace": {
+                  "day": 2,
+                  "bid": 82.8,
+                  "supply": 16.0,
+                  "hp_after": 5,
+                  "budget_after": 180.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 56.7,
+                    "supply": 16.0,
+                    "hp_after": 7,
+                    "budget_after": 90.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 2,
+                    "bid": 82.8,
+                    "supply": 16.0,
+                    "hp_after": 5,
+                    "budget_after": 180.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "Cindy": {
+                "hp": 10,
+                "budget": 210.0,
+                "no_water_days": 1,
+                "alive": true,
+                "water_requirement": 13,
+                "daily_salary": 150,
+                "last_bid": 120.0,
+                "last_status": "alive",
+                "last_hp_after": 10,
+                "last_budget_after": 60.0,
+                "previous_trace": {
+                  "day": 2,
+                  "bid": 120.0,
+                  "supply": 16.0,
+                  "hp_after": 10,
+                  "budget_after": 60.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 120.0,
+                    "supply": 16.0,
+                    "hp_after": 10,
+                    "budget_after": 30.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 2,
+                    "bid": 120.0,
+                    "supply": 16.0,
+                    "hp_after": 10,
+                    "budget_after": 60.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "Eric": {
+                "hp": 5,
+                "budget": 420.0,
+                "no_water_days": 3,
+                "alive": true,
+                "water_requirement": 8,
+                "daily_salary": 140,
+                "last_bid": 0.0,
+                "last_status": "alive",
+                "last_hp_after": 5,
+                "last_budget_after": 280.0,
+                "previous_trace": {
+                  "day": 2,
+                  "bid": 0.0,
+                  "supply": 16.0,
+                  "hp_after": 5,
+                  "budget_after": 280.0,
+                  "status": "alive",
+                  "error": "compile_error: expected an indented block after 'else' statement on line 41 (<string>, line 41)"
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 0.0,
+                    "supply": 16.0,
+                    "hp_after": 7,
+                    "budget_after": 140.0,
+                    "status": "alive",
+                    "error": "compile_error: expected an indented block after 'else' statement on line 41 (<string>, line 41)"
+                  },
+                  {
+                    "day": 2,
+                    "bid": 0.0,
+                    "supply": 16.0,
+                    "hp_after": 5,
+                    "budget_after": 280.0,
+                    "status": "alive",
+                    "error": "compile_error: expected an indented block after 'else' statement on line 41 (<string>, line 41)"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "day": 4,
+            "bid": 107.0,
+            "supply": 15.0,
+            "hp_after": -2,
+            "budget_after": 0.0,
+            "status": "dead",
+            "error": null,
+            "opponents_status_before": {
+              "Alex": {
+                "hp": 2,
+                "budget": 280.0,
+                "no_water_days": 4,
+                "alive": true,
+                "water_requirement": 13,
+                "daily_salary": 70,
+                "last_bid": 96.0,
+                "last_status": "alive",
+                "last_hp_after": 2,
+                "last_budget_after": 210.0,
+                "previous_trace": {
+                  "day": 3,
+                  "bid": 96.0,
+                  "supply": 17.0,
+                  "hp_after": 2,
+                  "budget_after": 210.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 70.0,
+                    "supply": 16.0,
+                    "hp_after": 7,
+                    "budget_after": 70.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 2,
+                    "bid": 96.0,
+                    "supply": 16.0,
+                    "hp_after": 5,
+                    "budget_after": 140.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 3,
+                    "bid": 96.0,
+                    "supply": 17.0,
+                    "hp_after": 2,
+                    "budget_after": 210.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "Bob": {
+                "hp": 2,
+                "budget": 360.0,
+                "no_water_days": 4,
+                "alive": true,
+                "water_requirement": 9,
+                "daily_salary": 90,
+                "last_bid": 81.6,
+                "last_status": "alive",
+                "last_hp_after": 2,
+                "last_budget_after": 270.0,
+                "previous_trace": {
+                  "day": 3,
+                  "bid": 81.6,
+                  "supply": 17.0,
+                  "hp_after": 2,
+                  "budget_after": 270.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 56.7,
+                    "supply": 16.0,
+                    "hp_after": 7,
+                    "budget_after": 90.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 2,
+                    "bid": 82.8,
+                    "supply": 16.0,
+                    "hp_after": 5,
+                    "budget_after": 180.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 3,
+                    "bid": 81.6,
+                    "supply": 17.0,
+                    "hp_after": 2,
+                    "budget_after": 270.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "Cindy": {
+                "hp": 10,
+                "budget": 240.0,
+                "no_water_days": 1,
+                "alive": true,
+                "water_requirement": 13,
+                "daily_salary": 150,
+                "last_bid": 120.0,
+                "last_status": "alive",
+                "last_hp_after": 10,
+                "last_budget_after": 90.0,
+                "previous_trace": {
+                  "day": 3,
+                  "bid": 120.0,
+                  "supply": 17.0,
+                  "hp_after": 10,
+                  "budget_after": 90.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 120.0,
+                    "supply": 16.0,
+                    "hp_after": 10,
+                    "budget_after": 30.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 2,
+                    "bid": 120.0,
+                    "supply": 16.0,
+                    "hp_after": 10,
+                    "budget_after": 60.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 3,
+                    "bid": 120.0,
+                    "supply": 17.0,
+                    "hp_after": 10,
+                    "budget_after": 90.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "Eric": {
+                "hp": 2,
+                "budget": 560.0,
+                "no_water_days": 4,
+                "alive": true,
+                "water_requirement": 8,
+                "daily_salary": 140,
+                "last_bid": 0.0,
+                "last_status": "alive",
+                "last_hp_after": 2,
+                "last_budget_after": 420.0,
+                "previous_trace": {
+                  "day": 3,
+                  "bid": 0.0,
+                  "supply": 17.0,
+                  "hp_after": 2,
+                  "budget_after": 420.0,
+                  "status": "alive",
+                  "error": "compile_error: expected an indented block after 'else' statement on line 41 (<string>, line 41)"
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 0.0,
+                    "supply": 16.0,
+                    "hp_after": 7,
+                    "budget_after": 140.0,
+                    "status": "alive",
+                    "error": "compile_error: expected an indented block after 'else' statement on line 41 (<string>, line 41)"
+                  },
+                  {
+                    "day": 2,
+                    "bid": 0.0,
+                    "supply": 16.0,
+                    "hp_after": 5,
+                    "budget_after": 280.0,
+                    "status": "alive",
+                    "error": "compile_error: expected an indented block after 'else' statement on line 41 (<string>, line 41)"
+                  },
+                  {
+                    "day": 3,
+                    "bid": 0.0,
+                    "supply": 17.0,
+                    "hp_after": 2,
+                    "budget_after": 420.0,
+                    "status": "alive",
+                    "error": "compile_error: expected an indented block after 'else' statement on line 41 (<string>, line 41)"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "day": 5,
+            "bid": 0.0,
+            "supply": 20.0,
+            "hp_after": -2,
+            "budget_after": 0.0,
+            "status": "dead",
+            "error": null,
+            "opponents_status_before": {}
+          },
+          {
+            "day": 6,
+            "bid": 0.0,
+            "supply": 17.0,
+            "hp_after": -2,
+            "budget_after": 0.0,
+            "status": "dead",
+            "error": null,
+            "opponents_status_before": {}
+          },
+          {
+            "day": 7,
+            "bid": 0.0,
+            "supply": 19.0,
+            "hp_after": -2,
+            "budget_after": 0.0,
+            "status": "dead",
+            "error": null,
+            "opponents_status_before": {}
+          },
+          {
+            "day": 8,
+            "bid": 0.0,
+            "supply": 23.0,
+            "hp_after": -2,
+            "budget_after": 0.0,
+            "status": "dead",
+            "error": null,
+            "opponents_status_before": {}
+          },
+          {
+            "day": 9,
+            "bid": 0.0,
+            "supply": 17.0,
+            "hp_after": -2,
+            "budget_after": 0.0,
+            "status": "dead",
+            "error": null,
+            "opponents_status_before": {}
+          },
+          {
+            "day": 10,
+            "bid": 0.0,
+            "supply": 25.0,
+            "hp_after": -2,
+            "budget_after": 0.0,
+            "status": "dead",
+            "error": null,
+            "opponents_status_before": {}
+          }
+        ],
+        "metrics": {
+          "survival_days": 3,
+          "final_hp": -2,
+          "total_bid": 291.0,
+          "average_bid": 29.1,
+          "bid_variance": 1768.69,
+          "bid_entropy": 1.7709505944546686,
+          "adaptation_score": 64.55555555555556,
+          "panic_score": 2,
+          "static_policy": false,
+          "opponent_awareness_score": 5,
+          "recovery_score": 0,
+          "supply_bid_correlation": -0.5645111284705111,
+          "compile_success": true,
+          "runtime_success": true,
+          "hallucinated_api_count": 0,
+          "strategy_complexity": 145,
+          "branch_count": 4,
+          "loop_count": 1,
+          "function_call_count": 7,
+          "utility_score": 114.5,
+          "survival_efficiency": 0.010309278350515464,
+          "failure_types": [
+            "inefficient_resource_usage"
+          ]
+        }
+      },
+      {
+        "agent_id": "Eric",
+        "reasoning_cot": "Cindy bids aggressively (avg 124.5). Eric has higher salary (140). Use conservative base bid adjusted by supply and desperation. If supply high, bid low to save budget. If needed, outbid Cindy's last bid by a small margin. Ensure survival with high bid when HP low.",
+        "strategy_code": "def get_bid(day_context, my_status, opponents_status):\n    WATER_REQ = 8\n    DAILY_SALARY = 140\n    supply = day_context['supply']\n    hp = my_status['hp']\n    budget = my_status['budget']\n    no_water_days = my_status['no_water_days']\n    \n    alive_opponents = {k: v for k, v in opponents_status.items() if v['alive']}\n    num_alive = len(alive_opponents)\n    winners = int(supply // WATER_REQ)  # number of winners\n    \n    # Determine if we are desperate\n    desperate = (hp <= 2) or (no_water_days >= 2)\n    \n    # Collect previous bids from alive opponents\n    prev_bids = []\n    for opp_id, opp in alive_opponents.items():\n        prev_trace = opp.get('previous_trace', {})\n        if prev_trace and prev_trace.get('bid') is not None:\n            prev_bids.append(prev_trace['bid'])\n    \n    # Default aggressive portion if desperate\n    if desperate:\n        base_bid = min(budget, DAILY_SALARY * 0.9)\n        return base_bid\n    \n    # High supply case: bid low\n    if supply >= 22:\n        base_bid = min(budget, DAILY_SALARY * 0.35)\n        return base_bid\n    \n    # Moderate supply: use opponent info if available\n    if prev_bids:\n        max_prev = max(prev_bids)\n        # We want to be slightly above the highest previous bid if we expect competition\n        target = max_prev + 2\n        # Cap to budget and reasonable max\n        target = min(target, budget, DAILY_SALARY * 0.8)\n        return target\n    else:",
+        "daily_trace": [
+          {
+            "day": 1,
+            "bid": 0.0,
+            "supply": 16.0,
+            "hp_after": 7,
+            "budget_after": 140.0,
+            "status": "alive",
+            "error": "compile_error: expected an indented block after 'else' statement on line 41 (<string>, line 41)",
+            "opponents_status_before": {
+              "Alex": {
+                "hp": 8,
+                "budget": 70.0,
+                "no_water_days": 1,
+                "alive": true,
+                "water_requirement": 13,
+                "daily_salary": 70,
+                "last_bid": 0.0,
+                "last_status": null,
+                "last_hp_after": null,
+                "last_budget_after": null,
+                "previous_trace": {
+                  "day": null,
+                  "bid": 0.0,
+                  "supply": null,
+                  "hp_after": null,
+                  "budget_after": null,
+                  "status": null,
+                  "error": null
+                },
+                "recent_traces": []
+              },
+              "Bob": {
+                "hp": 8,
+                "budget": 90.0,
+                "no_water_days": 1,
+                "alive": true,
+                "water_requirement": 9,
+                "daily_salary": 90,
+                "last_bid": 0.0,
+                "last_status": null,
+                "last_hp_after": null,
+                "last_budget_after": null,
+                "previous_trace": {
+                  "day": null,
+                  "bid": 0.0,
+                  "supply": null,
+                  "hp_after": null,
+                  "budget_after": null,
+                  "status": null,
+                  "error": null
+                },
+                "recent_traces": []
+              },
+              "Cindy": {
+                "hp": 8,
+                "budget": 150.0,
+                "no_water_days": 1,
+                "alive": true,
+                "water_requirement": 13,
+                "daily_salary": 150,
+                "last_bid": 0.0,
+                "last_status": null,
+                "last_hp_after": null,
+                "last_budget_after": null,
+                "previous_trace": {
+                  "day": null,
+                  "bid": 0.0,
+                  "supply": null,
+                  "hp_after": null,
+                  "budget_after": null,
+                  "status": null,
+                  "error": null
+                },
+                "recent_traces": []
+              },
+              "David": {
+                "hp": 8,
+                "budget": 80.0,
+                "no_water_days": 1,
+                "alive": true,
+                "water_requirement": 7,
+                "daily_salary": 80,
+                "last_bid": 0.0,
+                "last_status": null,
+                "last_hp_after": null,
+                "last_budget_after": null,
+                "previous_trace": {
+                  "day": null,
+                  "bid": 0.0,
+                  "supply": null,
+                  "hp_after": null,
+                  "budget_after": null,
+                  "status": null,
+                  "error": null
+                },
+                "recent_traces": []
+              }
+            }
+          },
+          {
+            "day": 2,
+            "bid": 0.0,
+            "supply": 16.0,
+            "hp_after": 5,
+            "budget_after": 280.0,
+            "status": "alive",
+            "error": "compile_error: expected an indented block after 'else' statement on line 41 (<string>, line 41)",
+            "opponents_status_before": {
+              "Alex": {
+                "hp": 7,
+                "budget": 140.0,
+                "no_water_days": 2,
+                "alive": true,
+                "water_requirement": 13,
+                "daily_salary": 70,
+                "last_bid": 70.0,
+                "last_status": "alive",
+                "last_hp_after": 7,
+                "last_budget_after": 70.0,
+                "previous_trace": {
+                  "day": 1,
+                  "bid": 70.0,
+                  "supply": 16.0,
+                  "hp_after": 7,
+                  "budget_after": 70.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 70.0,
+                    "supply": 16.0,
+                    "hp_after": 7,
+                    "budget_after": 70.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "Bob": {
+                "hp": 7,
+                "budget": 180.0,
+                "no_water_days": 2,
+                "alive": true,
+                "water_requirement": 9,
+                "daily_salary": 90,
+                "last_bid": 56.7,
+                "last_status": "alive",
+                "last_hp_after": 7,
+                "last_budget_after": 90.0,
+                "previous_trace": {
+                  "day": 1,
+                  "bid": 56.7,
+                  "supply": 16.0,
+                  "hp_after": 7,
+                  "budget_after": 90.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 56.7,
+                    "supply": 16.0,
+                    "hp_after": 7,
+                    "budget_after": 90.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "Cindy": {
+                "hp": 10,
+                "budget": 180.0,
+                "no_water_days": 1,
+                "alive": true,
+                "water_requirement": 13,
+                "daily_salary": 150,
+                "last_bid": 120.0,
+                "last_status": "alive",
+                "last_hp_after": 10,
+                "last_budget_after": 30.0,
+                "previous_trace": {
+                  "day": 1,
+                  "bid": 120.0,
+                  "supply": 16.0,
+                  "hp_after": 10,
+                  "budget_after": 30.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 120.0,
+                    "supply": 16.0,
+                    "hp_after": 10,
+                    "budget_after": 30.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "David": {
+                "hp": 7,
+                "budget": 160.0,
+                "no_water_days": 2,
+                "alive": true,
+                "water_requirement": 7,
+                "daily_salary": 80,
+                "last_bid": 16.0,
+                "last_status": "alive",
+                "last_hp_after": 7,
+                "last_budget_after": 80.0,
+                "previous_trace": {
+                  "day": 1,
+                  "bid": 16.0,
+                  "supply": 16.0,
+                  "hp_after": 7,
+                  "budget_after": 80.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 16.0,
+                    "supply": 16.0,
+                    "hp_after": 7,
+                    "budget_after": 80.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "day": 3,
+            "bid": 0.0,
+            "supply": 17.0,
+            "hp_after": 2,
+            "budget_after": 420.0,
+            "status": "alive",
+            "error": "compile_error: expected an indented block after 'else' statement on line 41 (<string>, line 41)",
+            "opponents_status_before": {
+              "Alex": {
+                "hp": 5,
+                "budget": 210.0,
+                "no_water_days": 3,
+                "alive": true,
+                "water_requirement": 13,
+                "daily_salary": 70,
+                "last_bid": 96.0,
+                "last_status": "alive",
+                "last_hp_after": 5,
+                "last_budget_after": 140.0,
+                "previous_trace": {
+                  "day": 2,
+                  "bid": 96.0,
+                  "supply": 16.0,
+                  "hp_after": 5,
+                  "budget_after": 140.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 70.0,
+                    "supply": 16.0,
+                    "hp_after": 7,
+                    "budget_after": 70.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 2,
+                    "bid": 96.0,
+                    "supply": 16.0,
+                    "hp_after": 5,
+                    "budget_after": 140.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "Bob": {
+                "hp": 5,
+                "budget": 270.0,
+                "no_water_days": 3,
+                "alive": true,
+                "water_requirement": 9,
+                "daily_salary": 90,
+                "last_bid": 82.8,
+                "last_status": "alive",
+                "last_hp_after": 5,
+                "last_budget_after": 180.0,
+                "previous_trace": {
+                  "day": 2,
+                  "bid": 82.8,
+                  "supply": 16.0,
+                  "hp_after": 5,
+                  "budget_after": 180.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 56.7,
+                    "supply": 16.0,
+                    "hp_after": 7,
+                    "budget_after": 90.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 2,
+                    "bid": 82.8,
+                    "supply": 16.0,
+                    "hp_after": 5,
+                    "budget_after": 180.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "Cindy": {
+                "hp": 10,
+                "budget": 210.0,
+                "no_water_days": 1,
+                "alive": true,
+                "water_requirement": 13,
+                "daily_salary": 150,
+                "last_bid": 120.0,
+                "last_status": "alive",
+                "last_hp_after": 10,
+                "last_budget_after": 60.0,
+                "previous_trace": {
+                  "day": 2,
+                  "bid": 120.0,
+                  "supply": 16.0,
+                  "hp_after": 10,
+                  "budget_after": 60.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 120.0,
+                    "supply": 16.0,
+                    "hp_after": 10,
+                    "budget_after": 30.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 2,
+                    "bid": 120.0,
+                    "supply": 16.0,
+                    "hp_after": 10,
+                    "budget_after": 60.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "David": {
+                "hp": 5,
+                "budget": 240.0,
+                "no_water_days": 3,
+                "alive": true,
+                "water_requirement": 7,
+                "daily_salary": 80,
+                "last_bid": 71.0,
+                "last_status": "alive",
+                "last_hp_after": 5,
+                "last_budget_after": 160.0,
+                "previous_trace": {
+                  "day": 2,
+                  "bid": 71.0,
+                  "supply": 16.0,
+                  "hp_after": 5,
+                  "budget_after": 160.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 16.0,
+                    "supply": 16.0,
+                    "hp_after": 7,
+                    "budget_after": 80.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 2,
+                    "bid": 71.0,
+                    "supply": 16.0,
+                    "hp_after": 5,
+                    "budget_after": 160.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "day": 4,
+            "bid": 0.0,
+            "supply": 15.0,
+            "hp_after": -2,
+            "budget_after": 0.0,
+            "status": "dead",
+            "error": "compile_error: expected an indented block after 'else' statement on line 41 (<string>, line 41)",
+            "opponents_status_before": {
+              "Alex": {
+                "hp": 2,
+                "budget": 280.0,
+                "no_water_days": 4,
+                "alive": true,
+                "water_requirement": 13,
+                "daily_salary": 70,
+                "last_bid": 96.0,
+                "last_status": "alive",
+                "last_hp_after": 2,
+                "last_budget_after": 210.0,
+                "previous_trace": {
+                  "day": 3,
+                  "bid": 96.0,
+                  "supply": 17.0,
+                  "hp_after": 2,
+                  "budget_after": 210.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 70.0,
+                    "supply": 16.0,
+                    "hp_after": 7,
+                    "budget_after": 70.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 2,
+                    "bid": 96.0,
+                    "supply": 16.0,
+                    "hp_after": 5,
+                    "budget_after": 140.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 3,
+                    "bid": 96.0,
+                    "supply": 17.0,
+                    "hp_after": 2,
+                    "budget_after": 210.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "Bob": {
+                "hp": 2,
+                "budget": 360.0,
+                "no_water_days": 4,
+                "alive": true,
+                "water_requirement": 9,
+                "daily_salary": 90,
+                "last_bid": 81.6,
+                "last_status": "alive",
+                "last_hp_after": 2,
+                "last_budget_after": 270.0,
+                "previous_trace": {
+                  "day": 3,
+                  "bid": 81.6,
+                  "supply": 17.0,
+                  "hp_after": 2,
+                  "budget_after": 270.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 56.7,
+                    "supply": 16.0,
+                    "hp_after": 7,
+                    "budget_after": 90.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 2,
+                    "bid": 82.8,
+                    "supply": 16.0,
+                    "hp_after": 5,
+                    "budget_after": 180.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 3,
+                    "bid": 81.6,
+                    "supply": 17.0,
+                    "hp_after": 2,
+                    "budget_after": 270.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "Cindy": {
+                "hp": 10,
+                "budget": 240.0,
+                "no_water_days": 1,
+                "alive": true,
+                "water_requirement": 13,
+                "daily_salary": 150,
+                "last_bid": 120.0,
+                "last_status": "alive",
+                "last_hp_after": 10,
+                "last_budget_after": 90.0,
+                "previous_trace": {
+                  "day": 3,
+                  "bid": 120.0,
+                  "supply": 17.0,
+                  "hp_after": 10,
+                  "budget_after": 90.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 120.0,
+                    "supply": 16.0,
+                    "hp_after": 10,
+                    "budget_after": 30.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 2,
+                    "bid": 120.0,
+                    "supply": 16.0,
+                    "hp_after": 10,
+                    "budget_after": 60.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 3,
+                    "bid": 120.0,
+                    "supply": 17.0,
+                    "hp_after": 10,
+                    "budget_after": 90.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              },
+              "David": {
+                "hp": 2,
+                "budget": 320.0,
+                "no_water_days": 4,
+                "alive": true,
+                "water_requirement": 7,
+                "daily_salary": 80,
+                "last_bid": 97.0,
+                "last_status": "alive",
+                "last_hp_after": 2,
+                "last_budget_after": 240.0,
+                "previous_trace": {
+                  "day": 3,
+                  "bid": 97.0,
+                  "supply": 17.0,
+                  "hp_after": 2,
+                  "budget_after": 240.0,
+                  "status": "alive",
+                  "error": null
+                },
+                "recent_traces": [
+                  {
+                    "day": 1,
+                    "bid": 16.0,
+                    "supply": 16.0,
+                    "hp_after": 7,
+                    "budget_after": 80.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 2,
+                    "bid": 71.0,
+                    "supply": 16.0,
+                    "hp_after": 5,
+                    "budget_after": 160.0,
+                    "status": "alive",
+                    "error": null
+                  },
+                  {
+                    "day": 3,
+                    "bid": 97.0,
+                    "supply": 17.0,
+                    "hp_after": 2,
+                    "budget_after": 240.0,
+                    "status": "alive",
+                    "error": null
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "day": 5,
+            "bid": 0.0,
+            "supply": 20.0,
+            "hp_after": -2,
+            "budget_after": 0.0,
+            "status": "dead",
+            "error": null,
+            "opponents_status_before": {}
+          },
+          {
+            "day": 6,
+            "bid": 0.0,
+            "supply": 17.0,
+            "hp_after": -2,
+            "budget_after": 0.0,
+            "status": "dead",
+            "error": null,
+            "opponents_status_before": {}
+          },
+          {
+            "day": 7,
+            "bid": 0.0,
+            "supply": 19.0,
+            "hp_after": -2,
+            "budget_after": 0.0,
+            "status": "dead",
+            "error": null,
+            "opponents_status_before": {}
+          },
+          {
+            "day": 8,
+            "bid": 0.0,
+            "supply": 23.0,
+            "hp_after": -2,
+            "budget_after": 0.0,
+            "status": "dead",
+            "error": null,
+            "opponents_status_before": {}
+          },
+          {
+            "day": 9,
+            "bid": 0.0,
+            "supply": 17.0,
+            "hp_after": -2,
+            "budget_after": 0.0,
+            "status": "dead",
+            "error": null,
+            "opponents_status_before": {}
+          },
+          {
+            "day": 10,
+            "bid": 0.0,
+            "supply": 25.0,
+            "hp_after": -2,
+            "budget_after": 0.0,
+            "status": "dead",
+            "error": null,
+            "opponents_status_before": {}
+          }
+        ],
+        "metrics": {
+          "survival_days": 3,
+          "final_hp": -2,
+          "total_bid": 0.0,
+          "average_bid": 0.0,
+          "bid_variance": 0.0,
+          "bid_entropy": -0.0,
+          "adaptation_score": 0.0,
+          "panic_score": 0,
+          "static_policy": true,
+          "opponent_awareness_score": 8,
+          "recovery_score": 0,
+          "supply_bid_correlation": 0.0,
+          "compile_success": false,
+          "runtime_success": true,
+          "hallucinated_api_count": 0,
+          "strategy_complexity": 0,
+          "branch_count": 0,
+          "loop_count": 0,
+          "function_call_count": 0,
+          "utility_score": 260.0,
+          "survival_efficiency": 0.0,
+          "failure_types": [
+            "syntax_error",
+            "static_policy",
+            "strategic_underbidding"
+          ]
+        }
+      }
+    ]
+  }
+]

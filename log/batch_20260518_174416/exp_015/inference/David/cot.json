@@ -1,0 +1,47 @@
+{
+  "experiment_id": "exp_015",
+  "agent_id": "David",
+  "source_log": "exp_015",
+  "cot_history": [
+    {
+      "meta_round_id": 1,
+      "reasoning_cot": "Since this is the first day, I will bid slightly above the fair share (supply/agents) to ensure water, while keeping the bid proportional to my salary to preserve budget for later days."
+    },
+    {
+      "meta_round_id": 2,
+      "reasoning_cot": "Cindy and Bob are aggressive bidders (60-75 range). With a supply of 15-25, the market is competitive. I will bid slightly above the average historical bid of the top players to ensure survival while conserving budget, targeting a 65-75 range to outbid Bob and Cindy."
+    },
+    {
+      "meta_round_id": 3,
+      "reasoning_cot": "Alex and Eric are the only survivors. Both bid aggressively (avg > 120). Since supply is 15-25 and requirements are 7, there is enough water for two agents. I will bid slightly above the expected average to secure water while preserving my budget, aiming to outlast them."
+    },
+    {
+      "meta_round_id": 4,
+      "reasoning_cot": "Cindy and Alex bid aggressively. I will calculate the average bid of active opponents and adjust based on my HP. If HP is low, I will bid higher to ensure survival, otherwise, I will bid slightly above the average to secure water while conserving budget."
+    },
+    {
+      "meta_round_id": 5,
+      "reasoning_cot": "Alex and Eric are aggressive survivors. I will target a bid slightly above the average historical competition while maintaining a buffer to preserve my budget. If supply is tight, I prioritize survival; if abundant, I bid moderately to conserve funds for late-game scarcity."
+    },
+    {
+      "meta_round_id": 6,
+      "reasoning_cot": "Cindy bids aggressively (~140) while others failed or were eliminated. I will bid slightly above the average survival threshold to secure water while preserving budget, adjusting upwards if my HP drops below 4 to ensure survival."
+    },
+    {
+      "meta_round_id": 7,
+      "reasoning_cot": "Cindy and Eric are strong survivors. Cindy bids aggressively, often overpaying. I will monitor their budget and bid slightly above the median of their previous bids to ensure water acquisition while preserving budget, as Eric is also a disciplined, high-budget competitor."
+    },
+    {
+      "meta_round_id": 8,
+      "reasoning_cot": "Opponents like Cindy and Eric bid aggressively (190-280). I will prioritize survival by bidding just enough to secure water when supply is tight, while conserving budget. I will estimate the competitive threshold based on yesterday's max bids and adjust based on my current HP."
+    },
+    {
+      "meta_round_id": 9,
+      "reasoning_cot": "Cindy and Bob demonstrate high bidding capacity. I will target a bid slightly above the average historical bids of active opponents while keeping it under my daily salary to preserve budget, adjusting aggressively if my HP drops below 4."
+    },
+    {
+      "meta_round_id": 10,
+      "reasoning_cot": "Opponents Bob, Cindy, and Eric bid aggressively (averaging ~102). Since total supply is 15-25 and requirements are 7, there is often enough for three agents but not four. I will bid slightly above the average to secure water while conserving budget, adjusting based on my HP status."
+    }
+  ]
+}

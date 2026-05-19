@@ -1,0 +1,47 @@
+{
+  "experiment_id": "exp_103",
+  "agent_id": "Cindy",
+  "source_log": "exp_103",
+  "cot_history": [
+    {
+      "meta_round_id": 1,
+      "reasoning_cot": "I observe opponents' previous bids from `previous_trace`. Given the extreme water scarcity (only one unit available daily), if opponents bid high yesterday, I anticipate continued aggression. My bid increases significantly, often above their previous high, to outcompete, especially when my HP is critical. Otherwise, I conserve budget, adapting to my HP status."
+    },
+    {
+      "meta_round_id": 2,
+      "reasoning_cot": "My strategy adapts to opponent's yesterday bids and supply. Low HP triggers aggressive bidding. Otherwise, I bid slightly above opponents' highest previous bid if they were competitive, or conserve if they were passive and supply is abundant. This balances survival with budget efficiency."
+    },
+    {
+      "meta_round_id": 3,
+      "reasoning_cot": "Cindy prioritizes survival (HP, no_water_days). It dynamically adjusts bids, reacting to high `max_yesterday_bid` from competitive opponents (Alex, Eric) to stay competitive, especially when supply is low or late-game. When opponents bid low, Cindy attempts to win cheaply."
+    },
+    {
+      "meta_round_id": 4,
+      "reasoning_cot": "Analyzed opponent average and max bids from previous meta-round. My strategy adapts by bidding higher when my HP is low, and competitively against previous high bids, while conserving budget when opponents bid moderately and my HP is good."
+    },
+    {
+      "meta_round_id": 5,
+      "reasoning_cot": "My strategy dynamically adjusts bids based on my HP and day progression, prioritizing survival. I exploit opponent's 'previous_trace' by reacting to yesterday's highest bid, increasing my bid to stay competitive or slightly outbid aggressive opponents, while managing my budget."
+    },
+    {
+      "meta_round_id": 6,
+      "reasoning_cot": "Given the supply range (15-25) and my water requirement (13), only one agent can satisfy their needs per day. My strategy prioritizes winning this single slot by bidding aggressively, especially when HP is low or water was missed yesterday, and slightly above observed opponent bids."
+    },
+    {
+      "meta_round_id": 7,
+      "reasoning_cot": "I exploit opponents' `previous_trace` by adjusting my bid based on their `max_yesterday_bid`. If competition was high yesterday or my HP is low, I bid aggressively. If supply is abundant or opponents bid low, I aim to save budget. My bids are capped by my daily salary to avoid overspending."
+    },
+    {
+      "meta_round_id": 8,
+      "reasoning_cot": "Only one agent can satisfy their water need, making it a winner-take-all for water. I'll bid aggressively when HP is low or in late game, leveraging opponent's previous high bids. When HP is high, I'll conserve budget but remain competitive against strong players like David and Eric."
+    },
+    {
+      "meta_round_id": 9,
+      "reasoning_cot": "Given the supply always allows only one agent to get their full water requirement (13 units), I must bid aggressively. I'll adjust my bid based on my HP (higher when low), yesterday's highest opponent bid (to outbid), and remaining days (more desperate towards the end to survive)."
+    },
+    {
+      "meta_round_id": 10,
+      "reasoning_cot": "I react to opponents' yesterday bids from previous_trace to stay competitive. If critical HP or end-game, I bid aggressively. Otherwise, I adjust bids based on yesterday's highest bid, supply levels, and number of active opponents to secure water efficiently without overspending."
+    }
+  ]
+}

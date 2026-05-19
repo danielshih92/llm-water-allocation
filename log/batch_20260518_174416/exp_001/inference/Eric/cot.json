@@ -1,0 +1,47 @@
+{
+  "experiment_id": "exp_001",
+  "agent_id": "Eric",
+  "source_log": "exp_001",
+  "cot_history": [
+    {
+      "meta_round_id": 1,
+      "reasoning_cot": "No opponent code provided; use defensive heuristic. Early round: bid moderately to secure water without overspending. Adapt bid based on our HP: if low, bid high; otherwise bid ~40% salary. Use previous_trace if available to adjust, but default to reasonable baseline."
+    },
+    {
+      "meta_round_id": 2,
+      "reasoning_cot": "Previous meta-round shows Bob and Cindy bid high (avg 76, 89). They have large budgets, so aggressive bidding is costly. I'll bid moderately (60-70% of salary) to win occasional water, but raise if HP low. Use previous trace to detect if they recently escalated; if not, I can save."
+    },
+    {
+      "meta_round_id": 3,
+      "reasoning_cot": "On day 1, no opponent trace. Assume aggressive opponents like Cindy. Start with moderate bid to secure water without overpaying. Adjust based on HP: if low, bid higher to survive. Keep budget for later days."
+    },
+    {
+      "meta_round_id": 4,
+      "reasoning_cot": "Day 1 fresh start. Opponents Cindy/David likely aggressive from past. Save budget by bidding moderately based on supply ratio and HP desperation. Avoid overpaying for water."
+    },
+    {
+      "meta_round_id": 5,
+      "reasoning_cot": "Opponents' average bids high (88-118). Use previous highest bid plus small edge to win water. Increase bid if low HP or no_water_days >0. Adjust for low supply. Conserve budget when healthy."
+    },
+    {
+      "meta_round_id": 6,
+      "reasoning_cot": "Exploit yesterday's high bidders (Alex avg 95, Cindy avg 98) by bidding slightly above their max previous bid to secure water, while conserving budget. Adjust for own HP to ensure survival."
+    },
+    {
+      "meta_round_id": 7,
+      "reasoning_cot": "Exploit opponents' high average bids by minimally outbidding them when HP is low; otherwise bid conservatively to save budget. Use previous_trace to estimate current competition."
+    },
+    {
+      "meta_round_id": 8,
+      "reasoning_cot": "Exploit opponent traces: Alex often bids high (>117), Bob moderate (~82), Cindy varied. When my HP is critical (>3), undercut or match their last bid plus a small margin if I need water. Use budget constraints to avoid overspending. For index operations, wrap with int()."
+    },
+    {
+      "meta_round_id": 9,
+      "reasoning_cot": "Exploit opponent patterns: Cindy bids highest (avg 97), Alex moderate (84), Bob low (70). Focus on Cindy's previous bid + margin to outbid when needed. Use HP and no_water_days to adjust urgency. Ensure integer indices by converting floor division result."
+    },
+    {
+      "meta_round_id": 10,
+      "reasoning_cot": "Exploit yesterday's high bids: Alex and Bob bid high (avg 129, 109). We outbid their previous max slightly when HP low, else save budget. Supply high allows lower bid."
+    }
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "experiment_id": "exp_094",
+  "agent_id": "Eric",
+  "source_log": "exp_094",
+  "cot_history": [
+    {
+      "meta_round_id": 1,
+      "reasoning_cot": "No opponent history available. Use conservative baseline: Bid proportionate to HP deficit, survival priority. Escalate if low HP, otherwise moderate. No opponent traces, so assume aggressive bidding."
+    },
+    {
+      "meta_round_id": 2,
+      "reasoning_cot": "Opponents Alex and Cindy averaged ~100-118 bids, indicating aggression. Bob moderate, David passive. To survive, we need to outbid them when HP low, but conserve budget when HP high. Use previous_trace to gauge recent bids. Supply uncertainty suggests bidding higher when supply low. Aim for win rate ~50-60%."
+    },
+    {
+      "meta_round_id": 3,
+      "reasoning_cot": "Opponents bid high (avg 92-129). I'll exploit by bidding slightly above yesterday's max when my hp is low, otherwise save budget. Use previous_trace for immediate reaction."
+    },
+    {
+      "meta_round_id": 4,
+      "reasoning_cot": "Cindy averaged 116.25 with max 145. Others averaged 63-76 with max ~120. She likely bids high again. We can save budget by bidding just above the median of yesterday's bids (around 76) if we have high hp, or more aggressively if low hp. Use previous_trace from opponents alive today to estimate current pressure. Ensure code uses int() for indices."
+    },
+    {
+      "meta_round_id": 5,
+      "reasoning_cot": "Use yesterday's opponents' bids from previous_trace to assess competition. Bid aggressively when hp is low, else conserve budget. Consider supply to adjust: lower supply increases pressure. Always ensure bid is affordable given budget and water requirement."
+    },
+    {
+      "meta_round_id": 6,
+      "reasoning_cot": ""
+    },
+    {
+      "meta_round_id": 7,
+      "reasoning_cot": ""
+    },
+    {
+      "meta_round_id": 8,
+      "reasoning_cot": "Target opponents based on yesterday's max bid. If any aggressive (high bid), match slightly above to secure water when HP low. Otherwise bid conservative to save budget. Use HP as urgency trigger."
+    },
+    {
+      "meta_round_id": 9,
+      "reasoning_cot": "Use previous_trace to gauge opponent aggression. If they bid high yesterday, they may be budget-constrained today. If my HP is low, bid aggressively to survive. Otherwise, bid moderate to save budget for later days."
+    },
+    {
+      "meta_round_id": 10,
+      "reasoning_cot": "Exploit yesterday's max bid among alive opponents. If urgent need water (low hp or no_water_days), bid aggressively just above that max. Otherwise, conserve budget with a moderate bid. Adjust for low supply to ensure winning."
+    }
+  ]
+}

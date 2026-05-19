@@ -1,0 +1,47 @@
+{
+  "experiment_id": "exp_107",
+  "agent_id": "Eric",
+  "source_log": "exp_107",
+  "cot_history": [
+    {
+      "meta_round_id": 1,
+      "reasoning_cot": "No prior traces (metaround empty). Start conservative to avoid overspending. Use 40% salary as base; if hp low, increase. Ensure int conversion for any index."
+    },
+    {
+      "meta_round_id": 2,
+      "reasoning_cot": "Opponent traces show high avg bids (103, 83). Yesterday's trace reveals immediate aggression. To survive 10 days, we must conserve budget but win water when needed. If yesterday's bids were high, we bid just above to secure water. Otherwise lean on low bids with HP>3."
+    },
+    {
+      "meta_round_id": 3,
+      "reasoning_cot": "Exploit Cindy's high budget and past high bids by bidding just above her likely bid only when necessary. Use David's low bids to win cheap when supply high. Adjust for my HP and today's supply."
+    },
+    {
+      "meta_round_id": 4,
+      "reasoning_cot": "Exploit yesterday's traces to estimate opponent bids. Cindy bid high, Bob low budget. Aim to outbid median but stay within budget. Adjust based on own HP."
+    },
+    {
+      "meta_round_id": 5,
+      "reasoning_cot": "Exploit opponent bid traces: Alex is aggressive, others moderate. Use supply to estimate units and bid just above average when safe, but secure water when HP low."
+    },
+    {
+      "meta_round_id": 6,
+      "reasoning_cot": "Cindy dominates with high bids (avg 144.75). To survive, must outbid when low on HP, else save budget. Base bid on need: critical (HP<=2) bid up to 90% salary or outbid yesterday's highest by 1; moderate need (HP<=4) bid 60%; healthy bid low unless supply low. Budget limit enforced."
+    },
+    {
+      "meta_round_id": 7,
+      "reasoning_cot": "Cindy had high average bid (137) and huge budget; likely bids aggressively. David moderate. We must outbid when hp low, else stay conservative. Use yesterday's highest bid to anticipate current. Supply low increases competition, so raise bid. Keep example's adaptive structure but tune to our constants."
+    },
+    {
+      "meta_round_id": 8,
+      "reasoning_cot": "Alex bids high (~107 avg) and spends all. Cindy bids very high (~126) but saves budget, suggesting she may drop bids late. I'll outbid the highest yesterday's bid by a small margin to secure water, but cap at 80-90% of salary to conserve for later. Adjust urgency based on HP and no_water_days."
+    },
+    {
+      "meta_round_id": 9,
+      "reasoning_cot": "Based on meta-round context, Cindy is aggressive with high bids (avg 143.45). Others die early. Exploit by setting base bid on hp and no_water_days, then react to max previous bid from alive opponents to stay competitive when urgent. Conserve budget when healthy."
+    },
+    {
+      "meta_round_id": 10,
+      "reasoning_cot": "Exploit yesterday's max bid: if high, bid conservatively (~70) to still win; if low, bid just above. Also adjust for low HP: bid up to 90% of salary. This adaptive approach balances survival and resource conservation."
+    }
+  ]
+}

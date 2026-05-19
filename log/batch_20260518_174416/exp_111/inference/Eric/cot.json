@@ -1,0 +1,47 @@
+{
+  "experiment_id": "exp_111",
+  "agent_id": "Eric",
+  "source_log": "exp_111",
+  "cot_history": [
+    {
+      "meta_round_id": 1,
+      "reasoning_cot": "Initial round: no opponent history. Start with moderate bid (45% salary) to conserve budget. Once traces exist, counter highest previous bid if we need water, otherwise bid just above average to win cheaply. Adjust based on HP: bid higher if low HP."
+    },
+    {
+      "meta_round_id": 2,
+      "reasoning_cot": "Meta-round shows Cindy is very aggressive (avg bid 97), while others bid low (25). In current episode, assume similar pattern. Use previous_trace to detect if any opponent bid >80 yesterday; if so, avoid competing unless desperate. Else, bid moderate share of supply. This conserves budget while ensuring water when needed."
+    },
+    {
+      "meta_round_id": 3,
+      "reasoning_cot": "Cindy and Alex bid high yesterday (avg ~90-96) with large budgets. To secure water, bid slightly above their average but conserve budget. Adjust by supply: if plentiful, bid lower. Use previous trace for immediate reaction."
+    },
+    {
+      "meta_round_id": 4,
+      "reasoning_cot": "Opponents' average bids ~82-94. I have higher salary (140). To exploit, bid slightly above their highest yesterday if they were aggressive, else moderate. Use previous_trace for estimates. Protect HP if low."
+    },
+    {
+      "meta_round_id": 5,
+      "reasoning_cot": "Exploit yesterday's traces: Bob high avg (117) indicates aggression; David low avg (88) suggests conservatism. Since we have high salary (140) and moderate requirement (8), bid cautiously early, escalate if hp low or supply scarce. Use previous_trace to adjust bid slightly above yesterday's max if needed."
+    },
+    {
+      "meta_round_id": 6,
+      "reasoning_cot": "Opponents Alex and Cindy historically bid high (~100-130), Bob and David low (~27). Today, exploit by bidding just above their previous trace if they were aggressive, else conservative. If low HP, bid high to secure water."
+    },
+    {
+      "meta_round_id": 7,
+      "reasoning_cot": ""
+    },
+    {
+      "meta_round_id": 8,
+      "reasoning_cot": ""
+    },
+    {
+      "meta_round_id": 9,
+      "reasoning_cot": "Exploit opponents' high previous bids: if they bid aggressively yesterday, we can bid slightly above their max to secure water, but we lower bid if we have high HP to conserve budget. Adjust based on HP and supply."
+    },
+    {
+      "meta_round_id": 10,
+      "reasoning_cot": "Use opponent previous bids to estimate their aggression. If my hp low, bid high to survive. Otherwise, bid just above their average previous bid to secure water efficiently, but not exceed budget. Adapt to remaining days."
+    }
+  ]
+}

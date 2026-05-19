@@ -1,0 +1,47 @@
+{
+  "experiment_id": "exp_055",
+  "agent_id": "Bob",
+  "source_log": "exp_055",
+  "cot_history": [
+    {
+      "meta_round_id": 1,
+      "reasoning_cot": "We don’t have yesterday’s opponent traces in the provided context, so we can’t infer their aggressiveness. Use a conservative mid bid to avoid overpaying while still securing enough water given our 9-unit requirement and the 15–25 supply range."
+    },
+    {
+      "meta_round_id": 2,
+      "reasoning_cot": "Yesterday Alex/Cindy/Eric bid very high (~87-95 avg) while David stayed low (30.8) and died. This suggests most surviving opponents are willing to pay aggressively to maintain HP. I’ll bid moderately-high when supply is ample, but back off if my HP is low to avoid overspending; react to whether yesterday’s max bid was extreme."
+    },
+    {
+      "meta_round_id": 3,
+      "reasoning_cot": "Yesterday Alex and Eric bid aggressively (~88-99 avg; Alex max 164.5), while Cindy survived with lower avg (~90). David died quickly (0 bids). To exploit likely overbidding, keep a mid-high but not max bid, scaling with supply and my HP, and react to whether Alex/Eric were in the top pressure tier yesterday."
+    },
+    {
+      "meta_round_id": 4,
+      "reasoning_cot": "Yesterday Alex/Cindy survived with high bids; David died quickly with zero bids. To exploit, bid moderately-high when supply allows to secure enough water early, but avoid overpaying since some opponents already spend aggressively. If my HP is low, raise bid to prevent a no-water day."
+    },
+    {
+      "meta_round_id": 5,
+      "reasoning_cot": "Yesterday Alex and Eric died/near-death with low budgets, suggesting aggressive overbidding by some players. Cindy survived all days with high remaining budget, implying she likely bids reliably near her comfort level. Today, with medium supply and our 9-water need, we should bid moderately to secure enough water without burning budget, then escalate only if others were bidding extremely high yesterday."
+    },
+    {
+      "meta_round_id": 6,
+      "reasoning_cot": "From yesterday, Cindy outbid heavily and survived 10 days, implying she can afford aggressive bids. Alex and David died quickly, suggesting some agents overreached or lacked budget. We should bid moderately but enough to secure water early: scale with current supply and our HP, while avoiding matching Cindy’s likely high pressure."
+    },
+    {
+      "meta_round_id": 7,
+      "reasoning_cot": "Yesterday, Alex/Cindy survived with high average bids, while David died after low bids. This suggests others overbid to secure hp. I’ll bid moderately but scale up when supply is tight and my hp is low, using yesterday’s max bids as a proxy for current aggression."
+    },
+    {
+      "meta_round_id": 8,
+      "reasoning_cot": "Yesterday, top bidders clustered around ~100–135 with one agent (Alex) collapsing (hp<0) likely from under/over mismatch. To avoid being outbid while preserving budget, bid slightly below the mid-high band (~120) when we’re healthy, and sharply reduce when low hp to conserve for later survival."
+    },
+    {
+      "meta_round_id": 9,
+      "reasoning_cot": "Yesterday Alex and David died quickly (hp -2, survival 3) after aggressive/ineffective bidding patterns, while Cindy/Eric survived with high average bids (~130). With supply likely mid (15-25), we should bid just enough to avoid being outbid by the surviving high-bidders, conserving budget since our requirement is 9 and we have 10 days."
+    },
+    {
+      "meta_round_id": 10,
+      "reasoning_cot": "Yesterday Cindy outbid heavily yet survived; Alex also bid high. David/Eric collapsed, suggesting they were underbidding relative to pressure. To secure 9 units when supply is moderate, match aggressive bids when my HP is safe; otherwise conserve budget to avoid no-water days."
+    }
+  ]
+}

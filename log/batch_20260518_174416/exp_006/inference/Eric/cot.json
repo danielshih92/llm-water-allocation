@@ -1,0 +1,47 @@
+{
+  "experiment_id": "exp_006",
+  "agent_id": "Eric",
+  "source_log": "exp_006",
+  "cot_history": [
+    {
+      "meta_round_id": 1,
+      "reasoning_cot": "No previous traces available. Use conservative initial bid (~60% salary) unless HP is low, then bid higher to secure water. Adjust slightly upward if supply is scarce. Respect budget and never exceed."
+    },
+    {
+      "meta_round_id": 2,
+      "reasoning_cot": "Exploit Alex's high bids by monitoring his hp and budget via previous_trace. If he is low on hp, he will bid desperately; outbid him only if needed. If he is healthy, underbid to conserve budget. For others, use their yesterday bids and current hp to estimate aggression. Adjust based on supply and my own hp."
+    },
+    {
+      "meta_round_id": 3,
+      "reasoning_cot": "Opponents from yesterday were aggressive (Bob avg 91, Cindy avg 99). To survive 10 days, bid high when supply low or HP critical, but save budget when healthy. Use daily salary 140 as baseline, adjust for supply and HP."
+    },
+    {
+      "meta_round_id": 4,
+      "reasoning_cot": "Opponents Alex & Cindy had high average bids (~120-124) and max bids ~153 in previous round, suggesting aggressive bidding. I will exploit by bidding just above their typical bid when my hp is low, otherwise conserve budget. Use their previous_trace to estimate current aggressiveness."
+    },
+    {
+      "meta_round_id": 5,
+      "reasoning_cot": "Exploit Cindy's aggressive bidding by bidding just above her when supply is low and HP low; otherwise bid low to conserve budget. Use yesterday's bids to adjust. Ensure survival by prioritizing water when HP critical."
+    },
+    {
+      "meta_round_id": 6,
+      "reasoning_cot": "Opponents have high average bids (Alex 88, Cindy 91). Exploit by bidding low early to conserve budget, then escalate when HP low. Use previous trace to undercut if they bid very high yesterday. Aim to win supply-dependent number of slots."
+    },
+    {
+      "meta_round_id": 7,
+      "reasoning_cot": "Exploit Cindy's overbidding: if yesterday any opponent bid very high (>200), bid low when hp>3 to let them waste budget. When hp<=2, bid up to 100 to secure water. Otherwise, bid ~60-70% of salary, adjusted for supply. Use int() for indices."
+    },
+    {
+      "meta_round_id": 8,
+      "reasoning_cot": "Exploit opponents' yesterday bids to undercut them if safe, else bid aggressively based on my hp and no_water_days. Use expected water cost = supply/alive_opponents(approx) and add a margin to secure water. On low hp or high thirst, bid high."
+    },
+    {
+      "meta_round_id": 9,
+      "reasoning_cot": "Yesterday's traces show Cindy with high budget but moderate average bid of 150; she likely will be a threat but may not bid high daily. Bob averaged 85, Alex low. Use supply to adjust: low supply forces high bid, high supply allows low bid. Maintain aggressive when HP low."
+    },
+    {
+      "meta_round_id": 10,
+      "reasoning_cot": "Exploit previous metaround: Cindy bids high (avg 69), others low. In new episode, use opponents' previous_trace bids from yesterday (if available). Bid aggressively when HP low, else undercut highest previous bid from survivors, considering supply and salary."
+    }
+  ]
+}

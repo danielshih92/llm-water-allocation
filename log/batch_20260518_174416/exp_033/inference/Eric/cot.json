@@ -1,0 +1,47 @@
+{
+  "experiment_id": "exp_033",
+  "agent_id": "Eric",
+  "source_log": "exp_033",
+  "cot_history": [
+    {
+      "meta_round_id": 1,
+      "reasoning_cot": "No opponent code or previous traces available. Start with moderate bid to conserve budget while ensuring survival. Use adaptive threshold based on HP and update if any opponent trace becomes available in future rounds."
+    },
+    {
+      "meta_round_id": 2,
+      "reasoning_cot": "Alex and Cindy bid high (avg 108-115) and survived, so they'll likely continue bidding high when alive. My hp matters; I'll bid aggressively if low, else slightly below their max to save budget."
+    },
+    {
+      "meta_round_id": 3,
+      "reasoning_cot": "Alex and Cindy bid high yesterday (avg 111, 148). To win, outbid their max yesterday by small margin. If low hp or no water, bid aggressively. Save budget when healthy."
+    },
+    {
+      "meta_round_id": 4,
+      "reasoning_cot": "Exploit opponent traces: Cindy's high budget and past high bids suggest aggression; Alex moderate. Will bid just above their max previous bid if HP low, else conservative. Ensure survival by bidding higher when no_water_days>1 or hp low. Use int() for any index to avoid float errors."
+    },
+    {
+      "meta_round_id": 5,
+      "reasoning_cot": "Opponents from last meta-round show Cindy bids high (avg 162), David and Alex moderate. My goal: survive with HP, conserve budget. Use reactive strategy: if HP<=2 or no_water_days>=1, bid aggressively near salary*0.9; else bid to outbid yesterday's highest bid among alive opponents by a small margin, but cap at DAILY_SALARY * 0.85 to avoid overpaying."
+    },
+    {
+      "meta_round_id": 6,
+      "reasoning_cot": "Opponents Bob and Cindy bid high (~115) and survived with budgets. I'll bid slightly above their last bid (if available) to secure water without overpaying. If low HP, increase bid. Use conservative baseline of ~70% salary."
+    },
+    {
+      "meta_round_id": 7,
+      "reasoning_cot": "Exploit past high bidders (Bob & Cindy) by bidding moderately high to secure water. Adjust based on supply and personal need: base = 0.6*salary, +5 for low supply, +10 per no_water_day, +5 if HP <=3. Cap at 0.9*budget or 1.2*salary. No traces on day 1, so use this heuristic."
+    },
+    {
+      "meta_round_id": 8,
+      "reasoning_cot": "Cindy bids very high (~124 avg, 154 max). Alex & Bob moderate. Save budget when healthy; when HP low, outbid Cindy by 1 if needed. Use yesterday's max opponent bid as baseline."
+    },
+    {
+      "meta_round_id": 9,
+      "reasoning_cot": "Exploit yesterday's traces: Cindy had high average bid (192) indicating aggression; Alex moderate but survived. Today, if supply is low, bid aggressively to secure water; if high, undercut. Use previous bid to estimate opponent's current bid, adjusting based on HP and budget."
+    },
+    {
+      "meta_round_id": 10,
+      "reasoning_cot": "Exploit yesterday's traces: Bob bids low (~28), others high (~130-168). I'll bid just above the highest yesterday's bid from alive opponents to secure water, unless low on HP then bid max affordable. Conservatively cap at salary."
+    }
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "experiment_id": "exp_068",
+  "agent_id": "Eric",
+  "source_log": "exp_068",
+  "cot_history": [
+    {
+      "meta_round_id": 1,
+      "reasoning_cot": "No opponent data available; default to conservative bidding of 40% salary when healthy, aggressive when low HP. Ensure int() conversion on any indices to avoid float errors."
+    },
+    {
+      "meta_round_id": 2,
+      "reasoning_cot": ""
+    },
+    {
+      "meta_round_id": 3,
+      "reasoning_cot": "Exploit yesterday's high bids from survivors (Alex, Cindy) to adapt: bid just above if supply low, otherwise bid conservatively to save budget. Use supply and HP thresholds."
+    },
+    {
+      "meta_round_id": 4,
+      "reasoning_cot": ""
+    },
+    {
+      "meta_round_id": 5,
+      "reasoning_cot": "Exploit yesterday's traces: Cindy and David averaged 115-90 bids. With salary 140, they likely bid high. On low supply (≤16), only 1 winner, so bid near max to secure water. On high supply, bid just above yesterday's median to conserve budget. Keep 20% reserve for future days."
+    },
+    {
+      "meta_round_id": 6,
+      "reasoning_cot": "Bob is the only strong survivor with high budget and avg bid 115. I'll bid moderate (~70-90) on normal days, but escalate if my HP is low or I've missed water. Exploit yesterday's max opponent bid to stay competitive without overbidding."
+    },
+    {
+      "meta_round_id": 7,
+      "reasoning_cot": "Exploit opponent traces: yesterday's max bid indicates current aggressiveness. If desperate, bid high; else undercut by small increment. Adjust for low supply. Survive with moderate bids."
+    },
+    {
+      "meta_round_id": 8,
+      "reasoning_cot": "Exploit opponents' high-bid pattern (Bob/Cindy avg >100) by bidding low when HP high, and outbidding previous max when HP low. Use previous_trace to react to yesterday's aggression."
+    },
+    {
+      "meta_round_id": 9,
+      "reasoning_cot": "Alex bids high (avg 109) but survived; Bob and Cindy died early. David bids 0. I will bid slightly above yesterday's max among alive opponents when my HP is low, otherwise bid moderate to conserve budget. Use previous_trace to adapt."
+    },
+    {
+      "meta_round_id": 10,
+      "reasoning_cot": ""
+    }
+  ]
+}

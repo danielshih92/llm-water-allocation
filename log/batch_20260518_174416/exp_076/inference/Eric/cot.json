@@ -1,0 +1,47 @@
+{
+  "experiment_id": "exp_076",
+  "agent_id": "Eric",
+  "source_log": "exp_076",
+  "cot_history": [
+    {
+      "meta_round_id": 1,
+      "reasoning_cot": "No prior traces; focus on survival. First day, moderate bid based on HP. If HP high, bid low; if low, bid high to secure water. Opponents unknown, so conservative start."
+    },
+    {
+      "meta_round_id": 2,
+      "reasoning_cot": "Leverage opponents' yesterday bids from previous_trace to predict today's pressure. Adjust bid based on my HP: aggressive if low HP, conservative if high. Outbid average of top opponents if necessary."
+    },
+    {
+      "meta_round_id": 3,
+      "reasoning_cot": "Yesterday, Bob and Cindy had high bids (avg 124-151) and large budgets. To win water, I must outbid them when necessary, but conserve budget when my hp is high. I'll use their last bid as a benchmark, bidding slightly above if I need water, otherwise lower."
+    },
+    {
+      "meta_round_id": 4,
+      "reasoning_cot": "Exploit Cindy's high spending (avg 138) by bidding low when she bids high, conserving budget. Target slightly above Alex's average (105) to win against him. Use previous trace to detect aggressive bids."
+    },
+    {
+      "meta_round_id": 5,
+      "reasoning_cot": "Opponents Alex (average bid 80.4) and Cindy (average 103.8) were aggressive. Yesterday's highest bid among alive opponents reveals current pressure. I'll bid slightly above that if my HP is low or supply low, else conserve budget. Use previous_trace to adapt."
+    },
+    {
+      "meta_round_id": 6,
+      "reasoning_cot": ""
+    },
+    {
+      "meta_round_id": 7,
+      "reasoning_cot": "Bob's high average bid (70.9) suggests aggressive spending. I'll conserve budget when healthy, but bid decisively when HP low. Use previous bid max to calibrate: if max previous bid is very high, avoid competing unless desperate."
+    },
+    {
+      "meta_round_id": 8,
+      "reasoning_cot": ""
+    },
+    {
+      "meta_round_id": 9,
+      "reasoning_cot": "Exploit yesterday's aggressive bids from Alex and David. If their previous bid was high (≥100), outbid them slightly if HP low; otherwise save money. Use supply scarcity to adjust bid magnitude."
+    },
+    {
+      "meta_round_id": 10,
+      "reasoning_cot": "Exploit yesterday's max bid to slightly outbid. Conserve budget when HP is high, bid aggressively when HP is low. Ensure enough water to survive."
+    }
+  ]
+}

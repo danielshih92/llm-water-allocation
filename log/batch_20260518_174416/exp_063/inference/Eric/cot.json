@@ -1,0 +1,47 @@
+{
+  "experiment_id": "exp_063",
+  "agent_id": "Eric",
+  "source_log": "exp_063",
+  "cot_history": [
+    {
+      "meta_round_id": 1,
+      "reasoning_cot": "No opponent traces yet. Start with a moderate bid of 60% salary to secure water early, adjusted for supply tightness. Escalate if HP low."
+    },
+    {
+      "meta_round_id": 2,
+      "reasoning_cot": "Cindy is the only strong survivor; she bids very high (~123 average). To win, I'll target her previous bid + delta, but conserve budget by bidding lower when supply is high or my HP is good. I'll cap bids to avoid overspending."
+    },
+    {
+      "meta_round_id": 3,
+      "reasoning_cot": "Focus on HP and supply: bid aggressively if low HP or no_water_days. Otherwise conserve budget. Use supply to adjust: higher supply -> lower bid. Avoid overbidding against likely high bidders like Cindy."
+    },
+    {
+      "meta_round_id": 4,
+      "reasoning_cot": "Exploit David and Cindy's high past bids: bid slightly above their last bid when HP low, else conserve budget. Use previous_trace to react dynamically."
+    },
+    {
+      "meta_round_id": 5,
+      "reasoning_cot": "Exploit opponents' tendencies: Cindy has huge budget but likely conservative (saves). Alex aggressive but low budget. Bob and David dead. Bid moderately early, increase when low hp. Use previous trace if available to outbid by small margin."
+    },
+    {
+      "meta_round_id": 6,
+      "reasoning_cot": "Bob and Cindy have large budgets and high avg bids (~87-97). I'll conserve budget by bidding low most days unless my HP is critical. Use previous_trace to detect if they bid high yesterday, then I bid minimal to force them to overspend. Only bid aggressively when HP<=2."
+    },
+    {
+      "meta_round_id": 7,
+      "reasoning_cot": "Bob ended with zero budget, expect low bids. Cindy has high budget and bid high (~177 avg). Alex moderate. To win, bid slightly above Cindy's likely bid when HP safe, otherwise moderate. Use previous_trace to adjust."
+    },
+    {
+      "meta_round_id": 8,
+      "reasoning_cot": "High average bids from Alex and Bob indicate aggressive bidding. Use their previous trace to gauge current aggression. If high, conserve when HP high; else secure water. Adjust for supply and HP."
+    },
+    {
+      "meta_round_id": 9,
+      "reasoning_cot": "Exploit yesterday's high bids (Alex/Cindy ~90-125) by bidding just above max yesterday when hp≤2, otherwise bid moderate to save budget. Use previous_trace for adaptive response."
+    },
+    {
+      "meta_round_id": 10,
+      "reasoning_cot": "Opponent traces show Cindy and Alex bid high (~160), Bob low (~32), David moderate (~95). Since supply is moderate (15-25), I'll bid just above the highest previous bid if I need water, else save budget. Use previous_trace for immediate reaction, adjusting for my hp and budget."
+    }
+  ]
+}

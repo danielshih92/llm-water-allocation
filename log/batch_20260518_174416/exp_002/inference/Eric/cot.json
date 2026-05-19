@@ -1,0 +1,47 @@
+{
+  "experiment_id": "exp_002",
+  "agent_id": "Eric",
+  "source_log": "exp_002",
+  "cot_history": [
+    {
+      "meta_round_id": 1,
+      "reasoning_cot": "Generic strategy: preserve budget but ensure survival. Use yesterday's max bid to adjust bid upwards if needed. Low HP triggers aggressive bidding. No opponent source code available, so rely on trace analysis."
+    },
+    {
+      "meta_round_id": 2,
+      "reasoning_cot": ""
+    },
+    {
+      "meta_round_id": 3,
+      "reasoning_cot": "Opponents Alex, Cindy, David had high average bids (98-113) and large budgets, Bob was low. Need to outbid aggressively when HP low or supply scarce. Use previous_trace to estimate their recent bid level, then bid slightly above to secure water."
+    },
+    {
+      "meta_round_id": 4,
+      "reasoning_cot": "Cindy and David had high bids (avg 131, 96) and survived. They likely bid aggressively again. I'll match or slightly exceed their yesterday's bid if high, otherwise bid moderately to conserve budget. If my hp is low or I need water, bid higher."
+    },
+    {
+      "meta_round_id": 5,
+      "reasoning_cot": "Exploit opponent greed: if they bid high yesterday, undercut to save budget; if low, bid slightly above to secure water. Adjust for own health: low hp -> high bid."
+    },
+    {
+      "meta_round_id": 6,
+      "reasoning_cot": "Alex and Bob died fast with low bids; Cindy and David survive with high bids. In medium supply, I need to secure water when hp low, else bid conservatively. I'll use a function that bids higher if my hp is low, lower if healthy, and never exceed budget."
+    },
+    {
+      "meta_round_id": 7,
+      "reasoning_cot": "At start of meta-round, no previous traces available. Use adaptive bid based on my hp and supply. Bid high if hp low or supply low. Otherwise moderate to conserve budget."
+    },
+    {
+      "meta_round_id": 8,
+      "reasoning_cot": "Based on last meta-round, opponents Alex, Cindy, David bid up to ~160, likely aggressive. Bob died from low bids. Assume similar aggression in new episode. Use yesterday's trace to adapt: if yesterday's highest bid ≥ 119 (85% salary), conserve unless low HP. Else beat yesterday's highest by small margin to secure water."
+    },
+    {
+      "meta_round_id": 9,
+      "reasoning_cot": "Cindy bids extremely high (max 995), likely bankrupting herself; Alex is moderate (max 110). Exploit by bidding just above Alex's previous bid when healthy, or higher when low HP. Avoid competing with Cindy's irrational bids; let her waste budget."
+    },
+    {
+      "meta_round_id": 10,
+      "reasoning_cot": "Exploit yesterday's traces: for each alive opponent, use previous_trace bid to estimate current pressure. If any yesterday bid was high (>85% salary), they may be aggressive; bid just below or conservative. Otherwise, bid slightly above max yesterday bid. Also adjust for my HP and budget."
+    }
+  ]
+}

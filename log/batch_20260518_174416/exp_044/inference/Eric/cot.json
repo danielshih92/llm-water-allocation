@@ -1,0 +1,47 @@
+{
+  "experiment_id": "exp_044",
+  "agent_id": "Eric",
+  "source_log": "exp_044",
+  "cot_history": [
+    {
+      "meta_round_id": 1,
+      "reasoning_cot": "No prior opponent data, so use conservative baseline: bid 40% of salary normally, but if HP critical (<3) bid up to 90% to survive early rounds. Ensure no array index errors with int()."
+    },
+    {
+      "meta_round_id": 2,
+      "reasoning_cot": "Alex and Bob's high max bids (153-162) offset by moderate average (109-117) suggests they vary bids with hp. Yesterday's trace likely shows their bid. I'll bid aggressively when my hp is low (≥0.95 salary) and conservatively when hp high (≤0.7 salary). I'll also adjust based on supply: if low supply, bid higher to secure water against their high bids. Use their yesterday bid as a signal: if they bid very high (>140), they may drop today, so bid just under. Otherwise, slightly above their max to win."
+    },
+    {
+      "meta_round_id": 3,
+      "reasoning_cot": "No yesterday traces available for this new round. Use conservative initial bid based on supply and HP. Cindy's past high bids imply aggression, but uncertain. Focus on survival: bid proportionally to water need and my health."
+    },
+    {
+      "meta_round_id": 4,
+      "reasoning_cot": "Alex averaged 76.65, Cindy 98.15. Cindy ends with huge budget likely saving early. Exploit: bid moderately above Alex but below Cindy's typical, adjusting based on HP and supply. Use yesterday's trace to react to recent aggression."
+    },
+    {
+      "meta_round_id": 5,
+      "reasoning_cot": "Exploit Cindy's high average and Alex's aggressive bidding by targeting a safe margin slightly above their previous max when low on hp. Otherwise, conserve budget by underbidding. Use daily salary and supply to calibrate."
+    },
+    {
+      "meta_round_id": 6,
+      "reasoning_cot": ""
+    },
+    {
+      "meta_round_id": 7,
+      "reasoning_cot": "No opponent code provided; base strategy on health and supply. Bid high when HP low, else typical. Avoid float indices."
+    },
+    {
+      "meta_round_id": 8,
+      "reasoning_cot": "Cindy bid high average (92.9), David (75.2), Alex (85.1). They all survived 10 days. Likely aggressive. To survive, match highest previous bid if any, else base on supply and HP. Use floor division with int() to avoid float indices."
+    },
+    {
+      "meta_round_id": 9,
+      "reasoning_cot": "Exploit yesterday's aggressive bids (Alex/Cindy ~150) by bidding slightly above their average. If low HP, bid near max to guarantee water. Otherwise, conservative at ~80 to save budget."
+    },
+    {
+      "meta_round_id": 10,
+      "reasoning_cot": "Exploit Cindy/David's high stable bidding (~120/104) from yesterday. Use their previous trace to estimate today's max, then outbid by a small margin. Adjust for HP and supply to conserve budget."
+    }
+  ]
+}

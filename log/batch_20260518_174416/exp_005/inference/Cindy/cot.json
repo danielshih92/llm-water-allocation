@@ -1,0 +1,47 @@
+{
+  "experiment_id": "exp_005",
+  "agent_id": "Cindy",
+  "source_log": "exp_005",
+  "cot_history": [
+    {
+      "meta_round_id": 1,
+      "reasoning_cot": "My strategy prioritizes survival by bidding aggressively when HP is low. It analyzes `previous_trace` to react to opponent bids, increasing my bid if they were aggressive, especially during high competition or low supply, and attempting to save when conditions are favorable."
+    },
+    {
+      "meta_round_id": 2,
+      "reasoning_cot": "Analyze opponent `previous_trace` to identify `highest_prev_bid`, reacting by bidding slightly above it. Prioritize survival with high bids when my HP is low (<=4). Increase bid if supply is scarce relative to active players, to outcompete aggressive opponents like Alex and Eric."
+    },
+    {
+      "meta_round_id": 3,
+      "reasoning_cot": "I analyze yesterday's highest opponent bids from `previous_trace` to gauge competition. If previous bids were high, I bid higher, especially if my HP is low or supply is tight. Otherwise, I bid competitively, slightly above average, adjusting for my HP and game day to ensure survival while managing budget."
+    },
+    {
+      "meta_round_id": 4,
+      "reasoning_cot": "My strategy adapts to opponents' yesterday bids. If opponents bid aggressively (high `highest_prev_bid`), I prioritize survival with high bids when HP is low/critical. Otherwise, I bid moderately above their previous high to win while managing budget."
+    },
+    {
+      "meta_round_id": 5,
+      "reasoning_cot": "Exploit opponent's `previous_trace` by bidding slightly above their highest yesterday's bid to secure water. Prioritize survival with aggressive bids when my HP is low or in late game. Conserve budget when healthy, especially with ample supply or fewer opponents."
+    },
+    {
+      "meta_round_id": 6,
+      "reasoning_cot": "Analyze previous day's bids from alive opponents, especially strong ones like Alex, to set a competitive bid. Adjust based on my HP and water scarcity to ensure survival and budget efficiency."
+    },
+    {
+      "meta_round_id": 7,
+      "reasoning_cot": "My strategy prioritizes survival with aggressive bids when HP is low or supply is scarce. It dynamically reacts to opponents' previous bids: bidding slightly above their highest if I need water, or attempting to undercut if their bids were low and my HP is stable, ensuring budget efficiency."
+    },
+    {
+      "meta_round_id": 8,
+      "reasoning_cot": "Exploit Alex's high bids by conserving budget when healthy (HP > 4) if opponents bid very high. React aggressively to high bids when HP is low (<=4) to secure water. Otherwise, moderately outbid previous bids to win efficiently and prioritize survival with very high bids in critical HP states, especially late game."
+    },
+    {
+      "meta_round_id": 9,
+      "reasoning_cot": "My strategy prioritizes survival by bidding aggressively when HP is low or in late game. I dynamically adjust bids based on opponents' previous bids (yesterday's trace) and current supply. I aim to outbid competitors when supply is tight, or conserve budget when it's abundant or opponents bid low, always capping bids by my available budget."
+    },
+    {
+      "meta_round_id": 10,
+      "reasoning_cot": "Opponents Alex, David, Eric showed high bids previously. My strategy dynamically adjusts bids based on my HP, remaining days, and current supply. I will bid aggressively (slightly above yesterday's max opponent bid) if supply is scarce or my HP is low, otherwise conserve budget, reacting to 'previous_trace'."
+    }
+  ]
+}

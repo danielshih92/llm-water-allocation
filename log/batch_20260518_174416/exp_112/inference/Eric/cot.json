@@ -1,0 +1,47 @@
+{
+  "experiment_id": "exp_112",
+  "agent_id": "Eric",
+  "source_log": "exp_112",
+  "cot_history": [
+    {
+      "meta_round_id": 1,
+      "reasoning_cot": "No opponent traces yet. Focus on own state: bid moderately when healthy, but aggressively when low HP to survive. Use supply to gauge competition: lower supply -> higher bids. Since no history, start with conservative but safe bids."
+    },
+    {
+      "meta_round_id": 2,
+      "reasoning_cot": "Cindy's high budget and previous high bids suggest she will continue aggressive bidding. To survive, focus on HP: low HP forces high bid; high HP allows low bid. Avoid bidding wars with Cindy. Use supply to adjust; low supply increases needed bid. Use previous traces if available to gauge opponents' aggression."
+    },
+    {
+      "meta_round_id": 3,
+      "reasoning_cot": "Opponents' yesterday bids: Alex 84.5, Bob 57.98 (dead), Cindy 106.3, David 71.08. Cindy is aggressive with high budget; outbid her if possible. Use a probabilistic margin: bid 1.5 above the second-highest previous bid among alive, but cap at 140. If own HP low, bid more aggressively."
+    },
+    {
+      "meta_round_id": 4,
+      "reasoning_cot": "Exploit Cindy/David's high average bids by bidding just above their expected minimum if supply is low, but conserve budget if hp is high. Use yesterday's max bid as reference, but cap at budget. Ensure survival when hp is low."
+    },
+    {
+      "meta_round_id": 5,
+      "reasoning_cot": "Start of new meta-round; no previous traces. Opponents from last round were aggressive (Cindy avg 119, David 91). To survive, bid conservatively early but secure water when HP low. Use supply level to adjust base bid: low supply -> higher bid. Guard against budget depletion."
+    },
+    {
+      "meta_round_id": 6,
+      "reasoning_cot": "Exploit yesterday's highest bid to either outbid cheaply if low, or conserve if high. Use HP to decide aggression: low HP forces higher bid. Convert indices to int."
+    },
+    {
+      "meta_round_id": 7,
+      "reasoning_cot": "Use opponent yesterday bid to gauge aggression; adjust bid based on my HP and supply scarcity. Outbid moderate opponents slightly, avoid overbidding high bidders unless desperate."
+    },
+    {
+      "meta_round_id": 8,
+      "reasoning_cot": "Cindy bids high (~125), Alex moderate (~88). Avoid overbidding when HP high; when HP low, bid just above yesterday's max. Use supply to adjust baseline."
+    },
+    {
+      "meta_round_id": 9,
+      "reasoning_cot": "Exploit yesterday's highest bid among alive opponents. If my HP is low, bid aggressively near salary; otherwise bid slightly above or below yesterday's max depending on health. Conserve budget for later days."
+    },
+    {
+      "meta_round_id": 10,
+      "reasoning_cot": "Exploit yesterday's high bids from Cindy/David by raising our bid when low HP, and undercut when healthy. Use previous_trace for immediate reaction."
+    }
+  ]
+}

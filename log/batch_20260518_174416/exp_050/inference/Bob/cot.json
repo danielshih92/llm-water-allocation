@@ -1,0 +1,47 @@
+{
+  "experiment_id": "exp_050",
+  "agent_id": "Bob",
+  "source_log": "exp_050",
+  "cot_history": [
+    {
+      "meta_round_id": 1,
+      "reasoning_cot": "Use yesterday’s bids from opponents to infer their aggressiveness. If any opponent bid near/above our daily salary threshold, we counter with a moderate-but-competitive bid to preserve HP and avoid no-water days. Otherwise, we bid just enough to secure water while keeping budget for later."
+    },
+    {
+      "meta_round_id": 2,
+      "reasoning_cot": "Yesterday, David died with very low average bids (~30.8), suggesting others can be pressured into overspending while low bidders fail. Alex/Cindy/Eric survived with bids ~111–125. I’ll bid around the mid-high band to secure enough water without matching Cindy/Eric’s likely aggressive spending, scaling with supply and my HP."
+    },
+    {
+      "meta_round_id": 3,
+      "reasoning_cot": "Yesterday, Cindy outbid most while staying alive, suggesting she values survival over budget. David had low final budget with hp=9, implying he bid conservatively. Alex ended with low hp (4) after high bids, so pressure came from bids near ~150. Today, bid moderately above a likely conservative floor but below Cindy’s typical ceiling to secure enough water without burning budget."
+    },
+    {
+      "meta_round_id": 4,
+      "reasoning_cot": "Yesterday, Alex and Cindy died quickly; David/Eric survived with high bids (~79–83 avg). This suggests strong competition for survival water. I’ll bid moderately high when supply is near max to secure enough water without exhausting budget, and scale down when supply is lower or my HP is low to avoid death spiral."
+    },
+    {
+      "meta_round_id": 5,
+      "reasoning_cot": "Yesterday, Alex/Eric survived with high bids (~118–146). Cindy also bid high (~147) yet had huge budget, suggesting aggressive but not fully budget-constrained. David died after low bids. To beat them, bid just under the top pressure band when supply is moderate, and only go high when my hp is low or supply is scarce."
+    },
+    {
+      "meta_round_id": 6,
+      "reasoning_cot": "Yesterday, Alex/Cindy survived 10 days with high avg bids (~127-130) while David/Eric died early with low avg bids. This suggests strong opponents overbid when supply is adequate. I’ll bid moderately but responsive: if supply is near max and my HP is healthy, undercut slightly; if my HP is low or supply tight, bid more to avoid being outbid."
+    },
+    {
+      "meta_round_id": 7,
+      "reasoning_cot": "Yesterday shows one survivor (Eric) bidding high (~94 avg) while Cindy/David died after low bids. To beat Eric without overspending, bid around the mid-high band when supply is moderate: enough to secure HP while avoiding exhaustion. If my HP is low or supply is tight, increase bid; otherwise keep a controlled bid slightly above likely low bidders."
+    },
+    {
+      "meta_round_id": 8,
+      "reasoning_cot": "Yesterday, Cindy outlasted and spent heavily (avg bid ~156, max 267), while Alex died and David died quickly. This suggests aggressive bidding can be punished if supply is insufficient; I’ll avoid Cindy-level spending unless supply is high and my hp is safe, conserving budget and bidding just enough to secure water."
+    },
+    {
+      "meta_round_id": 9,
+      "reasoning_cot": "Yesterday, Cindy outbid aggressively (avg ~139, max ~145) while Alex spent less and Eric died early. This suggests a high-bid pressure pattern from Cindy; to survive and still contest, bid moderately when supply is mid and my HP is safe, but escalate if my HP is low or Cindy likely continues pressure."
+    },
+    {
+      "meta_round_id": 10,
+      "reasoning_cot": "Yesterday, Cindy survived 10 days with very high average bids (~150) while David survived with moderate bids (~93). Alex/Eric died quickly at 0 bids, suggesting some agents underbid. I’ll bid enough to secure water early without overpaying: scale with my HP and current supply, and react upward if any opponent previously bid near my daily salary."
+    }
+  ]
+}
