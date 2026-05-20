@@ -4,7 +4,7 @@ import os
 import time
 
 from datetime import datetime
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 import config
 from agent_interface import AgentRunner, create_backend
@@ -294,6 +294,34 @@ def save_daily_metric_plots_for_meta_round(
         plt.close()
 
         print(f"Saved plot: {output_path}")
+
+
+def build_compact_meta_round_record(
+    record: Dict[str, Any],
+) -> Dict[str, Any]:
+    if not isinstance(record, dict):
+        return record
+
+    compact_agents = []
+
+    for agent in record.get("agents", []):
+        if not isinstance(agent, dict):
+            continue
+
+        compact_agents.append(
+            {
+                "agent_id": agent.get("agent_id"),
+                "reasoning_cot": agent.get("reasoning_cot", ""),
+                "strategy_code": agent.get("strategy_code", ""),
+                "daily_trace": agent.get("daily_trace", []),
+            }
+        )
+
+    return {
+        "meta_round_id": record.get("meta_round_id"),
+        "environment": record.get("environment", {}),
+        "agents": compact_agents,
+    }
         
 def save_cross_meta_metric_plots(
     history: Dict[str, object],
@@ -725,6 +753,12 @@ def main() -> None:
         help="Skip generating daily and cross-meta line plots",
     )
 
+    parser.add_argument(
+        "--compact-meta-log",
+        action="store_true",
+        help="Save compact meta-round logs (omit metrics)",
+    )
+
     args = parser.parse_args()
 
     total_start_time = time.time()
@@ -1008,8 +1042,14 @@ def main() -> None:
             seed=seed_for_round,
         )
 
+        record_for_log = (
+            build_compact_meta_round_record(record)
+            if args.compact_meta_log
+            else record
+        )
+
         log_path = env.save_meta_round_log(
-            record,
+            record_for_log,
             args.output_dir,
             experiment_id,
         )

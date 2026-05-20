@@ -457,7 +457,7 @@ def main():
                 "temperature": 0.6,
             }
 
-        temp_config_path = "temp_backend_config.json"
+        temp_config_path = os.path.join(script_dir, "temp_backend_config.json")
         with open(temp_config_path, "w", encoding="utf-8") as f:
             json.dump(backend_config, f, indent=2)
 
@@ -478,6 +478,7 @@ def main():
             "--experiment-id", experiment_id,
             "--output-dir", os.path.join(project_root, "log"),
             "--meta-rounds", str(args.meta_rounds),
+            "--compact-meta-log",
         ]
         if args.no_plots:
             cmd.append("--no-plots")
