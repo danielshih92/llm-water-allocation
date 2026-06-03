@@ -299,10 +299,6 @@ class WACProgrammaticEnv:
                             "budget_after": state.budget,
                             "status": "alive" if state.alive else "dead",
                             "error": errors.get(profile.agent_id),
-                            "opponents_status_before": opponents_snapshots.get(
-                                profile.agent_id,
-                                {}
-                            ),
                         }
                     )
                     continue
@@ -328,10 +324,6 @@ class WACProgrammaticEnv:
                         "budget_after": state.budget,
                         "status": "alive" if state.alive else "dead",
                         "error": errors.get(profile.agent_id),
-                        "opponents_status_before": opponents_snapshots.get(
-                            profile.agent_id,
-                            {}
-                        ),
                     }
                 )
 

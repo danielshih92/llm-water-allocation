@@ -1,6 +1,6 @@
 One-click run and export
 
-This guide shows how to run meta-rounds and export res/ outputs with a single script.
+This guide shows how to run a single experiment or batch permutations.
 
 Prerequisites
 - You are in the Alympics/ folder.
@@ -9,13 +9,6 @@ Prerequisites
 Script location
 - scripts/run_and_export.sh
 
-## Batch run (permutations)
-1) Run a slice of permutations:
-   python3 src/run_all_permutations.py --slice-start 1 --slice-end 120
-
-2) Select opponent info mode:
-   python3 src/run_all_permutations.py --slice-start 1 --slice-end 120 --opponent-info-mode outcome_only
-
 Quick start (single run)
 1) Make the script executable:
    chmod +x scripts/run_and_export.sh
@@ -23,39 +16,53 @@ Quick start (single run)
 2) Run with defaults:
    ./scripts/run_and_export.sh
 
-Default values (run_and_export.sh)
-- SCENARIO=low
-- META_ROUNDS=3
-- BACKEND=mock
-- SEED=42
-- EXPERIMENT_ID=exp1
-- OPPONENT_INFO_MODE=full_code_access
+Single experiment (run.py)
+1) Per-agent mode (configured in config.py):
+   python3 src/run.py --scenario medium --meta-rounds 10 --backend-mode per-agent
 
-Available options (run_and_export.sh)
-- SCENARIO: low, medium, high
-- BACKEND: mock, openai
-- OPPONENT_INFO_MODE: full_code_access, outcome_only, no_opponent_info
+2) Uniform mode (override in CLI):
+   python3 src/run.py --scenario medium --meta-rounds 10 --backend-mode uniform --backend openai --backend-model gpt-5.4
 
-Customize via environment variables (run_and_export.sh)
-- Example:
-   SCENARIO=low META_ROUNDS=10 BACKEND=openai SEED=42 EXPERIMENT_ID=exp1 OPPONENT_INFO_MODE=outcome_only ./scripts/run_and_export.sh
+Batch run (permutations)
+1) Run a slice of permutations:
+   python3 src/run_all_permutations.py --slice-start 1 --slice-end 120
 
-What it does (run_and_export.sh)
-1) Runs meta-rounds and writes a log JSON in log/.
-2) Finds the newest log for the chosen experiment id.
-3) Exports res/{experiment_id}/inference and res/{experiment_id}/plots.
+2) Select opponent info mode:
+   python3 src/run_all_permutations.py --slice-start 1 --slice-end 120 --opponent-info-mode full_code_access
 
-Output locations (run_and_export.sh)
-- Log JSON: log/meta_round_YYYYmmdd_HHMM_<EXPERIMENT_ID>.json
-- Res outputs: res/<EXPERIMENT_ID>/inference and res/<EXPERIMENT_ID>/plots
+3) Run multiple slices into the same batch folder:
+   python3 src/run_all_permutations.py --slice-start 1 --slice-end 2 --no-plots --batch-name batch_003
+   python3 src/run_all_permutations.py --slice-start 61 --slice-end 120 --no-plots --batch-name batch_002
+
+Config-only settings
+- All backend/model settings are defined in [Alympics/src/config.py](Alympics/src/config.py).
+- For single runs (per-agent), edit AGENT_BACKENDS.
+- For batch permutations, edit BATCH_MODELS and AGENTS.
+
+Key flags (run.py)
+- --scenario: low, medium, high
+- --meta-rounds: number of meta-rounds
+- --seed: base random seed (optional)
+- --backend-mode: uniform | per-agent
+- --backend: mock | openai | gemini | ollama | deepseek (uniform only)
+- --backend-model, --backend-temperature, --backend-base-url (uniform only)
+- --output-dir: log
+- --experiment-id: custom name
+- --opponent-info-mode: full_code_access | outcome_only | no_opponent_info
+- --no-plots, --compact-meta-log
+
+Key flags (run_all_permutations.py)
+- --slice-start, --slice-end: permutation slice range
+- --meta-rounds: number of meta-rounds per experiment
+- --no-plots: skip plots
+- --opponent-info-mode: full_code_access | outcome_only | no_opponent_info
+- --batch-name: reuse a specific batch folder name
+
+What scripts output
+- Single runs: log/<experiment_id>/meta_round_*.json, backend_config.json, agent_averages.json, daily_metric_plots/
+- Batch runs: log/batch_<timestamp>/exp_###/ (each exp contains the same outputs)
 
 Notes
-- For batch runs, BACKEND in this file does not apply. Batch uses per-agent model specs in run_all_permutations.py.
-- If you use BACKEND=openai, set OPENAI_API_KEY in your environment.
-- If no log is found for the experiment id, the script exits with an error.
+- If you use OpenAI or DeepSeek, set OPENAI_API_KEY or DEEPSEEK_API_KEY in your environment.
 - OPPONENT_INFO_MODE only affects the LLM prompt context between meta-rounds.
-- For batch runs, use --opponent-info-mode in run_all_permutations.py to override config defaults.
-
-Batch run notes
-- Batch uses per-agent backends/models defined in [Alympics/src/run_all_permutations.py](Alympics/src/run_all_permutations.py).
-- Supported backends in batch depend on the entries in the MODELS list (openai, gemini, deepseek).
+- When using --batch-name, exp numbering follows slice indices (e.g., slice 20-40 -> exp_020 to exp_040).

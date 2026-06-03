@@ -1,5 +1,4 @@
-import os
-import json
+
 
 # Whether to reveal opponent strategy code to the LLM
 REVEAL_OPPONENT_CODE = True
@@ -8,7 +7,7 @@ REVEAL_OPPONENT_CODE = True
 # full_code_access | outcome_only | no_opponent_info
 OPPONENT_INFO_MODE = "full_code_access"
 
-OPENAI_ENGINE = "gpt-4.1-nano"
+OPENAI_ENGINE = "gpt-5.4"
 OPENAI_TEMPERATURE = None
 OPENAI_SLEEP_TIME = 10
 OPENAI_API_TYPE = "openai"
@@ -17,7 +16,20 @@ OPENAI_API_VERSION = ""
 
 # Gemini placeholder config (for future use)
 GEMINI_API_KEY = ""
-GEMINI_MODEL = "gemini-1.5-pro"
+GEMINI_MODEL = "gemini-2.5-flash"
+
+# DeepSeek JSON output mode
+DEEPSEEK_JSON_MODE = True
+
+# Batch permutation inputs (run_all_permutations.py)
+AGENTS = ["Alex", "Bob", "Cindy", "David", "Eric"]
+BATCH_MODELS = [
+    {"backend": "openai", "model": "gpt-5.4"},
+    {"backend": "deepseek", "model": "deepseek-v4-flash"},
+    {"backend": "openai", "model": "gpt-5.4-nano"},
+    {"backend": "gemini", "model": "gemini-3.5-flash"},
+    {"backend": "gemini", "model": "gemini-2.5-flash"},
+]
 
 # Backend selection mode: "uniform" (mode 1) or "per-agent" (mode 2)
 BACKEND_MODE = "uniform"
@@ -38,25 +50,13 @@ PER_AGENT_DEFAULT = {
 }
 
 # Per-agent overrides (only set keys you want to override)
-if os.path.exists("temp_backend_config.json"):
-
-    with open(
-        "temp_backend_config.json",
-        "r",
-        encoding="utf-8"
-    ) as f:
-
-        AGENT_BACKENDS = json.load(f)
-
-else:
-
-    AGENT_BACKENDS = {
-        "Alex": {"backend": "deepseek", "model": "deepseek-v4-flash", "temperature": 0.6},
-        "Bob": {"backend": "deepseek", "model": "deepseek-v4-flash", "temperature": 0.6},
-        "Cindy": {"backend": "deepseek", "model": "deepseek-v4-flash", "temperature": 0.6},
-        "David": {"backend": "deepseek", "model": "deepseek-v4-flash", "temperature": 0.6},
-        "Eric":{"backend": "deepseek", "model": "deepseek-v4-flash", "temperature": 0.6},
-    }
+AGENT_BACKENDS = {
+    "Alex": {"backend": "openai", "model": "gpt-5.4", "temperature": 0.6},
+    "Bob": {"backend": "deepseek", "model": "deepseek-v4-flash", "temperature": 0.6},
+    "Cindy": {"backend": "openai", "model": "gpt-5.4-nano", "temperature": 0.6},
+    "David": {"backend": "gemini", "model": "gemini-3.1-flash-lite", "temperature": 0.6},
+    "Eric": {"backend": "gemini", "model": "gemini-2.5-flash", "temperature": 0.6},
+}
 
 # experiment_rocord.md
 

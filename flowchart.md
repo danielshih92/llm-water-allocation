@@ -1,10 +1,14 @@
 flowchart TD
-  A[run.py 解析參數] --> B[選擇 backend<br/>agent_interface.py]
-  B --> C[PromptBuilder 組提示詞<br/>prompt_builder.py]
-  C --> D[AgentRunner 產生 reasoning + strategy code<br/>agent_interface.py]
-  D --> E[WACProgrammaticEnv 回合模擬<br/>wac_programmatic.py]
-  E --> F[execute_strategy 安全執行策略碼<br/>sandbox_executor.py]
-  F --> E
-  E --> G[輸出 meta-round log]
-  G --> H[export_inference.py 萃取 CoT/Code]
-  G --> I[visualize_log.py 視覺化]
+  A[run_all_permutations.py builds permutations] --> B[Generate per-agent backend overrides]
+  B --> C[run.py run_experiment]
+  C --> D[Parse args and config.py]
+  D --> E[Create LLM backend<br/>agent_interface.py]
+  E --> F[PromptBuilder builds prompt<br/>prompt_builder.py]
+  F --> G[AgentRunner generates reasoning + code<br/>agent_interface.py]
+  G --> H[WACProgrammaticEnv simulates rounds<br/>wac_programmatic.py]
+  H --> I[execute_strategy sandbox execution<br/>sandbox_executor.py]
+  I --> H
+  H --> J[Write meta-round log]
+  J --> K[Write agent_averages.json + plots]
+  J --> L[build_inference_for_experiment]
+  J --> M[visualize_log.py / visualize_agent_performance.py]

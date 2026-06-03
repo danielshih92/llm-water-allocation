@@ -483,6 +483,8 @@ def save_agent_average_summary(
         "compile_success",
         "runtime_success",
         "hallucinated_api_count",
+        "json_parse_failed",
+        "default_code_used",
     ]
 
     agent_stats = defaultdict(
@@ -604,6 +606,12 @@ def save_agent_average_summary(
         extra_averages = {}
 
         for metric_key in extra_metric_keys:
+            if metric_key in {
+                "json_parse_failed",
+                "default_code_used",
+            }:
+                continue
+
             values = stats["metric_lists"].get(
                 metric_key,
                 [],
@@ -632,6 +640,14 @@ def save_agent_average_summary(
             ),
             "mortality_rate": f"{mortality_rate:.1f}%",
             "death_count": f"{stats['death_count']}/{rounds_played}",
+            "json_parse_fail_rate": round(
+                sum(stats["metric_lists"].get("json_parse_failed", [])) / rounds_played,
+                4,
+            ) if stats["metric_lists"].get("json_parse_failed") else 0.0,
+            "default_code_usage_rate": round(
+                sum(stats["metric_lists"].get("default_code_used", [])) / rounds_played,
+                4,
+            ) if stats["metric_lists"].get("default_code_used") else 0.0,
             **extra_averages,
         }
 
@@ -664,121 +680,10 @@ def save_agent_average_summary(
     else:
         print("Skipping cross-meta plots (--no-plots).")
     
-def main() -> None:
-    parser = argparse.ArgumentParser(
-        description="Water Allocation Challenge Programmatic Runner"
-    )
-
-    parser.add_argument(
-        "--scenario",
-        type=str,
-        default="medium",
-        choices=sorted(
-            SCENARIOS.keys()
-        ),
-        help="Scarcity scenario: low, medium, or high",
-    )
-
-    parser.add_argument(
-        "--meta-rounds",
-        type=int,
-        default=10,
-        help="Number of meta-rounds to run",
-    )
-
-    parser.add_argument(
-        "--seed",
-        type=int,
-        default=None,
-        help="Base random seed for deterministic supply generation",
-    )
-
-    parser.add_argument(
-        "--backend-mode",
-        type=str,
-        default=config.BACKEND_MODE,
-        choices=[
-            "uniform",
-            "per-agent",
-        ],
-        help="Backend mode: uniform or per-agent",
-    )
-
-    parser.add_argument(
-        "--backend",
-        type=str,
-        default=None,
-        choices=[
-            "mock",
-            "openai",
-            "gemini",
-            "ollama",
-            "deepseek",
-        ],
-        help="LLM backend for uniform mode",
-    )
-
-    parser.add_argument(
-        "--backend-model",
-        type=str,
-        default=None,
-        help="Model name for uniform mode",
-    )
-
-    parser.add_argument(
-        "--backend-temperature",
-        type=float,
-        default=None,
-        help="Temperature for uniform mode",
-    )
-
-    parser.add_argument(
-        "--backend-base-url",
-        type=str,
-        default=None,
-        help="Base URL for uniform mode",
-    )
-
-    parser.add_argument(
-        "--output-dir",
-        type=str,
-        default="log",
-        help="Directory to write meta-round logs",
-    )
-
-    parser.add_argument(
-        "--experiment-id",
-        type=str,
-        default=None,
-        help="Optional experiment ID suffix for log naming",
-    )
-
-    parser.add_argument(
-        "--opponent-info-mode",
-        type=str,
-        default=config.OPPONENT_INFO_MODE,
-        choices=[
-            "full_code_access",
-            "outcome_only",
-            "no_opponent_info",
-        ],
-        help="Opponent info exposure across meta-rounds",
-    )
-
-    parser.add_argument(
-        "--no-plots",
-        action="store_true",
-        help="Skip generating daily and cross-meta line plots",
-    )
-
-    parser.add_argument(
-        "--compact-meta-log",
-        action="store_true",
-        help="Save compact meta-round logs (omit metrics)",
-    )
-
-    args = parser.parse_args()
-
+def run_experiment(
+    args: argparse.Namespace,
+    backend_overrides: Optional[Dict[str, Dict[str, object]]] = None,
+) -> None:
     total_start_time = time.time()
 
     env = WACProgrammaticEnv(
@@ -786,6 +691,7 @@ def main() -> None:
     )
 
     profiles: List[AgentProfile] = default_agent_profiles()
+    per_agent_backends = backend_overrides or config.AGENT_BACKENDS
 
     experiment_id = (
         args.experiment_id
@@ -812,7 +718,7 @@ def main() -> None:
         )
 
         spec.update(
-            config.AGENT_BACKENDS.get(
+            per_agent_backends.get(
                 profile.agent_id,
                 {},
             )
@@ -864,7 +770,7 @@ def main() -> None:
             )
 
             spec.update(
-                config.AGENT_BACKENDS.get(
+                per_agent_backends.get(
                     profile.agent_id,
                     {},
                 )
@@ -965,7 +871,7 @@ def main() -> None:
                 f"{profile.agent_id}"
             )
 
-            spec = config.AGENT_BACKENDS.get(
+            spec = per_agent_backends.get(
                 profile.agent_id,
                 {},
             )
@@ -1017,7 +923,7 @@ def main() -> None:
                 "  Generating reasoning/code..."
             )
 
-            reasoning_cot, strategy_code = runner.generate_strategy(
+            reasoning_cot, strategy_code, generation_stats = runner.generate_strategy(
                 agent_profile={
                     "agent_id": profile.agent_id,
                     "water_requirement": profile.water_requirement,
@@ -1106,7 +1012,7 @@ def main() -> None:
                 "metrics"
             ]
 
-            # 🌟 [關鍵改動] 僅動態計算並打包最直觀、大模型最容易看懂的對手戰績指標
+            # Keep only the compact per-agent summary for the next meta-round.
             valid_bids = [t["bid"] for t in agent["daily_trace"] if t.get("bid") is not None]
             max_bid_val = round(max(valid_bids), 2) if valid_bids else 0.0
 
@@ -1129,7 +1035,7 @@ def main() -> None:
                 "final_budget": final_trace[
                     "budget_after"
                 ],
-                "max_bid": max_bid_val  # 👈 新增最高出價
+                "max_bid": max_bid_val
             }
 
             round_summary[
@@ -1163,6 +1069,8 @@ def main() -> None:
                 "compile_success": int(metrics["compile_success"]),
                 "runtime_success": int(metrics["runtime_success"]),
                 "hallucinated_api_count": metrics["hallucinated_api_count"],
+                "json_parse_failed": int(generation_stats["json_parse_failed"]),
+                "default_code_used": int(generation_stats["default_code_used"]),
 
                 "daily_traces": agent["daily_trace"]
             }
@@ -1215,6 +1123,123 @@ def main() -> None:
         ),
         enable_plots=not args.no_plots,
     )
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(
+        description="Water Allocation Challenge Programmatic Runner"
+    )
+
+    parser.add_argument(
+        "--scenario",
+        type=str,
+        default="medium",
+        choices=sorted(
+            SCENARIOS.keys()
+        ),
+        help="Scarcity scenario: low, medium, or high",
+    )
+
+    parser.add_argument(
+        "--meta-rounds",
+        type=int,
+        default=3,
+        help="Number of meta-rounds to run",
+    )
+
+    parser.add_argument(
+        "--seed",
+        type=int,
+        default=None,
+        help="Base random seed for deterministic supply generation",
+    )
+
+    parser.add_argument(
+        "--backend-mode",
+        type=str,
+        default=config.BACKEND_MODE,
+        choices=[
+            "uniform",
+            "per-agent",
+        ],
+        help="Backend mode: uniform or per-agent",
+    )
+
+    parser.add_argument(
+        "--backend",
+        type=str,
+        default=None,
+        choices=[
+            "mock",
+            "openai",
+            "gemini",
+            "ollama",
+            "deepseek",
+        ],
+        help="LLM backend for uniform mode",
+    )
+
+    parser.add_argument(
+        "--backend-model",
+        type=str,
+        default=None,
+        help="Model name for uniform mode",
+    )
+
+    parser.add_argument(
+        "--backend-temperature",
+        type=float,
+        default=None,
+        help="Temperature for uniform mode",
+    )
+
+    parser.add_argument(
+        "--backend-base-url",
+        type=str,
+        default=None,
+        help="Base URL for uniform mode",
+    )
+
+    parser.add_argument(
+        "--output-dir",
+        type=str,
+        default="log",
+        help="Directory to write meta-round logs",
+    )
+
+    parser.add_argument(
+        "--experiment-id",
+        type=str,
+        default=None,
+        help="Optional experiment ID suffix for log naming",
+    )
+
+    parser.add_argument(
+        "--opponent-info-mode",
+        type=str,
+        default=config.OPPONENT_INFO_MODE,
+        choices=[
+            "full_code_access",
+            "outcome_only",
+            "no_opponent_info",
+        ],
+        help="Opponent info exposure across meta-rounds",
+    )
+
+    parser.add_argument(
+        "--no-plots",
+        action="store_true",
+        help="Skip generating daily and cross-meta line plots",
+    )
+
+    parser.add_argument(
+        "--compact-meta-log",
+        action="store_true",
+        help="Save compact meta-round logs (omit metrics)",
+    )
+
+    args = parser.parse_args()
+    run_experiment(args)
 
 
 if __name__ == "__main__":

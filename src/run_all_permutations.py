@@ -1,23 +1,16 @@
 import argparse
 import itertools
 import json
-import subprocess
 import os
 import re
 import time
-import sys
 from datetime import datetime
 
-AGENTS = ["Alex", "Bob", "Cindy", "David", "Eric"]
+import config
+import run as run_module
 
-MODELS = [
-    {"backend": "openai", "model": "gpt-5.4"},
-    {"backend": "openai", "model": "gpt-5.4-nano"},
-    {"backend": "gemini", "model": "gemini-2.5-flash"},
-    {"backend": "gemini", "model": "gemini-3.1-flash-lite"},
-    {"backend": "deepseek", "model": "deepseek-v4-flash"},
-
-]
+AGENTS = config.AGENTS
+MODELS = config.BATCH_MODELS
 
 META_ROUND_PATTERN = re.compile(r"^meta_round_(\d+)\.json$")
 
@@ -63,6 +56,8 @@ def aggregate_batch_results(batch_folder, batch_manifest=None):
         ("avg_compile_success", "compile_success", 4),
         ("avg_runtime_success", "runtime_success", 4),
         ("avg_hallucinated_api_count", "hallucinated_api_count", 4),
+        ("json_parse_fail_rate", "json_parse_fail_rate", 4),
+        ("default_code_usage_rate", "default_code_usage_rate", 4),
     ]
 
     def new_pool_item():
@@ -383,6 +378,12 @@ def build_inference_for_experiment(exp_dir, source_log_dir):
 def main():
     parser = argparse.ArgumentParser(description="Run permutation experiments.")
     parser.add_argument(
+        "--batch-name",
+        type=str,
+        default=None,
+        help="Use an existing batch folder name (e.g., batch_YYYYMMDD_HHMMSS).",
+    )
+    parser.add_argument(
         "--slice-start",
         type=int,
         default=1,
@@ -397,7 +398,7 @@ def main():
     parser.add_argument(
         "--meta-rounds",
         type=int,
-        default=10,
+        default=3,
         help="Number of meta-rounds to run for each experiment.",
     )
     parser.add_argument(
@@ -420,7 +421,7 @@ def main():
 
     script_dir = os.path.dirname(os.path.abspath(__file__))
     project_root = os.path.dirname(script_dir)
-    batch_id = datetime.now().strftime("batch_%Y%m%d_%H%M%S")
+    batch_id = args.batch_name or datetime.now().strftime("batch_%Y%m%d_%H%M%S")
     batch_dir = os.path.join(project_root, "log", batch_id)
     os.makedirs(batch_dir, exist_ok=True)
 
@@ -434,59 +435,59 @@ def main():
 
     all_permutations = list(itertools.permutations(MODELS))
     start_index = slice_start - 1
-    end_index = slice_end
-    all_permutations = all_permutations[start_index:end_index]
-    print(f"Total experiments: {len(all_permutations)}")
+    end_index = min(slice_end, len(all_permutations))
+    if start_index >= len(all_permutations):
+        raise SystemExit("--slice-start exceeds total permutations")
+    permutations_slice = all_permutations[start_index:end_index]
+    print(f"Total experiments: {len(permutations_slice)}")
 
     batch_start_time = time.time()
     experiment_summary = []
 
-    for exp_idx, perm in enumerate(all_permutations):
+    for offset, perm in enumerate(permutations_slice):
         experiment_start_time = time.time()
+        exp_index = slice_start + offset
         backend_config = {}
 
         for agent, model_spec in zip(AGENTS, perm):
             backend_config[agent] = {
                 "backend": model_spec["backend"],
                 "model": model_spec["model"],
-                "temperature": 0.6,
+                "temperature": 0.1,
             }
 
-        temp_config_path = os.path.join(script_dir, "temp_backend_config.json")
-        with open(temp_config_path, "w", encoding="utf-8") as f:
-            json.dump(backend_config, f, indent=2)
-
-        experiment_id = os.path.join(batch_id, f"exp_{exp_idx:03d}")
+        experiment_id = os.path.join(batch_id, f"exp_{exp_index:03d}")
 
         print("\n================================================")
-        print(f"Experiment {exp_idx+1}/{len(all_permutations)}")
+        print(f"Experiment {offset+1}/{len(permutations_slice)}")
         print(f"Experiment ID: {experiment_id}")
         for agent in AGENTS:
             print(f"{agent}: {backend_config[agent]['model']}")
         print("================================================\n")
 
-        cmd = [
-            sys.executable,
-            os.path.join(script_dir, "run.py"),
-            "--scenario", "medium",
-            "--backend-mode", "per-agent",
-            "--experiment-id", experiment_id,
-            "--output-dir", os.path.join(project_root, "log"),
-            "--meta-rounds", str(args.meta_rounds),
-            "--compact-meta-log",
-        ]
-        if args.no_plots:
-            cmd.append("--no-plots")
-        if args.opponent_info_mode:
-            cmd.extend(["--opponent-info-mode", args.opponent_info_mode])
+        run_args = argparse.Namespace(
+            scenario="medium",
+            meta_rounds=args.meta_rounds,
+            seed=None,
+            backend_mode="per-agent",
+            backend=None,
+            backend_model=None,
+            backend_temperature=None,
+            backend_base_url=None,
+            output_dir=os.path.join(project_root, "log"),
+            experiment_id=experiment_id,
+            opponent_info_mode=(args.opponent_info_mode or config.OPPONENT_INFO_MODE),
+            no_plots=args.no_plots,
+            compact_meta_log=True,
+        )
 
-        res = subprocess.run(cmd, cwd=os.path.dirname(__file__))
-
-        if res.returncode != 0:
-            print(f"[WARN] run.py failed for {experiment_id} (returncode={res.returncode}). Skipping inference build.")
+        try:
+            run_module.run_experiment(run_args, backend_overrides=backend_config)
+        except Exception as exc:
+            print(f"[WARN] run.py failed for {experiment_id}: {exc}. Skipping inference build.")
             continue
 
-        exp_dir = os.path.join(batch_dir, f"exp_{exp_idx:03d}")
+        exp_dir = os.path.join(batch_dir, f"exp_{exp_index:03d}")
         build_inference_for_experiment(exp_dir, batch_dir)
 
         experiment_elapsed = time.time() - experiment_start_time

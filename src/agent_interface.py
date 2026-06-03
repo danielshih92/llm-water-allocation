@@ -189,6 +189,11 @@ class DeepSeekBackend(LLMBackend):
             },
         }
 
+        if config.DEEPSEEK_JSON_MODE:
+            payload["response_format"] = {
+                "type": "json_object"
+            }
+
         if self.temperature is not None:
             payload["temperature"] = self.temperature
 
@@ -274,7 +279,7 @@ class AgentRunner:
     def _extract_strategy_code(
         self,
         response: str,
-    ) -> str:
+    ) -> Tuple[str, bool]:
 
         code = self._extract_json_field(
             response,
@@ -282,7 +287,7 @@ class AgentRunner:
         )
 
         if code:
-            return code
+            return code, False
 
         all_blocks = re.findall(
             r"```python\s*(.*?)\s*```",
@@ -298,7 +303,7 @@ class AgentRunner:
             )
 
         if all_blocks:
-            return all_blocks[-1]
+            return all_blocks[-1], False
 
         match = re.search(
             r"(def\s+get_bid\(.*)",
@@ -310,12 +315,12 @@ class AgentRunner:
             code = match.group(1)
             code = code.replace("\\n", "\n")
             code = code.replace('\\"', '"')
-            return code
+            return code, False
 
         return (
             "def get_bid(day_context, my_status, opponents_status):\n"
             "    return 15.0"
-        )
+        ), True
 
     def generate_strategy(
         self,
@@ -325,7 +330,7 @@ class AgentRunner:
         history: Optional[Dict[str, Any]] = None,
         opponent_info_mode: Optional[str] = None,
         show_opponent_code: Optional[bool] = None,
-    ) -> Tuple[str, str]:
+    ) -> Tuple[str, str, Dict[str, bool]]:
         backend = self._select_backend(agent_profile.get("agent_id", ""))
         combined_prompt = self.prompt_builder.build_combined_prompt(
             agent_profile=agent_profile,
@@ -349,6 +354,7 @@ class AgentRunner:
         cleaned_response = cleaned_response.strip()
 
         parse_failed = False
+        default_code_used = False
 
         try:
             # 這裡改成解析清洗過後的 cleaned_response
@@ -372,7 +378,7 @@ class AgentRunner:
                 "reasoning",
             )
 
-            strategy_code = self._extract_strategy_code(
+            strategy_code, default_code_used = self._extract_strategy_code(
                 response
             )
 
@@ -404,6 +410,7 @@ class AgentRunner:
                 strategy_code = match.group(1)
             else:
                 strategy_code = "def get_bid(day_context, my_status, opponents_status): return 15.0"
+                default_code_used = True
 
         if "def get_bid" not in strategy_code:
             strategy_code = re.sub(
@@ -412,4 +419,11 @@ class AgentRunner:
                 strategy_code,
             )
 
-        return reasoning_cot, strategy_code.strip()
+        return (
+            reasoning_cot,
+            strategy_code.strip(),
+            {
+                "json_parse_failed": parse_failed,
+                "default_code_used": default_code_used,
+            },
+        )
