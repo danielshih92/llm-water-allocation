@@ -1,3 +1,4 @@
+import copy
 import json
 import os
 import random
@@ -162,24 +163,22 @@ class WACProgrammaticEnv:
             other_state = runtime[other_profile.agent_id]
             other_traces = traces.get(other_profile.agent_id, [])
 
-            last_trace = (
-                other_traces[-1]
-                if other_traces
-                else {}
-            )
-
-            previous_trace = self._compact_trace(
-                last_trace
-            )
-
-            recent_traces = [
+            trace_history = [
                 self._compact_trace(trace)
-                for trace in other_traces[-3:]
+                for trace in other_traces
             ]
+
+            previous_trace = (
+                trace_history[-1]
+                if trace_history
+                else self._compact_trace({})
+            )
 
             last_bid = previous_trace["bid"]
 
             opponents_status[other_profile.agent_id] = {
+                "agent_id": other_profile.agent_id,
+
                 "hp": other_state.hp,
                 "budget": other_state.budget,
                 "no_water_days": other_state.no_water_days,
@@ -192,11 +191,30 @@ class WACProgrammaticEnv:
                 "last_hp_after": previous_trace["hp_after"],
                 "last_budget_after": previous_trace["budget_after"],
 
-                "previous_trace": previous_trace,
-                "recent_traces": recent_traces,
+                "trace_history": trace_history,
             }
 
         return opponents_status
+
+    def _compact_opponents_status_for_log(
+        self,
+        opponents_status: Dict[str, Dict[str, Any]],
+    ) -> Dict[str, Dict[str, Any]]:
+
+        compact_status: Dict[str, Dict[str, Any]] = {}
+
+        for opponent_id, status in opponents_status.items():
+            if not isinstance(status, dict):
+                compact_status[opponent_id] = status
+                continue
+
+            status_copy = dict(status)
+
+            status_copy.pop("trace_history", None)
+
+            compact_status[opponent_id] = status_copy
+
+        return compact_status
 
     def run_episode(
         self,
@@ -243,8 +261,10 @@ class WACProgrammaticEnv:
                     traces=traces,
                     current_agent_id=profile.agent_id,
                 )
-                opponents_snapshots[profile.agent_id] = opponents_status
-
+                opponents_snapshots[profile.agent_id] = self._compact_opponents_status_for_log(
+                    opponents_status
+                )
+                
                 submission = submission_map.get(profile.agent_id)
                 if submission is None:
                     bids[profile.agent_id] = 0.0
@@ -376,12 +396,18 @@ class WACProgrammaticEnv:
     ) -> str:
         exp_dir = os.path.join(output_dir, experiment_id)
         os.makedirs(exp_dir, exist_ok=True)
+
         meta_round_id = meta_round_record.get("meta_round_id", "unknown")
         filename = f"meta_round_{meta_round_id}.json"
         path = os.path.join(exp_dir, filename)
+
+        record_to_save = copy.deepcopy(meta_round_record)
+
         with open(path, "w", encoding="utf-8") as handle:
-            json.dump([meta_round_record], handle, indent=2)
+            json.dump([record_to_save], handle, indent=2)
+
         return path
+    
     def _compute_agent_metrics(
         self,
         profile,

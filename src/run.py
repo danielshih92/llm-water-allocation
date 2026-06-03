@@ -221,16 +221,34 @@ def save_daily_metric_plots_for_meta_round(
 
         has_valid_trace = False
 
-        for agent in agents:
+        visible_agents = [
+            agent
+            for agent in agents
+            if agent.get("daily_trace")
+        ]
+
+        num_visible = len(visible_agents)
+
+        for idx, agent in enumerate(visible_agents):
             agent_id = agent.get("agent_id", "unknown")
             traces = agent.get("daily_trace", [])
-
-            if not traces:
-                continue
 
             days = [
                 trace.get("day")
                 for trace in traces
+            ]
+            
+            if num_visible > 1:
+                offset = (
+                    idx
+                    - (num_visible - 1) / 2
+                ) * 0.08
+            else:
+                offset = 0.0
+
+            days_shifted = [
+                day + offset
+                for day in days
             ]
 
             values = build_series(
@@ -239,7 +257,7 @@ def save_daily_metric_plots_for_meta_round(
             )
 
             plt.plot(
-                days,
+                days_shifted,
                 values,
                 marker=spec["marker"],
                 linewidth=2,
@@ -508,7 +526,7 @@ def save_agent_average_summary(
                 if isinstance(value, (int, float)):
                     stats["metric_lists"][metric_key].append(float(value))
 
-            traces = info.get("recent_traces", [])
+            traces = info.get("daily_traces", [])
 
             for trace in traces:
                 if not isinstance(trace, dict):
@@ -1146,7 +1164,7 @@ def main() -> None:
                 "runtime_success": int(metrics["runtime_success"]),
                 "hallucinated_api_count": metrics["hallucinated_api_count"],
 
-                "recent_traces": agent["daily_trace"],
+                "daily_traces": agent["daily_trace"]
             }
 
         all_meta_history[

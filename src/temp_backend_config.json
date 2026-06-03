@@ -5,13 +5,13 @@
     "temperature": 0.6
   },
   "Bob": {
-    "backend": "openai",
-    "model": "gpt-5.4-nano",
+    "backend": "deepseek",
+    "model": "deepseek-v4-flash",
     "temperature": 0.6
   },
   "Cindy": {
-    "backend": "gemini",
-    "model": "gemini-2.5-flash",
+    "backend": "openai",
+    "model": "gpt-5.4-nano",
     "temperature": 0.6
   },
   "David": {
@@ -20,8 +20,8 @@
     "temperature": 0.6
   },
   "Eric": {
-    "backend": "deepseek",
-    "model": "deepseek-v4-flash",
+    "backend": "gemini",
+    "model": "gemini-2.5-flash",
     "temperature": 0.6
   }
 }

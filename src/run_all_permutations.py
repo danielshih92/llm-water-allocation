@@ -16,11 +16,6 @@ MODELS = [
     {"backend": "gemini", "model": "gemini-2.5-flash"},
     {"backend": "gemini", "model": "gemini-3.1-flash-lite"},
     {"backend": "deepseek", "model": "deepseek-v4-flash"},
-    # {"backend": "deepseek", "model": "deepseek-v4-flash"},
-    # {"backend": "deepseek", "model": "deepseek-v4-flash"},
-    # {"backend": "deepseek", "model": "deepseek-v4-flash"},
-    # {"backend": "deepseek", "model": "deepseek-v4-flash"},
-    # {"backend": "deepseek", "model": "deepseek-v4-flash"},
 
 ]
 
