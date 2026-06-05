@@ -31,8 +31,8 @@ Batch run (permutations)
    python3 src/run_all_permutations.py --slice-start 1 --slice-end 120 --opponent-info-mode full_code_access
 
 3) Run multiple slices into the same batch folder:
-   python3 src/run_all_permutations.py --slice-start 1 --slice-end 2 --no-plots --batch-name batch_003
-   python3 src/run_all_permutations.py --slice-start 61 --slice-end 120 --no-plots --batch-name batch_002
+   python3 src/run_all_permutations.py --slice-start 1 --slice-end 120 --no-plots --batch-name batch_004 --opponent-info-mode full_code_access
+   python3 src/run_all_permutations.py --slice-start 1 --slice-end 120 --no-plots --batch-name batch_006_outcome_only --meta-rounds 3 --opponent-info-mode outcome_only
 
 Config-only settings
 - All backend/model settings are defined in [Alympics/src/config.py](Alympics/src/config.py).
@@ -66,3 +66,12 @@ Notes
 - If you use OpenAI or DeepSeek, set OPENAI_API_KEY or DEEPSEEK_API_KEY in your environment.
 - OPPONENT_INFO_MODE only affects the LLM prompt context between meta-rounds.
 - When using --batch-name, exp numbering follows slice indices (e.g., slice 20-40 -> exp_020 to exp_040).
+
+---
+tmux bash:
+tmux new -s alympics
+source venv/bin/activate
+python ...
+
+---
+python temp/batch_table_plot.py --log-dir log --batch batch_005_no_opp_info

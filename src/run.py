@@ -856,6 +856,7 @@ def run_experiment(
         )
 
         submissions: List[AgentSubmission] = []
+        generation_stats_by_agent: Dict[str, Dict[str, bool]] = {}
 
         total_agents = len(
             profiles
@@ -949,6 +950,8 @@ def run_experiment(
                 "  Strategy generation complete."
             )
 
+            generation_stats_by_agent[profile.agent_id] = generation_stats
+
             submissions.append(
                 AgentSubmission(
                     agent_id=profile.agent_id,
@@ -1002,6 +1005,14 @@ def run_experiment(
         for agent in record[
             "agents"
         ]:
+            agent_id = agent["agent_id"]
+            generation_stats = generation_stats_by_agent.get(
+                agent_id,
+                {
+                    "json_parse_failed": False,
+                    "default_code_used": False,
+                },
+            )
             final_trace = agent[
                 "daily_trace"
             ][
@@ -1019,9 +1030,7 @@ def run_experiment(
             history[
                 "agent_summaries"
             ][
-                agent[
-                    "agent_id"
-                ]
+                agent_id
             ] = {
                 "final_hp": metrics[
                     "final_hp"
@@ -1039,9 +1048,7 @@ def run_experiment(
             }
 
             round_summary[
-                agent[
-                    "agent_id"
-                ]
+                agent_id
             ] = {
                 "hp": metrics["final_hp"],
                 "survival_day": metrics["survival_days"],
