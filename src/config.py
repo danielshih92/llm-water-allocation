@@ -16,19 +16,26 @@ OPENAI_API_VERSION = ""
 
 # Gemini placeholder config (for future use)
 GEMINI_API_KEY = ""
-GEMINI_MODEL = "gemini-2.5-flash"
+GEMINI_MODEL = "gemini-3.5-flash"
 
 # DeepSeek JSON output mode
 DEEPSEEK_JSON_MODE = True
 
 # Batch permutation inputs (run_all_permutations.py)
 AGENTS = ["Alex", "Bob", "Cindy", "David", "Eric"]
+# BATCH_MODELS = [
+#     {"backend": "openai", "model": "gpt-5.4"},
+#     {"backend": "deepseek", "model": "deepseek-v4-flash"},
+#     {"backend": "openai", "model": "gpt-5.4-nano"},
+#     {"backend": "gemini", "model": "gemini-3.5-flash"},
+#     {"backend": "gemini", "model": "gemini-2.5-flash"},
+# ]
 BATCH_MODELS = [
-    {"backend": "openai", "model": "gpt-5.4"},
-    {"backend": "deepseek", "model": "deepseek-v4-flash"},
-    {"backend": "openai", "model": "gpt-5.4-nano"},
     {"backend": "gemini", "model": "gemini-3.5-flash"},
-    {"backend": "gemini", "model": "gemini-2.5-flash"},
+    {"backend": "gemini", "model": "gemini-3.5-flash"},
+    {"backend": "gemini", "model": "gemini-3.5-flash"},
+    {"backend": "gemini", "model": "gemini-3.5-flash"},
+    {"backend": "gemini", "model": "gemini-3.5-flash"},
 ]
 
 # Backend selection mode: "uniform" (mode 1) or "per-agent" (mode 2)

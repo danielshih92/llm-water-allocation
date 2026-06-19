@@ -16,9 +16,6 @@ class PromptBuilder:
         show_opponent_code: Optional[bool] = None,
     ) -> str:
 
-        # ============================================================
-        # 核心優化：智慧識別並提取精簡的上一輪對手戰績狀態
-        # ============================================================
         history_payload: Dict[str, Any] = {}
         if history and isinstance(history, dict):
             last_meta_round = history.get("last_meta_round")
@@ -32,7 +29,6 @@ class PromptBuilder:
                 history_payload["opponent_summaries"] = history.get("opponent_summaries")
 
             if not history_payload:
-                # 保持向下相容：如果未來傳入全域歷史大池 (all_meta_history) 也能安全解析
                 keys = list(history.keys())
                 if keys:
                     try:
@@ -43,7 +39,7 @@ class PromptBuilder:
                             else (0,),
                         )
                         data = history[latest_key]
-                        # 檢查內層是否帶有 summary 殼
+                        
                         if isinstance(data, dict) and "summary" in data:
                             history_payload = data["summary"]
                         else:
@@ -52,7 +48,7 @@ class PromptBuilder:
                         latest_key = keys[-1]
                         history_payload = history[latest_key]
 
-        # 將原本臃腫的歷史，替換為只有前一天數據的乾淨區塊
+        
         if show_opponent_code is None:
             show_opponent_code = config.REVEAL_OPPONENT_CODE
 
@@ -65,12 +61,11 @@ class PromptBuilder:
                 opponent_info_mode = "no_opponent_info"
 
         history_block = json.dumps(history_payload, indent=2)
-        state_block = json.dumps(game_state or {}, indent=2)      # 🌟 [補回] 格式化當前賽局狀態
-        profile_block = json.dumps(agent_profile or {}, indent=2)  # 🌟 [補回] 格式化智慧體基本配置
+        state_block = json.dumps(game_state or {}, indent=2)      
+        profile_block = json.dumps(agent_profile or {}, indent=2)  
 
         opponent_code_section = ""
 
-        # 提供當前這一輪正在執行的對手原始碼
         if show_opponent_code and opponent_code:
             opponent_block = json.dumps(opponent_code or {}, indent=2)
 
@@ -119,7 +114,6 @@ class PromptBuilder:
             f"Current Meta-Round State:\n{state_block}\n\n"
             f"{opponent_code_section}"
             
-            # 這裡現在只會倒進去「最新一輪」的歷史，其餘舊資料全部被丟棄
             f"LATEST METAROUND CONTEXT (YESTERDAY):\n{history_block}\n\n"
 
             # ============================================================
@@ -133,8 +127,8 @@ class PromptBuilder:
             "3. 'my_status' ONLY has fields: ['hp', 'budget', 'no_water_days']\n"
             "4. 'opponents_status' is a dictionary keyed by opponent agent_id.\n"
             "5. Each opponent state has: ['agent_id', 'hp', 'budget', 'no_water_days', 'alive', 'water_requirement', 'daily_salary', 'last_bid', 'last_status', 'last_hp_after', 'last_budget_after', 'trace_history'].\n"
-            "6. 'trace_history' is a compact list of that opponent's recent day records. Each record has: ['day', 'bid', 'supply', 'hp_after', 'budget_after', 'status', 'error'].\n"
-            "7. Use 'last_bid', 'last_status', 'last_hp_after', and 'last_budget_after' for quick yesterday information. Use 'trace_history' only when you need recent trend analysis.\n"
+            "6. 'trace_history' is a compact list of that opponent's recent 2 day records. Each record has: ['day', 'bid', 'supply', 'hp_after', 'budget_after', 'status', 'error'].\n"
+            "7. Use 'last_bid', 'last_status', 'last_hp_after', and 'last_budget_after' for quick yesterday information. Use 'trace_history' only when you need the last 2 days of trend analysis.\n"
             "8. Bidding is simultaneous. Current-day opponent bids are hidden.\n\n"
             "9. CRITICAL INDEX RULE: In Python, list/array indices MUST be integers. Since day_context['supply'] is passed as a float (e.g., 19.0), any mathematical operations like floor division (e.g., supply // WATER_REQ) will produce a FLOAT (e.g., 1.0). You MUST explicitly wrap ALL list indices or subscript selectors with int() (e.g., my_list[int(target_index)]) to strictly prevent float index RuntimeErrors.\n\n"
 

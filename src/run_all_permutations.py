@@ -15,9 +15,6 @@ MODELS = config.BATCH_MODELS
 META_ROUND_PATTERN = re.compile(r"^meta_round_(\d+)\.json$")
 
 
-# ============================================================================
-# 🌟 全域大匯總模組（已整合原本的 experiment_summary 執行紀錄）
-# ============================================================================
 def aggregate_batch_results(batch_folder, batch_manifest=None):
     """
     Scan all agent_averages.json files under a batch folder and build
@@ -372,9 +369,6 @@ def build_inference_for_experiment(exp_dir, source_log_dir):
         with open(code_path, "w", encoding="utf-8") as handle:
             handle.write(code_text)
 
-# ============================================================
-# 🚀 主執行流程區
-# ============================================================
 def main():
     parser = argparse.ArgumentParser(description="Run permutation experiments.")
     parser.add_argument(
@@ -402,6 +396,12 @@ def main():
         help="Number of meta-rounds to run for each experiment.",
     )
     parser.add_argument(
+        "--seed",
+        type=int,
+        default=None,
+        help="Base random seed forwarded to run.py (default: None for random supply).",
+    )
+    parser.add_argument(
         "--no-plots",
         action="store_true",
         help="Skip generating plots when calling run.py for each permutation.",
@@ -425,7 +425,6 @@ def main():
     batch_dir = os.path.join(project_root, "log", batch_id)
     os.makedirs(batch_dir, exist_ok=True)
 
-    # 這裡可以自由選擇切片（例如 [0:1] 或拿掉跑全排列）
     slice_start = args.slice_start
     slice_end = args.slice_end
     if slice_start < 1:
@@ -468,7 +467,7 @@ def main():
         run_args = argparse.Namespace(
             scenario="medium",
             meta_rounds=args.meta_rounds,
-            seed=None,
+            seed=args.seed,
             backend_mode="per-agent",
             backend=None,
             backend_model=None,
@@ -501,8 +500,6 @@ def main():
 
     batch_elapsed = time.time() - batch_start_time
 
-    # 🛠️ 關鍵改動：不再單獨寫出 experiment_summary.json 實體檔案
-    # 改為將記憶體中的 Dict 資料打包，當作參數直接送進全域統計模組中合併！
     manifest_data = {
         "batch_id": batch_id,
         "total_experiments": len(all_permutations),
@@ -516,7 +513,6 @@ def main():
     print(f"Total batch runtime: {batch_elapsed:.2f} sec")
     print("================================================")
 
-    # 🌟 呼叫升級後的統計模組，把 manifest_data 餵進去
     aggregate_batch_results(batch_dir, batch_manifest=manifest_data)
 
 

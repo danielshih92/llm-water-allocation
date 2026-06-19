@@ -165,7 +165,7 @@ class WACProgrammaticEnv:
 
             trace_history = [
                 self._compact_trace(trace)
-                for trace in other_traces
+                for trace in other_traces[-2:]
             ]
 
             previous_trace = (

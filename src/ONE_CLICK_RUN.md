@@ -21,7 +21,7 @@ Single experiment (run.py)
    python3 src/run.py --scenario medium --meta-rounds 10 --backend-mode per-agent
 
 2) Uniform mode (override in CLI):
-   python3 src/run.py --scenario medium --meta-rounds 10 --backend-mode uniform --backend openai --backend-model gpt-5.4
+   python3 src/run.py --scenario low --meta-rounds 10 --backend-mode uniform --backend gemini --backend-model gemini-3.5-flash
 
 Batch run (permutations)
 1) Run a slice of permutations:
@@ -54,6 +54,7 @@ Key flags (run.py)
 Key flags (run_all_permutations.py)
 - --slice-start, --slice-end: permutation slice range
 - --meta-rounds: number of meta-rounds per experiment
+- --seed: base random seed (optional, default None)
 - --no-plots: skip plots
 - --opponent-info-mode: full_code_access | outcome_only | no_opponent_info
 - --batch-name: reuse a specific batch folder name
@@ -67,11 +68,13 @@ Notes
 - OPPONENT_INFO_MODE only affects the LLM prompt context between meta-rounds.
 - When using --batch-name, exp numbering follows slice indices (e.g., slice 20-40 -> exp_020 to exp_040).
 
----
+---(common Command)
 tmux bash:
 tmux new -s alympics
+tmux ls
+tmux attach -t alympics
 source venv/bin/activate
-python ...
 
 ---
-python temp/batch_table_plot.py --log-dir log --batch batch_005_no_opp_info
+python temp/batch_table_plot.py --log-dir log --batch batch_006_outcome_only
+python temp/exp_plot.py --log-dir log --batch batch_004 --exp exp_080

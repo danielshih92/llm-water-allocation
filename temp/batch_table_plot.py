@@ -50,6 +50,62 @@ def _collect_agent_average_files(batch_dir: str) -> List[str]:
     return sorted(paths)
 
 
+def _get_agent_profiles() -> List[str]:
+    return [profile.agent_id for profile in default_agent_profiles()]
+
+
+def _build_role_model_metric_matrix(batch_dir: str, source_key: str) -> pd.DataFrame:
+    roles = _get_agent_profiles()
+    grouped: Dict[str, Dict[str, Dict[str, float]]] = {}
+
+    for summary_path in _collect_agent_average_files(batch_dir):
+        try:
+            with open(summary_path, "r", encoding="utf-8") as handle:
+                exp_data = json.load(handle)
+        except Exception:
+            continue
+
+        averages = exp_data.get("agent_averages", {})
+        if not isinstance(averages, dict):
+            continue
+
+        for role_name in roles:
+            stats = averages.get(role_name)
+            if not isinstance(stats, dict):
+                continue
+
+            model_name = str(stats.get("model_used", "Unknown Model"))
+            _, round_count = _parse_death_count(stats.get("death_count", "0/0"))
+            if round_count <= 0:
+                continue
+
+            model_bucket = grouped.setdefault(model_name, {})
+            role_bucket = model_bucket.setdefault(role_name, {"weighted_sum": 0.0, "rounds": 0.0})
+            role_bucket["weighted_sum"] += float(stats.get(source_key, 0.0)) * round_count
+            role_bucket["rounds"] += float(round_count)
+
+    model_names = sorted(grouped.keys())
+    matrix = pd.DataFrame(index=roles, columns=model_names, dtype=float)
+
+    for model_name in model_names:
+        for role_name in roles:
+            role_bucket = grouped.get(model_name, {}).get(role_name)
+            if not role_bucket or role_bucket["rounds"] <= 0:
+                matrix.loc[role_name, model_name] = float("nan")
+                continue
+            matrix.loc[role_name, model_name] = role_bucket["weighted_sum"] / role_bucket["rounds"]
+
+    return matrix
+
+
+def _build_role_model_survival_matrix(batch_dir: str) -> pd.DataFrame:
+    return _build_role_model_metric_matrix(batch_dir, "avg_survival_days")
+
+
+def _build_role_model_complexity_matrix(batch_dir: str) -> pd.DataFrame:
+    return _build_role_model_metric_matrix(batch_dir, "avg_strategy_complexity")
+
+
 def _build_role_model_rows_from_batch(batch_dir: str, agent_id: str) -> List[Dict[str, object]]:
     grouped: Dict[str, Dict[str, object]] = {}
 
@@ -329,6 +385,38 @@ def _save_model_comparison_table(rows: List[Dict[str, object]], output_dir: str,
     _save_table_png(formatted_table, os.path.join(output_dir, f"{file_stem}.png"), title=title)
 
 
+def _save_role_model_matrix(batch_dir: str, output_dir: str, matrix: pd.DataFrame, file_stem: str, title: str, value_format: str = "{:.2f}") -> None:
+    if matrix.empty:
+        return
+
+    display_df = matrix.copy()
+    display_df.insert(0, "Role", display_df.index)
+    for col in display_df.columns[1:]:
+        display_df[col] = display_df[col].map(lambda v: "" if pd.isna(v) else value_format.format(float(v)))
+
+    _save_markdown_table(display_df, os.path.join(output_dir, f"{file_stem}.md"))
+
+    fig_height = max(3.5, 0.55 * (len(display_df) + 1))
+    fig_width = max(10.0, 1.5 * (len(display_df.columns) + 1))
+    fig, ax = plt.subplots(figsize=(fig_width, fig_height))
+    ax.axis("off")
+    col_widths = _estimate_col_widths(display_df)
+    table = ax.table(
+        cellText=display_df.values,
+        colLabels=display_df.columns,
+        cellLoc="center",
+        loc="center",
+        colWidths=col_widths,
+    )
+    table.auto_set_font_size(False)
+    table.set_fontsize(9)
+    table.scale(1, 1.35)
+    ax.set_title(title, fontsize=12, pad=12)
+    plt.tight_layout()
+    plt.savefig(os.path.join(output_dir, f"{file_stem}.png"), dpi=300)
+    plt.close(fig)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Build model-level summary tables and figures.")
     parser.add_argument("--log-dir", type=str, default="log", help="Root log directory.")
@@ -417,6 +505,24 @@ def main() -> None:
     _bubble_chart(
         df,
         path=os.path.join(output_dir, "fig_complexity_survival_runtime_bubble.png"),
+    )
+
+    survival_matrix = _build_role_model_survival_matrix(batch_dir)
+    _save_role_model_matrix(
+        batch_dir,
+        output_dir,
+        survival_matrix,
+        "role_model_survival_matrix",
+        "Average Survival Days by Role and Model",
+    )
+
+    complexity_matrix = _build_role_model_complexity_matrix(batch_dir)
+    _save_role_model_matrix(
+        batch_dir,
+        output_dir,
+        complexity_matrix,
+        "role_model_complexity_matrix",
+        "Average Code Complexity by Role and Model",
     )
 
     perf_by_agent = report.get("performance_by_agent", {})

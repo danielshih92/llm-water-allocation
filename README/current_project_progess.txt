@@ -1,0 +1,85 @@
+Alympics Current Project Progress
+Date: 2026-06-18
+
+[1] 目前專案已完成的核心任務功能（依 src 程式碼盤點）
+1) 可執行多代理 WAC（Water Allocation Challenge）模擬
+   - 5 位代理固定參數（用水需求、日薪）
+   - 10 天 episode，依 bid 競爭供水，更新 hp/budget/no_water_days
+   - 支援 low/medium/high 三種 supply scenario
+
+2) 可由 LLM 自動生成策略程式碼並在沙盒執行
+   - 支援 openai / gemini / deepseek / ollama / mock 後端
+   - prompt 會注入 agent profile、遊戲狀態、歷史摘要與（可選）對手資訊
+   - 產生程式碼後執行，記錄 compile/runtime 錯誤與回退策略
+
+3) 已完成多 meta-round 的歷史記憶機制
+   - 每一輪會把上一輪摘要傳回給 agent
+   - 依 opponent_info_mode 決定可見資訊：
+     full_code_access / outcome_only / no_opponent_info
+
+4) 已完成批次 permutation 實驗（你目前主要在用）
+   - run_all_permutations.py 會對 5 模型做全排列切片執行
+   - 每個 experiment 產生獨立資料夾 exp_###
+   - 每個 experiment 會輸出：meta_round_*.json、backend_config.json、agent_averages.json、inference/
+   - batch 結束後會彙總成 global_batch_report.json
+
+5) 已完成結果彙整與視覺化輸出（可選）
+   - per-experiment: daily metric plots、cross-meta plots
+   - per-batch: global model/agent 層級平均指標與死亡率統計
+
+
+[2] 你目前「實際在用」的主流程（唯一重點）
+你目前真正常用流程是：run_all_permutations.py
+
+實際執行邏輯：
+1) 設定 slice（例如 1~120）
+2) 指定 opponent-info-mode
+3) 對每個 permutation 建立 backend_config（5 位 agent 對 5 個模型的一種排列）
+4) 呼叫 run.py.run_experiment(...) 跑完整 meta-round
+5) 每個 experiment 完成後自動輸出 inference（每 agent 的 cot.json + code.py）
+6) 最後輸出 global_batch_report.json
+
+
+[3] 已完成的三種模式（120 次獨立實驗）
+你已跑過三種對手資訊模式：
+1) full_code_access
+2) outcome_only
+3) no_opponent_info
+
+對應 batch（依目前 log 資料夾命名）：
+1) full_code_access -> batch_004
+2) no_opponent_info -> batch_005_no_opp_info
+3) outcome_only -> batch_006_outcome_only
+
+目前觀察到的批次狀態：
+1) 三個 batch 的 manifest 都記錄 total_experiments = 120
+2) batch_004 與 batch_006_outcome_only 的彙整 total_experiments 一致為 120
+3) batch_005_no_opp_info 在彙整區塊出現 total_experiments = 119 的統計值
+   - 可能原因：其中一次 experiment 在 run.py 失敗後被 skip（程式有 try/except + continue）
+   - 建議：若要完全公平比較三模式，可補跑缺失案例或重新聚合一次 no_opponent_info batch
+
+
+[4] 建議你持續沿用的最小操作集
+你目前只需要這一支：
+- python3 src/run_all_permutations.py --slice-start 1 --slice-end 120 --opponent-info-mode <mode> --batch-name <batch_name>
+
+範例：
+- python3 src/run_all_permutations.py --slice-start 1 --slice-end 120 --opponent-info-mode full_code_access --batch-name batch_004
+- python3 src/run_all_permutations.py --slice-start 1 --slice-end 120 --opponent-info-mode outcome_only --batch-name batch_006_outcome_only
+- python3 src/run_all_permutations.py --slice-start 1 --slice-end 120 --opponent-info-mode no_opponent_info --batch-name batch_005_no_opp_info
+
+
+[5] 現階段成果敘述（論文/報告可用）
+1) 系統已完成以 permutation 為核心的多代理大規模實驗流程。
+2) 已在三種 opponent info 條件下各執行 120 次獨立 experiment（manifest 層級）。
+3) pipeline 可產生完整可追溯紀錄：meta-round log、agent 平均指標、inference artifacts、batch 全域報告。
+4) 實驗的過程和LLM agent的COT以及strategy code都有被完整的存放在log資料夾中
+5) outcome_only的實驗結果目前比較不合理，Eric角色的平均存活天數理論上要是最久的，但結果卻不是如此
+
+
+[6] 重要程式位置（快速索引）
+- src/run_all_permutations.py: 批次排列主流程與最終彙整
+- src/run.py: 單次 experiment 與多 meta-round 主執行器
+- src/prompt_builder.py: 三種 opponent info 模式的 prompt 邏輯
+- src/config.py: OPPONENT_INFO_MODE、REVEAL_OPPONENT_CODE 與模型設定
+- log/*/global_batch_report.json: 各 batch 的最終彙整報告
