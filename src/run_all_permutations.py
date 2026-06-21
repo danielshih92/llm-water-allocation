@@ -52,6 +52,7 @@ def aggregate_batch_results(batch_folder, batch_manifest=None):
 
         ("avg_compile_success", "compile_success", 4),
         ("avg_runtime_success", "runtime_success", 4),
+        ("avg_strict_success_rate", "strict_success_rate", 4),
         ("avg_hallucinated_api_count", "hallucinated_api_count", 4),
         ("json_parse_fail_rate", "json_parse_fail_rate", 4),
         ("default_code_usage_rate", "default_code_usage_rate", 4),

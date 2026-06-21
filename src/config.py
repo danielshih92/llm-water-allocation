@@ -37,6 +37,13 @@ BATCH_MODELS = [
     {"backend": "gemini", "model": "gemini-3.5-flash"},
     {"backend": "gemini", "model": "gemini-3.5-flash"},
 ]
+# BATCH_MODELS = [
+#     {"backend": "deepseek", "model": "deepseek-v4-flash"},
+#     {"backend": "deepseek", "model": "deepseek-v4-flash"},
+#     {"backend": "deepseek", "model": "deepseek-v4-flash"},
+#     {"backend": "deepseek", "model": "deepseek-v4-flash"},
+#     {"backend": "deepseek", "model": "deepseek-v4-flash"},
+# ]
 
 # Backend selection mode: "uniform" (mode 1) or "per-agent" (mode 2)
 BACKEND_MODE = "uniform"

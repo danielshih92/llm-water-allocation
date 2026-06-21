@@ -32,7 +32,7 @@ Batch run (permutations)
 
 3) Run multiple slices into the same batch folder:
    python3 src/run_all_permutations.py --slice-start 1 --slice-end 120 --no-plots --batch-name batch_004 --opponent-info-mode full_code_access
-   python3 src/run_all_permutations.py --slice-start 1 --slice-end 120 --no-plots --batch-name batch_006_outcome_only --meta-rounds 3 --opponent-info-mode outcome_only
+   python3 src/run_all_permutations.py --slice-start 1 --slice-end 8 --no-plots --batch-name batch_008_full_code_access_test_gemini_3-5_flash --meta-rounds 3 --opponent-info-mode full_code_access
 
 Config-only settings
 - All backend/model settings are defined in [Alympics/src/config.py](Alympics/src/config.py).
@@ -76,5 +76,5 @@ tmux attach -t alympics
 source venv/bin/activate
 
 ---
-python temp/batch_table_plot.py --log-dir log --batch batch_006_outcome_only
-python temp/exp_plot.py --log-dir log --batch batch_004 --exp exp_080
+python temp/batch_table_plot.py --log-dir log --batch batch_008_full_code_access_test_gemini_3-5_flash
+python temp/exp_plot.py --log-dir log --batch batch_008_full_code_access_test_gemini_3-5_flash --exp exp_008

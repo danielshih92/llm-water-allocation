@@ -482,6 +482,7 @@ def save_agent_average_summary(
         "function_call_count",
         "compile_success",
         "runtime_success",
+        "strict_success_rate",
         "hallucinated_api_count",
         "json_parse_failed",
         "default_code_used",
@@ -1023,6 +1024,13 @@ def run_experiment(
                 "metrics"
             ]
 
+            strict_success_rate = int(
+                (not generation_stats["json_parse_failed"])
+                and (not generation_stats["default_code_used"])
+                and bool(metrics["compile_success"])
+                and bool(metrics["runtime_success"])
+            )
+
             # Keep only the compact per-agent summary for the next meta-round.
             valid_bids = [t["bid"] for t in agent["daily_trace"] if t.get("bid") is not None]
             max_bid_val = round(max(valid_bids), 2) if valid_bids else 0.0
@@ -1075,6 +1083,7 @@ def run_experiment(
 
                 "compile_success": int(metrics["compile_success"]),
                 "runtime_success": int(metrics["runtime_success"]),
+                "strict_success_rate": strict_success_rate,
                 "hallucinated_api_count": metrics["hallucinated_api_count"],
                 "json_parse_failed": int(generation_stats["json_parse_failed"]),
                 "default_code_used": int(generation_stats["default_code_used"]),

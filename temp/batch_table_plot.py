@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import argparse
+from collections import defaultdict
 import json
 import os
 import sys
@@ -50,6 +51,55 @@ def _collect_agent_average_files(batch_dir: str) -> List[str]:
     return sorted(paths)
 
 
+def _load_backend_label_map(exp_dir: str) -> Dict[str, str]:
+    backend_path = os.path.join(exp_dir, "backend_config.json")
+    if not os.path.isfile(backend_path):
+        return {}
+
+    try:
+        with open(backend_path, "r", encoding="utf-8") as handle:
+            backend_cfg = json.load(handle)
+    except Exception:
+        return {}
+
+    if not isinstance(backend_cfg, dict):
+        return {}
+
+    roles = _get_agent_profiles()
+    model_by_role: Dict[str, str] = {}
+
+    for role_name in roles:
+        role_cfg = backend_cfg.get(role_name)
+        if not isinstance(role_cfg, dict):
+            continue
+        model_name = str(role_cfg.get("model", "")).strip()
+        if model_name:
+            model_by_role[role_name] = model_name
+
+    if not model_by_role:
+        return {}
+
+    total_counts: Dict[str, int] = defaultdict(int)
+    for model_name in model_by_role.values():
+        total_counts[model_name] += 1
+
+    seen_counts: Dict[str, int] = defaultdict(int)
+    labeled: Dict[str, str] = {}
+
+    for role_name in roles:
+        model_name = model_by_role.get(role_name)
+        if not model_name:
+            continue
+
+        if total_counts[model_name] > 1:
+            seen_counts[model_name] += 1
+            labeled[role_name] = f"{model_name}({seen_counts[model_name]})"
+        else:
+            labeled[role_name] = model_name
+
+    return labeled
+
+
 def _get_agent_profiles() -> List[str]:
     return [profile.agent_id for profile in default_agent_profiles()]
 
@@ -59,6 +109,9 @@ def _build_role_model_metric_matrix(batch_dir: str, source_key: str) -> pd.DataF
     grouped: Dict[str, Dict[str, Dict[str, float]]] = {}
 
     for summary_path in _collect_agent_average_files(batch_dir):
+        exp_dir = os.path.dirname(summary_path)
+        label_map = _load_backend_label_map(exp_dir)
+
         try:
             with open(summary_path, "r", encoding="utf-8") as handle:
                 exp_data = json.load(handle)
@@ -74,7 +127,8 @@ def _build_role_model_metric_matrix(batch_dir: str, source_key: str) -> pd.DataF
             if not isinstance(stats, dict):
                 continue
 
-            model_name = str(stats.get("model_used", "Unknown Model"))
+            raw_model_name = str(stats.get("model_used", "Unknown Model"))
+            model_name = label_map.get(role_name, raw_model_name)
             _, round_count = _parse_death_count(stats.get("death_count", "0/0"))
             if round_count <= 0:
                 continue
@@ -110,6 +164,9 @@ def _build_role_model_rows_from_batch(batch_dir: str, agent_id: str) -> List[Dic
     grouped: Dict[str, Dict[str, object]] = {}
 
     for summary_path in _collect_agent_average_files(batch_dir):
+        exp_dir = os.path.dirname(summary_path)
+        label_map = _load_backend_label_map(exp_dir)
+
         try:
             with open(summary_path, "r", encoding="utf-8") as handle:
                 exp_data = json.load(handle)
@@ -121,7 +178,8 @@ def _build_role_model_rows_from_batch(batch_dir: str, agent_id: str) -> List[Dic
         if not isinstance(stats, dict):
             continue
 
-        model_name = str(stats.get("model_used", "Unknown Model"))
+        raw_model_name = str(stats.get("model_used", "Unknown Model"))
+        model_name = label_map.get(agent_id, raw_model_name)
         death_count, round_count = _parse_death_count(stats.get("death_count", "0/0"))
         if round_count <= 0:
             continue
@@ -134,7 +192,7 @@ def _build_role_model_rows_from_batch(batch_dir: str, agent_id: str) -> List[Dic
                 "weighted_sums": {
                     "Survival Days": 0.0,
                     "Daily Bid": 0.0,
-                    "Runtime Success (%)": 0.0,
+                    "Strict Success Rate (%)": 0.0,
                     "Code Complexity": 0.0,
                 },
             },
@@ -144,7 +202,7 @@ def _build_role_model_rows_from_batch(batch_dir: str, agent_id: str) -> List[Dic
         entry["rounds"] += round_count
         entry["weighted_sums"]["Survival Days"] += float(stats.get("avg_survival_days", 0.0)) * round_count
         entry["weighted_sums"]["Daily Bid"] += float(stats.get("avg_daily_bid", 0.0)) * round_count
-        entry["weighted_sums"]["Runtime Success (%)"] += float(stats.get("avg_runtime_success", 0.0)) * round_count * 100.0
+        entry["weighted_sums"]["Strict Success Rate (%)"] += float(stats.get("avg_strict_success_rate", 0.0)) * round_count * 100.0
         entry["weighted_sums"]["Code Complexity"] += float(stats.get("avg_strategy_complexity", 0.0)) * round_count
 
     rows = []
@@ -158,7 +216,7 @@ def _build_role_model_rows_from_batch(batch_dir: str, agent_id: str) -> List[Dic
                 "Survival Days": entry["weighted_sums"]["Survival Days"] / rounds,
                 "Mortality Rate (%)": f"{(entry['deaths'] / rounds) * 100:.1f}%",
                 "Daily Bid": entry["weighted_sums"]["Daily Bid"] / rounds,
-                "Runtime Success (%)": entry["weighted_sums"]["Runtime Success (%)"] / rounds,
+                "Strict Success Rate (%)": entry["weighted_sums"]["Strict Success Rate (%)"] / rounds,
                 "Code Complexity": entry["weighted_sums"]["Code Complexity"] / rounds,
                 "_mortality_numeric": (entry["deaths"] / rounds) * 100.0,
             }
@@ -177,11 +235,81 @@ def _build_model_rows(perf_by_model: Dict[str, Dict[str, object]]) -> List[Dict[
                 "Survival Days": float(stats.get("grand_avg_survival_days", 0.0)),
                 "Mortality Rate (%)": mortality_str,
                 "Daily Bid": float(stats.get("grand_avg_daily_bid", 0.0)),
-                "Runtime Success (%)": float(stats.get("grand_avg_runtime_success", 0.0)) * 100.0,
+                "Strict Success Rate (%)": float(stats.get("grand_avg_strict_success_rate", 0.0)) * 100.0,
                 "Code Complexity": float(stats.get("grand_avg_strategy_complexity", 0.0)),
                 "_mortality_numeric": _parse_percent(mortality_str),
             }
         )
+    return rows
+
+
+def _build_model_rows_from_batch(batch_dir: str) -> List[Dict[str, object]]:
+    grouped: Dict[str, Dict[str, object]] = {}
+
+    for summary_path in _collect_agent_average_files(batch_dir):
+        exp_dir = os.path.dirname(summary_path)
+        label_map = _load_backend_label_map(exp_dir)
+
+        try:
+            with open(summary_path, "r", encoding="utf-8") as handle:
+                exp_data = json.load(handle)
+        except Exception:
+            continue
+
+        averages = exp_data.get("agent_averages", {})
+        if not isinstance(averages, dict):
+            continue
+
+        for role_name, stats in averages.items():
+            if not isinstance(stats, dict):
+                continue
+
+            raw_model_name = str(stats.get("model_used", "Unknown Model"))
+            model_name = label_map.get(role_name, raw_model_name)
+
+            death_count, round_count = _parse_death_count(stats.get("death_count", "0/0"))
+            if round_count <= 0:
+                continue
+
+            entry = grouped.setdefault(
+                model_name,
+                {
+                    "deaths": 0,
+                    "rounds": 0,
+                    "weighted_sums": {
+                        "Survival Days": 0.0,
+                        "Daily Bid": 0.0,
+                        "Strict Success Rate (%)": 0.0,
+                        "Code Complexity": 0.0,
+                    },
+                },
+            )
+
+            entry["deaths"] += death_count
+            entry["rounds"] += round_count
+            entry["weighted_sums"]["Survival Days"] += float(stats.get("avg_survival_days", 0.0)) * round_count
+            entry["weighted_sums"]["Daily Bid"] += float(stats.get("avg_daily_bid", 0.0)) * round_count
+            entry["weighted_sums"]["Strict Success Rate (%)"] += float(stats.get("avg_strict_success_rate", 0.0)) * round_count * 100.0
+            entry["weighted_sums"]["Code Complexity"] += float(stats.get("avg_strategy_complexity", 0.0)) * round_count
+
+    rows: List[Dict[str, object]] = []
+    for model_name, entry in grouped.items():
+        rounds = entry["rounds"]
+        if rounds <= 0:
+            continue
+
+        rows.append(
+            {
+                "Model": model_name,
+                "Survival Days": entry["weighted_sums"]["Survival Days"] / rounds,
+                "Mortality Rate (%)": f"{(entry['deaths'] / rounds) * 100:.1f}%",
+                "Daily Bid": entry["weighted_sums"]["Daily Bid"] / rounds,
+                "Strict Success Rate (%)": entry["weighted_sums"]["Strict Success Rate (%)"] / rounds,
+                "Code Complexity": entry["weighted_sums"]["Code Complexity"] / rounds,
+                "_mortality_numeric": (entry["deaths"] / rounds) * 100.0,
+            }
+        )
+
     return rows
 
 
@@ -204,7 +332,7 @@ def _build_role_rows(perf_by_agent: Dict[str, Dict[str, object]]) -> List[Dict[s
                 "Survival Days": float(stats.get("grand_avg_survival_days", 0.0)),
                 "Mortality Rate (%)": mortality_str,
                 "Daily Bid": float(stats.get("grand_avg_daily_bid", 0.0)),
-                "Runtime Success (%)": float(stats.get("grand_avg_runtime_success", 0.0)) * 100.0,
+                "Strict Success Rate (%)": float(stats.get("grand_avg_strict_success_rate", 0.0)) * 100.0,
                 "Code Complexity": float(stats.get("grand_avg_strategy_complexity", 0.0)),
                 "_mortality_numeric": _parse_percent(mortality_str),
             }
@@ -217,7 +345,7 @@ def _format_table(df: pd.DataFrame) -> pd.DataFrame:
     table["Survival Days"] = table["Survival Days"].map(lambda v: f"{v:.2f}")
     table["Daily Bid"] = table["Daily Bid"].map(lambda v: f"{v:.2f}")
     table["Code Complexity"] = table["Code Complexity"].map(lambda v: f"{v:.2f}")
-    table["Runtime Success (%)"] = table["Runtime Success (%)"].map(lambda v: f"{v:.2f}%")
+    table["Strict Success Rate (%)"] = table["Strict Success Rate (%)"].map(lambda v: f"{v:.2f}%")
     return table
 
 
@@ -355,10 +483,10 @@ def _scatter_with_labels(df: pd.DataFrame, x: str, y: str, title: str, path: str
 
 def _bubble_chart(df: pd.DataFrame, path: str) -> None:
     fig, ax = plt.subplots(figsize=(8, 5))
-    sizes = df["Runtime Success (%)"] * 8.0
+    sizes = df["Strict Success Rate (%)"] * 8.0
     ax.scatter(df["Code Complexity"], df["Survival Days"], s=sizes, alpha=0.6)
     _annotate_points(ax, df, "Code Complexity", "Survival Days")
-    ax.set_title("Code Complexity, Survival, and Runtime Reliability")
+    ax.set_title("Code Complexity, Survival, and Strict Success")
     ax.set_xlabel("Code Complexity")
     ax.set_ylabel("Survival Days")
     plt.tight_layout()
@@ -377,7 +505,7 @@ def _save_model_comparison_table(rows: List[Dict[str, object]], output_dir: str,
         "Survival Days",
         "Mortality Rate (%)",
         "Daily Bid",
-        "Runtime Success (%)",
+        "Strict Success Rate (%)",
         "Code Complexity",
     ]]
     formatted_table = _format_table(table_df)
@@ -435,8 +563,10 @@ def main() -> None:
     with open(report_path, "r", encoding="utf-8") as handle:
         report = json.load(handle)
 
-    perf_by_model = report.get("performance_by_model", {})
-    rows = _build_model_rows(perf_by_model)
+    rows = _build_model_rows_from_batch(batch_dir)
+    if not rows:
+        perf_by_model = report.get("performance_by_model", {})
+        rows = _build_model_rows(perf_by_model)
     if not rows:
         raise SystemExit("No model-level metrics found in global_batch_report.json")
 
@@ -448,7 +578,7 @@ def main() -> None:
         "Survival Days",
         "Mortality Rate (%)",
         "Daily Bid",
-        "Runtime Success (%)",
+        "Strict Success Rate (%)",
         "Code Complexity",
     ]]
 
@@ -497,9 +627,9 @@ def main() -> None:
     _scatter_with_labels(
         df,
         x="Code Complexity",
-        y="Runtime Success (%)",
-        title="Code Complexity vs. Runtime Success",
-        path=os.path.join(output_dir, "fig_complexity_vs_runtime_success.png"),
+        y="Strict Success Rate (%)",
+        title="Code Complexity vs. Strict Success Rate",
+        path=os.path.join(output_dir, "fig_complexity_vs_strict_success_rate.png"),
     )
 
     _bubble_chart(
@@ -535,7 +665,7 @@ def main() -> None:
             "Survival Days",
             "Mortality Rate (%)",
             "Daily Bid",
-            "Runtime Success (%)",
+            "Strict Success Rate (%)",
             "Code Complexity",
         ]]
         formatted_role_table = _format_table(role_table_df)
