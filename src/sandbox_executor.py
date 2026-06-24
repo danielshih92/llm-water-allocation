@@ -1,6 +1,7 @@
 import math
 import re
 import inspect
+import multiprocessing
 from typing import Any, Dict, Optional, Tuple
 
 DENY_PATTERNS = [
@@ -42,6 +43,8 @@ ALLOWED_BUILTINS = {
     "enumerate": enumerate,
 }
 
+DEFAULT_TIMEOUT_SECONDS = 1.0
+
 
 def _static_check(code: str) -> Optional[str]:
     # 1. 為了避免在註釋中誤判關鍵字，我們先移除所有註釋
@@ -59,16 +62,12 @@ def _static_check(code: str) -> Optional[str]:
     return None
 
 
-def execute_strategy(
+def _execute_strategy_no_timeout(
     strategy_code: str,
     day_context: Dict[str, Any],
     my_status: Dict[str, Any],
     opponents_status: Optional[Dict[str, Any]] = None,
 ) -> Tuple[float, Optional[str]]:
-    error = _static_check(strategy_code)
-    if error:
-        return 0.0, error
-
     safe_globals: Dict[str, Any] = {
         "__builtins__": ALLOWED_BUILTINS,
         "math": math,
@@ -99,7 +98,6 @@ def execute_strategy(
                 day_context,
                 my_status,
             )
-
     except Exception as exc:
         return 0.0, f"runtime_error: {exc}"
 
@@ -108,4 +106,71 @@ def execute_strategy(
     except (TypeError, ValueError):
         return 0.0, "invalid_bid_type"
 
+    if not math.isfinite(bid):
+        return 0.0, "invalid_bid_value"
+
     return bid, None
+
+
+def _strategy_worker(
+    queue: multiprocessing.Queue,
+    strategy_code: str,
+    day_context: Dict[str, Any],
+    my_status: Dict[str, Any],
+    opponents_status: Optional[Dict[str, Any]],
+) -> None:
+    try:
+        queue.put(
+            _execute_strategy_no_timeout(
+                strategy_code=strategy_code,
+                day_context=day_context,
+                my_status=my_status,
+                opponents_status=opponents_status,
+            )
+        )
+    except Exception as exc:
+        queue.put((0.0, f"runtime_error: {exc}"))
+
+
+def execute_strategy(
+    strategy_code: str,
+    day_context: Dict[str, Any],
+    my_status: Dict[str, Any],
+    opponents_status: Optional[Dict[str, Any]] = None,
+    timeout_seconds: float = DEFAULT_TIMEOUT_SECONDS,
+) -> Tuple[float, Optional[str]]:
+    error = _static_check(strategy_code)
+    if error:
+        return 0.0, error
+
+    queue: multiprocessing.Queue = multiprocessing.Queue(maxsize=1)
+    process = multiprocessing.Process(
+        target=_strategy_worker,
+        args=(queue, strategy_code, day_context, my_status, opponents_status),
+        daemon=True,
+    )
+
+    process.start()
+    process.join(timeout_seconds)
+
+    if process.is_alive():
+        process.terminate()
+        process.join()
+        return 0.0, "runtime_timeout"
+
+    if queue.empty():
+        return 0.0, "runtime_error: no_result"
+
+    try:
+        result = queue.get_nowait()
+    except Exception:
+        return 0.0, "runtime_error: no_result"
+
+    if (
+        isinstance(result, tuple)
+        and len(result) == 2
+    ):
+        bid, err = result
+        return float(bid), err
+
+    return 0.0, "runtime_error: malformed_result"

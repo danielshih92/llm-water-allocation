@@ -332,11 +332,21 @@ def build_compact_meta_round_record(
                 "reasoning_cot": agent.get("reasoning_cot", ""),
                 "strategy_code": agent.get("strategy_code", ""),
                 "daily_trace": agent.get("daily_trace", []),
+                "metrics": agent.get("metrics"),
+                "admitted": agent.get("admitted", 0),
+                "outcome_valid": agent.get("outcome_valid", 0),
+                "generation_stats": agent.get("generation_stats", {}),
             }
         )
 
     return {
         "meta_round_id": record.get("meta_round_id"),
+        "evaluation_mode": record.get("evaluation_mode"),
+        "all_agents_admitted": record.get("all_agents_admitted"),
+        "invalid_agents": record.get("invalid_agents", []),
+        "outcome_valid": record.get("outcome_valid", 0),
+        "debug_invalid_agents_allowed": record.get("debug_invalid_agents_allowed", 0),
+        "official_outcome": record.get("official_outcome", 1),
         "environment": record.get("environment", {}),
         "agents": compact_agents,
     }
@@ -386,8 +396,7 @@ def save_cross_meta_metric_plots(
         ("average_bid", "Average Bid"),
         ("bid_variance", "Bid Variance"),
         ("bid_entropy", "Bid Entropy"),
-        ("adaptation_score", "Adaptation Score"),
-        ("panic_score", "Panic Score"),
+        ("bid_supply_sensitivity", "Bid-Supply Sensitivity"),
         ("opponent_awareness_score", "Opponent Awareness Score"),
         ("recovery_score", "Recovery Score"),
         ("supply_bid_correlation", "Supply-Bid Correlation"),
@@ -464,13 +473,12 @@ def save_agent_average_summary(
 ) -> None:
     from collections import defaultdict
 
-    extra_metric_keys = [
+    PERFORMANCE_METRIC_KEYS = [
         "total_bid",
         "average_bid",
         "bid_variance",
         "bid_entropy",
-        "adaptation_score",
-        "panic_score",
+        "bid_supply_sensitivity",
         "opponent_awareness_score",
         "recovery_score",
         "supply_bid_correlation",
@@ -480,9 +488,28 @@ def save_agent_average_summary(
         "branch_count",
         "loop_count",
         "function_call_count",
+    ]
+
+    RELIABILITY_METRIC_KEYS = [
+        "admitted",
+        "outcome_valid",
+        "one_shot_json_valid",
+        "one_shot_code_extracted",
+        "one_shot_compile_success",
+        "one_shot_runtime_success",
+        "one_shot_strict_success",
+        "repair_used",
+        "json_repair_used",
+        "json_repair_success",
+        "code_repair_used",
+        "code_repair_success",
+        "repair_attempts",
+        "post_repair_compile_success",
+        "post_repair_runtime_success",
+        "post_repair_strict_success",
+        "strict_success_rate",
         "compile_success",
         "runtime_success",
-        "strict_success_rate",
         "hallucinated_api_count",
         "json_parse_failed",
         "default_code_used",
@@ -490,12 +517,15 @@ def save_agent_average_summary(
 
     agent_stats = defaultdict(
         lambda: {
-            "survival_days_list": [],
-            "final_budgets_list": [],
-            "all_bids": [],
-            "death_count": 0,
-            "rounds_played": 0,
-            "metric_lists": defaultdict(list),
+            "attempted_meta_rounds": 0,
+            "valid_meta_rounds": 0,
+            "valid_survival_days_list": [],
+            "valid_final_budgets_list": [],
+            "valid_total_bid_list": [],
+            "valid_all_bids": [],
+            "valid_death_count": 0,
+            "performance_metric_lists": defaultdict(list),
+            "reliability_metric_lists": defaultdict(list),
         }
     )
 
@@ -508,37 +538,58 @@ def save_agent_average_summary(
                 continue
 
             stats = agent_stats[agent_id]
-            stats["rounds_played"] += 1
+            stats["attempted_meta_rounds"] += 1
 
-            survival_day = info.get("survival_day", 0)
-            final_budget = info.get("budget", 0.0)
-            final_hp = info.get("hp", 0)
+            outcome_valid = int(info.get("outcome_valid", 0)) == 1
+            admitted = int(info.get("admitted", 0)) == 1
+            strict_success = int(info.get("strict_success_rate", 0)) == 1
+            performance_valid = outcome_valid and admitted and strict_success
 
-            stats["survival_days_list"].append(survival_day)
-            stats["final_budgets_list"].append(final_budget)
-
-            if final_hp <= 0:
-                stats["death_count"] += 1
-
-            for metric_key in extra_metric_keys:
-                value = info.get(metric_key)
-
+            for metric_key in RELIABILITY_METRIC_KEYS:
+                value = info.get(metric_key, 0)
                 if isinstance(value, bool):
                     value = int(value)
-
                 if isinstance(value, (int, float)):
-                    stats["metric_lists"][metric_key].append(float(value))
+                    stats["reliability_metric_lists"][metric_key].append(float(value))
+                else:
+                    stats["reliability_metric_lists"][metric_key].append(0.0)
+
+            if not performance_valid:
+                continue
+
+            stats["valid_meta_rounds"] += 1
+
+            survival_day = info.get("survival_day")
+            final_budget = info.get("budget")
+            final_hp = info.get("hp")
+            total_bid = info.get("total_bid")
+
+            if isinstance(survival_day, (int, float)):
+                stats["valid_survival_days_list"].append(float(survival_day))
+
+            if isinstance(final_budget, (int, float)):
+                stats["valid_final_budgets_list"].append(float(final_budget))
+
+            if isinstance(total_bid, (int, float)):
+                stats["valid_total_bid_list"].append(float(total_bid))
+
+            if isinstance(final_hp, (int, float)) and float(final_hp) <= 0:
+                stats["valid_death_count"] += 1
+
+            for metric_key in PERFORMANCE_METRIC_KEYS:
+                value = info.get(metric_key)
+                if isinstance(value, bool):
+                    value = int(value)
+                if isinstance(value, (int, float)):
+                    stats["performance_metric_lists"][metric_key].append(float(value))
 
             traces = info.get("daily_traces", [])
-
             for trace in traces:
                 if not isinstance(trace, dict):
                     continue
-
                 bid = trace.get("bid")
-
-                if bid is not None:
-                    stats["all_bids"].append(bid)
+                if isinstance(bid, (int, float)):
+                    stats["valid_all_bids"].append(float(bid))
 
     output_data = {
         "experiment_metadata": {
@@ -555,34 +606,36 @@ def save_agent_average_summary(
     }
 
     for agent_id, stats in agent_stats.items():
-        rounds_played = stats["rounds_played"]
+        rounds_played = stats["attempted_meta_rounds"]
+        valid_rounds_played = stats["valid_meta_rounds"]
 
         if rounds_played == 0:
             continue
 
-        average_survival_days = (
-            sum(stats["survival_days_list"])
-            / rounds_played
-        )
-
-        average_final_budget = (
-            sum(stats["final_budgets_list"])
-            / rounds_played
-        )
-
-        if stats["all_bids"]:
-            average_daily_bid = (
-                sum(stats["all_bids"])
-                / len(stats["all_bids"])
-            )
+        if valid_rounds_played > 0 and stats["valid_survival_days_list"]:
+            average_survival_days = round(sum(stats["valid_survival_days_list"]) / len(stats["valid_survival_days_list"]), 2)
         else:
-            average_daily_bid = 0.0
+            average_survival_days = None
 
-        mortality_rate = (
-            stats["death_count"]
-            / rounds_played
-            * 100.0
-        )
+        if valid_rounds_played > 0 and stats["valid_final_budgets_list"]:
+            average_final_budget = round(sum(stats["valid_final_budgets_list"]) / len(stats["valid_final_budgets_list"]), 2)
+        else:
+            average_final_budget = None
+
+        if valid_rounds_played > 0 and stats["valid_all_bids"]:
+            average_daily_bid = round(sum(stats["valid_all_bids"]) / len(stats["valid_all_bids"]), 2)
+        else:
+            average_daily_bid = None
+
+        if valid_rounds_played > 0 and stats["valid_total_bid_list"]:
+            average_total_bid = round(sum(stats["valid_total_bid_list"]) / len(stats["valid_total_bid_list"]), 2)
+        else:
+            average_total_bid = None
+
+        if valid_rounds_played > 0:
+            mortality_rate = f"{(stats['valid_death_count'] / valid_rounds_played) * 100.0:.1f}%"
+        else:
+            mortality_rate = "N/A"
 
         developer_name = agent_id
 
@@ -604,52 +657,61 @@ def save_agent_average_summary(
         except Exception:
             pass
 
-        extra_averages = {}
+        performance_averages = {}
+        for metric_key in PERFORMANCE_METRIC_KEYS:
+            values = stats["performance_metric_lists"].get(metric_key, [])
+            if valid_rounds_played > 0 and values:
+                performance_averages[f"avg_{metric_key}"] = round(sum(values) / len(values), 4)
+            else:
+                performance_averages[f"avg_{metric_key}"] = None
 
-        for metric_key in extra_metric_keys:
-            if metric_key in {
-                "json_parse_failed",
-                "default_code_used",
-            }:
-                continue
+        reliability_averages = {}
+        for metric_key in RELIABILITY_METRIC_KEYS:
+            values = stats["reliability_metric_lists"].get(metric_key, [])
+            reliability_averages[f"avg_{metric_key}"] = round(sum(values) / rounds_played, 4) if rounds_played > 0 else 0.0
 
-            values = stats["metric_lists"].get(
-                metric_key,
-                [],
-            )
-
-            if values:
-                extra_averages[f"avg_{metric_key}"] = round(
-                    sum(values) / len(values),
-                    4,
-                )
+        avg_admitted = round(sum(stats["reliability_metric_lists"].get("admitted", [])) / rounds_played, 4)
+        avg_outcome_valid = round(sum(stats["reliability_metric_lists"].get("outcome_valid", [])) / rounds_played, 4)
+        avg_one_shot_json_valid = round(sum(stats["reliability_metric_lists"].get("one_shot_json_valid", [])) / rounds_played, 4)
+        avg_one_shot_code_extracted = round(sum(stats["reliability_metric_lists"].get("one_shot_code_extracted", [])) / rounds_played, 4)
+        avg_one_shot_compile_success = round(sum(stats["reliability_metric_lists"].get("one_shot_compile_success", [])) / rounds_played, 4)
+        avg_one_shot_runtime_success = round(sum(stats["reliability_metric_lists"].get("one_shot_runtime_success", [])) / rounds_played, 4)
+        avg_one_shot_strict_success = round(sum(stats["reliability_metric_lists"].get("one_shot_strict_success", [])) / rounds_played, 4)
+        avg_repair_used = round(sum(stats["reliability_metric_lists"].get("repair_used", [])) / rounds_played, 4)
+        avg_json_repair_success = round(sum(stats["reliability_metric_lists"].get("json_repair_success", [])) / rounds_played, 4)
+        avg_code_repair_success = round(sum(stats["reliability_metric_lists"].get("code_repair_success", [])) / rounds_played, 4)
+        avg_post_repair_strict_success = round(sum(stats["reliability_metric_lists"].get("post_repair_strict_success", [])) / rounds_played, 4)
+        avg_repair_attempts = round(sum(stats["reliability_metric_lists"].get("repair_attempts", [])) / rounds_played, 4)
 
         output_data["agent_averages"][agent_id] = {
             "developer_name": developer_name,
             "model_used": model_name,
-            "avg_survival_days": round(
-                average_survival_days,
-                2,
-            ),
-            "avg_final_budget": round(
-                average_final_budget,
-                2,
-            ),
-            "avg_daily_bid": round(
-                average_daily_bid,
-                2,
-            ),
-            "mortality_rate": f"{mortality_rate:.1f}%",
-            "death_count": f"{stats['death_count']}/{rounds_played}",
-            "json_parse_fail_rate": round(
-                sum(stats["metric_lists"].get("json_parse_failed", [])) / rounds_played,
-                4,
-            ) if stats["metric_lists"].get("json_parse_failed") else 0.0,
-            "default_code_usage_rate": round(
-                sum(stats["metric_lists"].get("default_code_used", [])) / rounds_played,
-                4,
-            ) if stats["metric_lists"].get("default_code_used") else 0.0,
-            **extra_averages,
+            "attempted_meta_rounds": rounds_played,
+            "valid_meta_rounds": valid_rounds_played,
+            "invalid_meta_rounds": rounds_played - valid_rounds_played,
+            "valid_round_rate": round(valid_rounds_played / rounds_played, 4),
+            "avg_survival_days": average_survival_days,
+            "avg_final_budget": average_final_budget,
+            "avg_daily_bid": average_daily_bid,
+            "avg_total_bid": average_total_bid,
+            "mortality_rate": mortality_rate,
+            "death_count": f"{stats['valid_death_count']}/{valid_rounds_played}",
+            "json_parse_fail_rate": round(sum(stats["reliability_metric_lists"].get("json_parse_failed", [])) / rounds_played, 4),
+            "default_code_usage_rate": round(sum(stats["reliability_metric_lists"].get("default_code_used", [])) / rounds_played, 4),
+            "admission_rate": avg_admitted,
+            "outcome_valid_rate": avg_outcome_valid,
+            "one_shot_json_valid_rate": avg_one_shot_json_valid,
+            "one_shot_code_extracted_rate": avg_one_shot_code_extracted,
+            "one_shot_compile_success_rate": avg_one_shot_compile_success,
+            "one_shot_runtime_success_rate": avg_one_shot_runtime_success,
+            "one_shot_strict_success_rate": avg_one_shot_strict_success,
+            "repair_used_rate": avg_repair_used,
+            "json_repair_success_rate": avg_json_repair_success,
+            "code_repair_success_rate": avg_code_repair_success,
+            "post_repair_strict_success_rate": avg_post_repair_strict_success,
+            "avg_repair_attempts": avg_repair_attempts,
+            **performance_averages,
+            **reliability_averages,
         }
 
     with open(
@@ -925,7 +987,7 @@ def run_experiment(
                 "  Generating reasoning/code..."
             )
 
-            reasoning_cot, strategy_code, generation_stats = runner.generate_strategy(
+            reasoning_cot, strategy_code, generation_stats = runner.generate_validated_strategy(
                 agent_profile={
                     "agent_id": profile.agent_id,
                     "water_requirement": profile.water_requirement,
@@ -945,6 +1007,9 @@ def run_experiment(
                     opponent_info_mode == "full_code_access"
                     and config.REVEAL_OPPONENT_CODE
                 ),
+                evaluation_mode=args.evaluation_mode,
+                max_json_repair_attempts=args.max_json_repair_attempts,
+                max_code_repair_attempts=args.max_code_repair_attempts,
             )
 
             print(
@@ -961,14 +1026,76 @@ def run_experiment(
                 )
             )
 
-        record = env.build_meta_round_record(
-            meta_round_id=meta_round_id,
-            profiles=profiles,
-            submissions=submissions,
-            supply_list=supply_list,
-            scenario=args.scenario,
-            seed=seed_for_round,
-        )
+        invalid_agents = [
+            agent_id
+            for agent_id, stats in generation_stats_by_agent.items()
+            if int(stats.get("admitted", 0)) != 1
+        ]
+        all_agents_admitted = len(invalid_agents) == 0
+
+        if all_agents_admitted or args.allow_invalid_agents_for_debug:
+            record = env.build_meta_round_record(
+                meta_round_id=meta_round_id,
+                profiles=profiles,
+                submissions=submissions,
+                supply_list=supply_list,
+                scenario=args.scenario,
+                seed=seed_for_round,
+            )
+
+            record["evaluation_mode"] = args.evaluation_mode
+            record["all_agents_admitted"] = int(all_agents_admitted)
+            record["invalid_agents"] = [] if all_agents_admitted else invalid_agents
+            record["outcome_valid"] = int(all_agents_admitted)
+            record["debug_invalid_agents_allowed"] = int(args.allow_invalid_agents_for_debug and (not all_agents_admitted))
+            record["official_outcome"] = int(all_agents_admitted)
+
+            for agent in record.get("agents", []):
+                agent_id = agent.get("agent_id")
+                stats = generation_stats_by_agent.get(agent_id, {})
+                admitted = int(stats.get("admitted", 0))
+                agent["admitted"] = admitted
+                agent["outcome_valid"] = int(all_agents_admitted)
+                agent["generation_stats"] = stats
+
+        else:
+            record = {
+                "meta_round_id": meta_round_id,
+                "evaluation_mode": args.evaluation_mode,
+                "all_agents_admitted": 0,
+                "invalid_agents": invalid_agents,
+                "outcome_valid": 0,
+                "debug_invalid_agents_allowed": 0,
+                "official_outcome": 0,
+                "environment": {
+                    "scenario": args.scenario,
+                    "supply_range": SCENARIOS[args.scenario],
+                    "seed": seed_for_round,
+                    "episode_days": env.episode_days,
+                    "players": [
+                        {
+                            "agent_id": p.agent_id,
+                            "water_requirement": p.water_requirement,
+                            "daily_salary": p.daily_salary,
+                        }
+                        for p in profiles
+                    ],
+                    "supply_list": supply_list,
+                },
+                "agents": [
+                    {
+                        "agent_id": submission.agent_id,
+                        "reasoning_cot": submission.reasoning_cot,
+                        "strategy_code": submission.strategy_code,
+                        "daily_trace": [],
+                        "metrics": None,
+                        "admitted": int(generation_stats_by_agent[submission.agent_id].get("admitted", 0)),
+                        "outcome_valid": 0,
+                        "generation_stats": generation_stats_by_agent[submission.agent_id],
+                    }
+                    for submission in submissions
+                ],
+            }
 
         record_for_log = (
             build_compact_meta_round_record(record)
@@ -987,13 +1114,13 @@ def run_experiment(
             "daily_metric_plots",
         )
 
-        if not args.no_plots:
+        if not args.no_plots and int(record.get("outcome_valid", 0)) == 1:
             save_daily_metric_plots_for_meta_round(
                 record=record,
                 output_dir=daily_plot_dir,
             )
         else:
-            print("Skipping daily metric plots (--no-plots).")
+            print("Skipping daily metric plots (--no-plots or outcome_valid=0).")
 
         history = {
             "last_meta_round": meta_round_id,
@@ -1007,88 +1134,145 @@ def run_experiment(
             "agents"
         ]:
             agent_id = agent["agent_id"]
-            generation_stats = generation_stats_by_agent.get(
-                agent_id,
-                {
-                    "json_parse_failed": False,
-                    "default_code_used": False,
-                },
-            )
-            final_trace = agent[
-                "daily_trace"
-            ][
-                -1
-            ]
+            generation_stats = generation_stats_by_agent.get(agent_id, {})
+            metrics = agent.get("metrics")
+            outcome_valid = int(record.get("outcome_valid", 0))
+            admitted = int(generation_stats.get("admitted", 0))
 
-            metrics = agent[
-                "metrics"
-            ]
+            common_reliability = {
+                "admitted": admitted,
+                "outcome_valid": outcome_valid,
+                "one_shot_json_valid": int(generation_stats.get("one_shot_json_valid", 0)),
+                "one_shot_code_extracted": int(generation_stats.get("one_shot_code_extracted", 0)),
+                "one_shot_compile_success": int(generation_stats.get("one_shot_compile_success", 0)),
+                "one_shot_runtime_success": int(generation_stats.get("one_shot_runtime_success", 0)),
+                "one_shot_strict_success": int(generation_stats.get("one_shot_strict_success", 0)),
+                "repair_used": int(generation_stats.get("repair_used", 0)),
+                "json_repair_used": int(generation_stats.get("json_repair_used", 0)),
+                "json_repair_success": int(generation_stats.get("json_repair_success", 0)),
+                "code_repair_used": int(generation_stats.get("code_repair_used", 0)),
+                "code_repair_success": int(generation_stats.get("code_repair_success", 0)),
+                "repair_attempts": int(generation_stats.get("repair_attempts", 0)),
+                "post_repair_compile_success": int(generation_stats.get("post_repair_compile_success", 0)),
+                "post_repair_runtime_success": int(generation_stats.get("post_repair_runtime_success", 0)),
+                "post_repair_strict_success": int(generation_stats.get("post_repair_strict_success", 0)),
+                "strict_success_rate": int(generation_stats.get("strict_success_rate", 0)),
+                "compile_success": int(generation_stats.get("post_repair_compile_success", 0)),
+                "runtime_success": int(generation_stats.get("post_repair_runtime_success", 0)),
+                "json_parse_failed": int(generation_stats.get("json_parse_failed", 0)),
+                "default_code_used": 0,
+                "generation_success": int(generation_stats.get("generation_success", 0)),
+                "final_error_type": generation_stats.get("final_error_type"),
+                "final_error_message": generation_stats.get("final_error_message"),
+            }
 
-            strict_success_rate = int(
-                (not generation_stats["json_parse_failed"])
-                and (not generation_stats["default_code_used"])
-                and bool(metrics["compile_success"])
-                and bool(metrics["runtime_success"])
+            performance_valid = (
+                outcome_valid == 1
+                and admitted == 1
+                and metrics is not None
             )
 
             # Keep only the compact per-agent summary for the next meta-round.
-            valid_bids = [t["bid"] for t in agent["daily_trace"] if t.get("bid") is not None]
+            valid_bids = [
+                t.get("bid")
+                for t in agent.get("daily_trace", [])
+                if isinstance(t, dict) and t.get("bid") is not None
+            ]
             max_bid_val = round(max(valid_bids), 2) if valid_bids else 0.0
 
-            history[
-                "agent_summaries"
-            ][
-                agent_id
-            ] = {
-                "final_hp": metrics[
-                    "final_hp"
-                ],
-                "survival_days": metrics[
-                    "survival_days"
-                ],
-                "average_bid": metrics[
-                    "average_bid"
-                ],
-                "final_budget": final_trace[
-                    "budget_after"
-                ],
-                "max_bid": max_bid_val
-            }
+            if performance_valid:
+                final_trace = agent["daily_trace"][-1]
+                history[
+                    "agent_summaries"
+                ][
+                    agent_id
+                ] = {
+                    "valid": True,
+                    "final_hp": metrics[
+                        "final_hp"
+                    ],
+                    "survival_days": metrics[
+                        "survival_days"
+                    ],
+                    "average_bid": metrics[
+                        "average_bid"
+                    ],
+                    "final_budget": final_trace[
+                        "budget_after"
+                    ],
+                    "max_bid": max_bid_val
+                }
+            else:
+                history[
+                    "agent_summaries"
+                ][
+                    agent_id
+                ] = {
+                    "valid": False,
+                    "failure": {
+                        "admitted": admitted,
+                        "outcome_valid": outcome_valid,
+                        "one_shot_json_valid": int(generation_stats.get("one_shot_json_valid", 0)),
+                        "one_shot_code_extracted": int(generation_stats.get("one_shot_code_extracted", 0)),
+                        "one_shot_runtime_success": int(generation_stats.get("one_shot_runtime_success", 0)),
+                        "one_shot_strict_success": int(generation_stats.get("one_shot_strict_success", 0)),
+                        "repair_used": int(generation_stats.get("repair_used", 0)),
+                        "post_repair_strict_success": int(generation_stats.get("post_repair_strict_success", 0)),
+                        "strict_success_rate": int(generation_stats.get("strict_success_rate", 0)),
+                        "final_error_type": generation_stats.get("final_error_type"),
+                        "final_error_message": generation_stats.get("final_error_message"),
+                    },
+                }
 
-            round_summary[
-                agent_id
-            ] = {
-                "hp": metrics["final_hp"],
-                "survival_day": metrics["survival_days"],
-                "budget": final_trace["budget_after"],
+            if performance_valid:
+                final_trace = agent["daily_trace"][-1]
+                performance_block = {
+                    "hp": metrics["final_hp"],
+                    "survival_day": metrics["survival_days"],
+                    "budget": final_trace["budget_after"],
+                    "total_bid": metrics["total_bid"],
+                    "average_bid": metrics["average_bid"],
+                    "bid_variance": metrics["bid_variance"],
+                    "bid_entropy": metrics["bid_entropy"],
+                    "bid_supply_sensitivity": metrics["bid_supply_sensitivity"],
+                    "opponent_awareness_score": metrics["opponent_awareness_score"],
+                    "recovery_score": metrics["recovery_score"],
+                    "supply_bid_correlation": metrics["supply_bid_correlation"],
+                    "utility_score": metrics["utility_score"],
+                    "survival_efficiency": metrics["survival_efficiency"],
+                    "strategy_complexity": metrics["strategy_complexity"],
+                    "branch_count": metrics["branch_count"],
+                    "loop_count": metrics["loop_count"],
+                    "function_call_count": metrics["function_call_count"],
+                    "hallucinated_api_count": metrics["hallucinated_api_count"],
+                    "daily_traces": agent.get("daily_trace", []),
+                }
+            else:
+                performance_block = {
+                    "hp": None,
+                    "survival_day": None,
+                    "budget": None,
+                    "total_bid": None,
+                    "average_bid": None,
+                    "bid_variance": None,
+                    "bid_entropy": None,
+                    "bid_supply_sensitivity": None,
+                    "opponent_awareness_score": None,
+                    "recovery_score": None,
+                    "supply_bid_correlation": None,
+                    "utility_score": None,
+                    "survival_efficiency": None,
+                    "strategy_complexity": None,
+                    "branch_count": None,
+                    "loop_count": None,
+                    "function_call_count": None,
+                    "hallucinated_api_count": None,
+                    "daily_traces": [],
+                }
 
-                "total_bid": metrics["total_bid"],
-                "average_bid": metrics["average_bid"],
-                "bid_variance": metrics["bid_variance"],
-                "bid_entropy": metrics["bid_entropy"],
-
-                "adaptation_score": metrics["adaptation_score"],
-                "panic_score": metrics["panic_score"],
-                "opponent_awareness_score": metrics["opponent_awareness_score"],
-                "recovery_score": metrics["recovery_score"],
-                "supply_bid_correlation": metrics["supply_bid_correlation"],
-
-                "utility_score": metrics["utility_score"],
-                "survival_efficiency": metrics["survival_efficiency"],
-
-                "strategy_complexity": metrics["strategy_complexity"],
-                "branch_count": metrics["branch_count"],
-                "loop_count": metrics["loop_count"],
-                "function_call_count": metrics["function_call_count"],
-
-                "compile_success": int(metrics["compile_success"]),
-                "runtime_success": int(metrics["runtime_success"]),
-                "strict_success_rate": strict_success_rate,
-                "hallucinated_api_count": metrics["hallucinated_api_count"],
-                "json_parse_failed": int(generation_stats["json_parse_failed"]),
-                "default_code_used": int(generation_stats["default_code_used"]),
-
-                "daily_traces": agent["daily_trace"]
+            round_summary[agent_id] = {
+                **performance_block,
+                **common_reliability,
             }
 
         all_meta_history[
@@ -1149,7 +1333,7 @@ def main() -> None:
     parser.add_argument(
         "--scenario",
         type=str,
-        default="medium",
+        default="low",
         choices=sorted(
             SCENARIOS.keys()
         ),
@@ -1252,6 +1436,30 @@ def main() -> None:
         "--compact-meta-log",
         action="store_true",
         help="Save compact meta-round logs (omit metrics)",
+    )
+
+    parser.add_argument(
+        "--evaluation-mode",
+        type=str,
+        default="repair_assisted",
+        choices=["one_shot", "repair_assisted"],
+    )
+
+    parser.add_argument(
+        "--max-json-repair-attempts",
+        type=int,
+        default=1,
+    )
+
+    parser.add_argument(
+        "--max-code-repair-attempts",
+        type=int,
+        default=1,
+    )
+
+    parser.add_argument(
+        "--allow-invalid-agents-for-debug",
+        action="store_true",
     )
 
     args = parser.parse_args()

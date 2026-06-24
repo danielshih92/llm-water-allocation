@@ -64,6 +64,15 @@ class PromptBuilder:
         state_block = json.dumps(game_state or {}, indent=2)      
         profile_block = json.dumps(agent_profile or {}, indent=2)  
 
+        supply_range = game_state.get("supply_range", [10, 20]) if isinstance(game_state, dict) else [10, 20]
+
+        try:
+            min_supply = int(supply_range[0])
+            max_supply = int(supply_range[1])
+        except Exception:
+            min_supply = 10
+            max_supply = 20
+
         opponent_code_section = ""
 
         if show_opponent_code and opponent_code:
@@ -165,8 +174,8 @@ class PromptBuilder:
             f"Agent Constants:\n"
             f"WATER_REQ = {agent_profile['water_requirement']}\n"
             f"DAILY_SALARY = {agent_profile['daily_salary']}\n"
-            f"MAX_SUPPLY = 25\n"
-            f"MIN_SUPPLY = 15\n\n"
+            f"MAX_SUPPLY = {max_supply}\n"
+            f"MIN_SUPPLY = {min_supply}\n\n"
 
             f"{reasoning_focus}"
             "Output valid JSON only.\n"

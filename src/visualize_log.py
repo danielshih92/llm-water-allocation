@@ -131,14 +131,11 @@ def extract_series(record: Dict[str, Any]) -> Tuple[Dict[str, Any], List[Dict[st
                 # Strategy
                 # ====================================================
 
-                "adaptation":
+                "bid_supply_sensitivity":
                 round(
-                    metrics.get("adaptation_score", 0),
+                  metrics.get("bid_supply_sensitivity", 0),
                     2
                 ),
-
-                "panic_score":
-                metrics.get("panic_score"),
 
                 "opponent_awareness":
                 metrics.get(
@@ -375,8 +372,7 @@ def build_html(record: Dict[str, Any]) -> str:
       'Bid Var',
       'Entropy',
 
-      'Adaptation',
-      'Panic',
+      'Bid-Supply Sensitivity',
       'Opponent Aware',
       'Recovery',
       'Supply-Bid Corr',
@@ -409,8 +405,7 @@ def build_html(record: Dict[str, Any]) -> str:
         'status',
         'survival_days',
         'avg_bid',
-        'adaptation',
-        'panic_score',
+        'bid_supply_sensitivity',
         'compile_success',
         'runtime_success',
       ].forEach(key => {

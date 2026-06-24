@@ -80,6 +80,24 @@ class WACProgrammaticEnv:
         return runtime
 
     def _sanitize_bid(self, bid: float, budget: float) -> float:
+        import math
+
+        try:
+            bid = float(bid)
+        except Exception:
+            return 0.0
+
+        if not math.isfinite(bid):
+            return 0.0
+
+        try:
+            budget = float(budget)
+        except Exception:
+            budget = 0.0
+
+        if (not math.isfinite(budget)) or budget < 0:
+            budget = 0.0
+
         if bid < 0:
             bid = 0.0
         if bid > budget:
@@ -91,7 +109,9 @@ class WACProgrammaticEnv:
         bids: Dict[str, float],
         profiles: Dict[str, AgentProfile],
         supply: float,
+        day: int,
     ) -> List[str]:
+        tie_rng = random.Random(f"wac-tie-break-{day}-{supply}")
         candidates = []
         for agent_id, bid in bids.items():
             requirement = profiles[agent_id].water_requirement
@@ -99,13 +119,14 @@ class WACProgrammaticEnv:
                 continue
             if requirement > supply:
                 continue
-            candidates.append((agent_id, bid, requirement))
+            tie_break = tie_rng.random()
+            candidates.append((agent_id, bid, requirement, tie_break))
 
-        candidates.sort(key=lambda row: (-row[1], row[2]))
+        candidates.sort(key=lambda row: (-row[1], row[2], row[3]))
 
         winners: List[str] = []
         remaining = supply
-        for agent_id, bid, requirement in candidates:
+        for agent_id, bid, requirement, _ in candidates:
             if requirement <= remaining:
                 winners.append(agent_id)
                 remaining -= requirement
@@ -285,7 +306,7 @@ class WACProgrammaticEnv:
                     bids[profile.agent_id] = self._sanitize_bid(raw_bid, state.budget)
                     errors[profile.agent_id] = None
 
-            winners = self._allocate_winners(bids, profile_map, supply)
+            winners = self._allocate_winners(bids, profile_map, supply, day)
 
             for profile in profiles:
                 state = runtime[profile.agent_id]
@@ -462,10 +483,7 @@ class WACProgrammaticEnv:
         )
 
         runtime_success = not any(
-            (
-                err is not None
-                and "compile_error" not in str(err)
-            )
+            err is not None
             for err in errors
         )
 
@@ -486,10 +504,10 @@ class WACProgrammaticEnv:
         )
 
         # ============================================================
-        # Adaptation Score
+        # Bid-Supply Sensitivity
         # ============================================================
 
-        adaptation_score = 0.0
+        bid_supply_sensitivity = 0.0
 
         if len(bids) > 1:
 
@@ -516,7 +534,7 @@ class WACProgrammaticEnv:
 
             if adaptation_pairs:
 
-                adaptation_score = (
+                bid_supply_sensitivity = (
                     statistics.mean(
                         adaptation_pairs
                     )
@@ -542,20 +560,6 @@ class WACProgrammaticEnv:
                 for p in probs
                 if p > 0
             )
-
-        # ============================================================
-        # Panic Score
-        # ============================================================
-
-        panic_score = 0
-
-        for i in range(len(hp)):
-
-            if (
-                hp[i] <= 3
-                and bids[i] > average_bid * 1.5
-            ):
-                panic_score += 1
 
         # ============================================================
         # Static Policy
@@ -784,12 +788,6 @@ class WACProgrammaticEnv:
                 "static_policy"
             )
 
-        if panic_score > 2:
-
-            failure_types.append(
-                "panic_strategy"
-            )
-
         if (
             survival_days < self.episode_days
             and average_bid < 5
@@ -842,9 +840,7 @@ class WACProgrammaticEnv:
             # Strategic Behavior
             # --------------------------------------------------------
 
-            "adaptation_score": adaptation_score,
-
-            "panic_score": panic_score,
+            "bid_supply_sensitivity": bid_supply_sensitivity,
 
             "static_policy": static_policy,
 

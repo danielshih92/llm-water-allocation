@@ -1,5 +1,3 @@
-
-
 # Whether to reveal opponent strategy code to the LLM
 REVEAL_OPPONENT_CODE = True
 
@@ -23,19 +21,12 @@ DEEPSEEK_JSON_MODE = True
 
 # Batch permutation inputs (run_all_permutations.py)
 AGENTS = ["Alex", "Bob", "Cindy", "David", "Eric"]
-# BATCH_MODELS = [
-#     {"backend": "openai", "model": "gpt-5.4"},
-#     {"backend": "deepseek", "model": "deepseek-v4-flash"},
-#     {"backend": "openai", "model": "gpt-5.4-nano"},
-#     {"backend": "gemini", "model": "gemini-3.5-flash"},
-#     {"backend": "gemini", "model": "gemini-2.5-flash"},
-# ]
 BATCH_MODELS = [
+    {"backend": "openai", "model": "gpt-5.4"},
+    {"backend": "deepseek", "model": "deepseek-v4-flash"},
+    {"backend": "openai", "model": "gpt-5.4-nano"},
     {"backend": "gemini", "model": "gemini-3.5-flash"},
-    {"backend": "gemini", "model": "gemini-3.5-flash"},
-    {"backend": "gemini", "model": "gemini-3.5-flash"},
-    {"backend": "gemini", "model": "gemini-3.5-flash"},
-    {"backend": "gemini", "model": "gemini-3.5-flash"},
+    {"backend": "gemini", "model": "gemini-2.5-flash"},
 ]
 # BATCH_MODELS = [
 #     {"backend": "deepseek", "model": "deepseek-v4-flash"},
@@ -44,6 +35,8 @@ BATCH_MODELS = [
 #     {"backend": "deepseek", "model": "deepseek-v4-flash"},
 #     {"backend": "deepseek", "model": "deepseek-v4-flash"},
 # ]
+
+
 
 # Backend selection mode: "uniform" (mode 1) or "per-agent" (mode 2)
 BACKEND_MODE = "uniform"

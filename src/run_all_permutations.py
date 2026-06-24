@@ -26,43 +26,55 @@ def aggregate_batch_results(batch_folder, batch_manifest=None):
     import time
     from collections import defaultdict
 
-    metric_fields = [
+    PERFORMANCE_METRIC_FIELDS = [
         ("avg_survival_days", "survival_days", 2),
         ("avg_final_budget", "final_budget", 2),
         ("avg_daily_bid", "daily_bid", 2),
-
         ("avg_total_bid", "total_bid", 2),
         ("avg_average_bid", "metric_average_bid", 2),
         ("avg_bid_variance", "bid_variance", 4),
         ("avg_bid_entropy", "bid_entropy", 4),
-
-        ("avg_adaptation_score", "adaptation_score", 4),
-        ("avg_panic_score", "panic_score", 4),
+        ("avg_bid_supply_sensitivity", "bid_supply_sensitivity", 4),
         ("avg_opponent_awareness_score", "opponent_awareness_score", 4),
         ("avg_recovery_score", "recovery_score", 4),
         ("avg_supply_bid_correlation", "supply_bid_correlation", 4),
-
         ("avg_utility_score", "utility_score", 4),
         ("avg_survival_efficiency", "survival_efficiency", 6),
-
         ("avg_strategy_complexity", "strategy_complexity", 4),
         ("avg_branch_count", "branch_count", 4),
         ("avg_loop_count", "loop_count", 4),
         ("avg_function_call_count", "function_call_count", 4),
+    ]
 
+    RELIABILITY_METRIC_FIELDS = [
+        ("admission_rate", "admission_rate", 4),
+        ("outcome_valid_rate", "outcome_valid_rate", 4),
+        ("one_shot_json_valid_rate", "one_shot_json_valid_rate", 4),
+        ("one_shot_code_extracted_rate", "one_shot_code_extracted_rate", 4),
+        ("one_shot_compile_success_rate", "one_shot_compile_success_rate", 4),
+        ("one_shot_runtime_success_rate", "one_shot_runtime_success_rate", 4),
+        ("one_shot_strict_success_rate", "one_shot_strict_success_rate", 4),
+        ("repair_used_rate", "repair_used_rate", 4),
+        ("json_repair_success_rate", "json_repair_success_rate", 4),
+        ("code_repair_success_rate", "code_repair_success_rate", 4),
+        ("post_repair_strict_success_rate", "post_repair_strict_success_rate", 4),
+        ("avg_repair_attempts", "repair_attempts", 4),
         ("avg_compile_success", "compile_success", 4),
         ("avg_runtime_success", "runtime_success", 4),
         ("avg_strict_success_rate", "strict_success_rate", 4),
         ("avg_hallucinated_api_count", "hallucinated_api_count", 4),
         ("json_parse_fail_rate", "json_parse_fail_rate", 4),
         ("default_code_usage_rate", "default_code_usage_rate", 4),
+        ("valid_round_rate", "valid_round_rate", 4),
     ]
 
     def new_pool_item():
         return {
-            "weighted_sums": defaultdict(float),
+            "performance_weighted_sums": defaultdict(float),
+            "reliability_weighted_sums": defaultdict(float),
             "deaths": 0,
-            "rounds": 0,
+            "valid_rounds": 0,
+            "attempted_rounds": 0,
             "agent_observations": 0,
             "experiments": set(),
         }
@@ -85,22 +97,48 @@ def aggregate_batch_results(batch_folder, batch_manifest=None):
 
         return death_count, round_count
 
-    def add_stats(pool, group_name, stats, round_count, death_count, experiment_id):
+    def parse_round_counts(stats, death_count, round_count):
+        attempted_rounds = stats.get("attempted_meta_rounds")
+        valid_rounds = stats.get("valid_meta_rounds")
+
+        if not isinstance(attempted_rounds, int) or attempted_rounds < 0:
+            attempted_rounds = round_count
+
+        if not isinstance(valid_rounds, int) or valid_rounds < 0:
+            valid_rounds = round_count
+
+        if valid_rounds > attempted_rounds:
+            valid_rounds = attempted_rounds
+
+        if death_count > valid_rounds:
+            death_count = valid_rounds
+
+        return attempted_rounds, valid_rounds, death_count
+
+    def add_stats(pool, group_name, stats, attempted_rounds, valid_rounds, death_count, experiment_id):
         item = pool[group_name]
 
         item["deaths"] += death_count
-        item["rounds"] += round_count
+        item["valid_rounds"] += valid_rounds
+        item["attempted_rounds"] += attempted_rounds
         item["agent_observations"] += 1
         item["experiments"].add(experiment_id)
 
-        for source_key, report_key, _ in metric_fields:
+        for source_key, report_key, _ in PERFORMANCE_METRIC_FIELDS:
             value = stats.get(source_key)
-
             if isinstance(value, bool):
                 value = int(value)
 
-            if isinstance(value, (int, float)):
-                item["weighted_sums"][report_key] += float(value) * round_count
+            if isinstance(value, (int, float)) and valid_rounds > 0:
+                item["performance_weighted_sums"][report_key] += float(value) * valid_rounds
+
+        for source_key, report_key, _ in RELIABILITY_METRIC_FIELDS:
+            value = stats.get(source_key)
+            if isinstance(value, bool):
+                value = int(value)
+
+            if isinstance(value, (int, float)) and attempted_rounds > 0:
+                item["reliability_weighted_sums"][report_key] += float(value) * attempted_rounds
 
     for root, _, files in os.walk(batch_folder):
         if "agent_averages.json" not in files:
@@ -149,14 +187,21 @@ def aggregate_batch_results(batch_folder, batch_manifest=None):
                 )
             )
 
-            if round_count == 0:
+            attempted_rounds, valid_rounds, death_count = parse_round_counts(
+                stats,
+                death_count,
+                round_count,
+            )
+
+            if attempted_rounds == 0:
                 continue
 
             add_stats(
                 pool=model_pool,
                 group_name=model_name,
                 stats=stats,
-                round_count=round_count,
+                attempted_rounds=attempted_rounds,
+                valid_rounds=valid_rounds,
                 death_count=death_count,
                 experiment_id=experiment_id,
             )
@@ -165,7 +210,8 @@ def aggregate_batch_results(batch_folder, batch_manifest=None):
                 pool=agent_pool,
                 group_name=agent_name,
                 stats=stats,
-                round_count=round_count,
+                attempted_rounds=attempted_rounds,
+                valid_rounds=valid_rounds,
                 death_count=death_count,
                 experiment_id=experiment_id,
             )
@@ -174,33 +220,45 @@ def aggregate_batch_results(batch_folder, batch_manifest=None):
         output = {}
 
         for group_name, data in pool.items():
-            rounds = data["rounds"]
+            valid_rounds = data["valid_rounds"]
+            attempted_rounds = data["attempted_rounds"]
 
-            if rounds == 0:
+            if attempted_rounds == 0:
                 continue
 
+            if valid_rounds > 0:
+                global_mortality_rate = f"{(data['deaths'] / valid_rounds) * 100:.1f}%"
+            else:
+                global_mortality_rate = "N/A"
+
             row = {
-                "global_mortality_rate": f"{(data['deaths'] / rounds) * 100:.1f}%",
-                "total_evaluated_meta_rounds": rounds,
+                "global_mortality_rate": global_mortality_rate,
+                "total_valid_meta_rounds": valid_rounds,
+                "total_attempted_meta_rounds": attempted_rounds,
+                "total_outcome_valid_meta_rounds": round(
+                    data["reliability_weighted_sums"].get("outcome_valid_rate", 0.0)
+                ),
+                "outcome_valid_rate": round(
+                    data["reliability_weighted_sums"].get("outcome_valid_rate", 0.0) / attempted_rounds,
+                    4,
+                ) if attempted_rounds > 0 else None,
                 "total_agent_observations": data["agent_observations"],
                 "total_experiments": len(data["experiments"]),
             }
 
-            for _, report_key, decimals in metric_fields:
-                weighted_sum = data["weighted_sums"].get(
-                    report_key,
-                    None,
-                )
+            for _, report_key, decimals in PERFORMANCE_METRIC_FIELDS:
+                weighted_sum = data["performance_weighted_sums"].get(report_key)
+                if weighted_sum is None or valid_rounds == 0:
+                    row[f"grand_avg_{report_key}"] = None
+                else:
+                    row[f"grand_avg_{report_key}"] = round(weighted_sum / valid_rounds, decimals)
 
-                if weighted_sum is None:
-                    continue
-
-                row[
-                    f"grand_avg_{report_key}"
-                ] = round(
-                    weighted_sum / rounds,
-                    decimals,
-                )
+            for _, report_key, decimals in RELIABILITY_METRIC_FIELDS:
+                weighted_sum = data["reliability_weighted_sums"].get(report_key)
+                if weighted_sum is None or attempted_rounds == 0:
+                    row[f"grand_avg_{report_key}"] = None
+                else:
+                    row[f"grand_avg_{report_key}"] = round(weighted_sum / attempted_rounds, decimals)
 
             output[group_name] = row
 
@@ -397,6 +455,13 @@ def main():
         help="Number of meta-rounds to run for each experiment.",
     )
     parser.add_argument(
+        "--scenario",
+        type=str,
+        default="low",
+        choices=["low", "medium", "high"],
+        help="Scarcity scenario used for all experiments in this batch.",
+    )
+    parser.add_argument(
         "--seed",
         type=int,
         default=None,
@@ -417,6 +482,22 @@ def main():
             "no_opponent_info",
         ],
         help="Opponent info exposure across meta-rounds (optional).",
+    )
+    parser.add_argument(
+        "--evaluation-mode",
+        type=str,
+        default="repair_assisted",
+        choices=["one_shot", "repair_assisted"],
+    )
+    parser.add_argument(
+        "--max-json-repair-attempts",
+        type=int,
+        default=1,
+    )
+    parser.add_argument(
+        "--max-code-repair-attempts",
+        type=int,
+        default=1,
     )
     args = parser.parse_args()
 
@@ -466,7 +547,7 @@ def main():
         print("================================================\n")
 
         run_args = argparse.Namespace(
-            scenario="medium",
+            scenario=args.scenario,
             meta_rounds=args.meta_rounds,
             seed=args.seed,
             backend_mode="per-agent",
@@ -479,6 +560,10 @@ def main():
             opponent_info_mode=(args.opponent_info_mode or config.OPPONENT_INFO_MODE),
             no_plots=args.no_plots,
             compact_meta_log=True,
+            evaluation_mode=args.evaluation_mode,
+            max_json_repair_attempts=args.max_json_repair_attempts,
+            max_code_repair_attempts=args.max_code_repair_attempts,
+            allow_invalid_agents_for_debug=False,
         )
 
         try:
@@ -503,6 +588,10 @@ def main():
 
     manifest_data = {
         "batch_id": batch_id,
+        "scenario": args.scenario,
+        "evaluation_mode": args.evaluation_mode,
+        "max_json_repair_attempts": args.max_json_repair_attempts,
+        "max_code_repair_attempts": args.max_code_repair_attempts,
         "total_experiments": len(all_permutations),
         "total_runtime_sec": round(batch_elapsed, 2),
         "experiments": experiment_summary,
