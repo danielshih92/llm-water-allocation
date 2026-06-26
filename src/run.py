@@ -682,6 +682,21 @@ def save_agent_average_summary(
         avg_code_repair_success = round(sum(stats["reliability_metric_lists"].get("code_repair_success", [])) / rounds_played, 4)
         avg_post_repair_strict_success = round(sum(stats["reliability_metric_lists"].get("post_repair_strict_success", [])) / rounds_played, 4)
         avg_repair_attempts = round(sum(stats["reliability_metric_lists"].get("repair_attempts", [])) / rounds_played, 4)
+        json_repair_used_count = sum(stats["reliability_metric_lists"].get("json_repair_used", []))
+        json_repair_success_count = sum(stats["reliability_metric_lists"].get("json_repair_success", []))
+        code_repair_used_count = sum(stats["reliability_metric_lists"].get("code_repair_used", []))
+        code_repair_success_count = sum(stats["reliability_metric_lists"].get("code_repair_success", []))
+
+        json_repair_success_given_used = (
+            round(json_repair_success_count / json_repair_used_count, 4)
+            if json_repair_used_count > 0
+            else None
+        )
+        code_repair_success_given_used = (
+            round(code_repair_success_count / code_repair_used_count, 4)
+            if code_repair_used_count > 0
+            else None
+        )
 
         output_data["agent_averages"][agent_id] = {
             "developer_name": developer_name,
@@ -708,6 +723,8 @@ def save_agent_average_summary(
             "repair_used_rate": avg_repair_used,
             "json_repair_success_rate": avg_json_repair_success,
             "code_repair_success_rate": avg_code_repair_success,
+            "json_repair_success_given_used": json_repair_success_given_used,
+            "code_repair_success_given_used": code_repair_success_given_used,
             "post_repair_strict_success_rate": avg_post_repair_strict_success,
             "avg_repair_attempts": avg_repair_attempts,
             **performance_averages,
@@ -1016,6 +1033,9 @@ def run_experiment(
                 "  Strategy generation complete."
             )
 
+            reasoning_cot = generation_stats.get("final_reasoning", reasoning_cot)
+            strategy_code = generation_stats.get("final_code", strategy_code)
+
             generation_stats_by_agent[profile.agent_id] = generation_stats
 
             submissions.append(
@@ -1279,10 +1299,13 @@ def run_experiment(
             f"meta_round_{meta_round_id}"
         ] = round_summary
 
-        previous_codes = {
-            submission.agent_id: submission.strategy_code
-            for submission in submissions
-        }
+        if int(record.get("outcome_valid", 0)) == 1:
+            previous_codes = {
+                submission.agent_id: submission.strategy_code
+                for submission in submissions
+            }
+        else:
+            previous_codes = {}
 
         meta_round_elapsed = (
             time.time()

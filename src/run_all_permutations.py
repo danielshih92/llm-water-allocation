@@ -57,6 +57,8 @@ def aggregate_batch_results(batch_folder, batch_manifest=None):
         ("repair_used_rate", "repair_used_rate", 4),
         ("json_repair_success_rate", "json_repair_success_rate", 4),
         ("code_repair_success_rate", "code_repair_success_rate", 4),
+        ("json_repair_success_given_used", "json_repair_success_given_used", 4),
+        ("code_repair_success_given_used", "code_repair_success_given_used", 4),
         ("post_repair_strict_success_rate", "post_repair_strict_success_rate", 4),
         ("avg_repair_attempts", "repair_attempts", 4),
         ("avg_compile_success", "compile_success", 4),
@@ -235,6 +237,9 @@ def aggregate_batch_results(batch_folder, batch_manifest=None):
                 "global_mortality_rate": global_mortality_rate,
                 "total_valid_meta_rounds": valid_rounds,
                 "total_attempted_meta_rounds": attempted_rounds,
+                "total_outcome_valid_agent_rounds": round(
+                    data["reliability_weighted_sums"].get("outcome_valid_rate", 0.0)
+                ),
                 "total_outcome_valid_meta_rounds": round(
                     data["reliability_weighted_sums"].get("outcome_valid_rate", 0.0)
                 ),

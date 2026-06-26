@@ -32,7 +32,10 @@ Batch run (permutations)
 
 3) Run multiple slices into the same batch folder:
    python3 src/run_all_permutations.py --slice-start 1 --slice-end 120 --no-plots --batch-name batch_004 --opponent-info-mode full_code_access
-   python3 src/run_all_permutations.py --slice-start 1 --slice-end 5 --no-plots --batch-name batch_013_full_code_access_all_med --meta-rounds 3 --opponent-info-mode full_code_access --seed 42 --scenario medium
+
+   python3 src/run_all_permutations.py --slice-start 51 --slice-end 120 --no-plots --batch-name batch_014_full_code_access_all_med --meta-rounds 3 --opponent-info-mode full_code_access --seed 42 --scenario medium
+
+   python3 src/run_all_permutations.py --slice-start 51 --slice-end 120 --no-plots --batch-name batch_015_no_opp_info_med --meta-rounds 2 --opponent-info-mode full_code_access --seed 42 --scenario medium
 
 Config-only settings
 - All backend/model settings are defined in [Alympics/src/config.py](Alympics/src/config.py).
@@ -71,15 +74,17 @@ Notes
 ---(common Command)
 tmux bash:
 tmux new -s alympics
+tmux new -s alympics_v2
 tmux ls
 tmux attach -t alympics
 source venv/bin/activate
 
 ---
-python temp/batch_table_plot.py --log-dir log --batch batch_008_full_code_access_test_gemini_3-5_flash
+python temp/batch_table_plot.py --log-dir log --batch batch_015_no_opp_info_med
 python temp/exp_plot.py --log-dir log --batch batch_008_full_code_access_test_gemini_3-5_flash --exp exp_008
 
 
 ---
 batch_009之後的實驗所使用的code是有被大力refactor過的
 batch_012有被refactor第二次
+batch_014refactor第三次

@@ -25,6 +25,17 @@ def _parse_percent(text: str) -> float:
         return 0.0
 
 
+def _safe_float(value, default=None):
+    try:
+        if value is None:
+            return default
+        if isinstance(value, str) and value.strip().upper() == "N/A":
+            return default
+        return float(value)
+    except Exception:
+        return default
+
+
 def _ensure_dir(path: str) -> None:
     os.makedirs(path, exist_ok=True)
 
@@ -49,6 +60,94 @@ def _collect_agent_average_files(batch_dir: str) -> List[str]:
             continue
         paths.append(os.path.join(root, "agent_averages.json"))
     return sorted(paths)
+
+
+def _aggregate_model_stats_from_batch(batch_dir: str) -> Dict[str, Dict[str, float]]:
+    grouped: Dict[str, Dict[str, float]] = {}
+
+    for summary_path in _collect_agent_average_files(batch_dir):
+        exp_dir = os.path.dirname(summary_path)
+        label_map = _load_backend_label_map(exp_dir)
+
+        try:
+            with open(summary_path, "r", encoding="utf-8") as handle:
+                exp_data = json.load(handle)
+        except Exception:
+            continue
+
+        averages = exp_data.get("agent_averages", {})
+        if not isinstance(averages, dict):
+            continue
+
+        for role_name, stats in averages.items():
+            if not isinstance(stats, dict):
+                continue
+
+            raw_model_name = str(stats.get("model_used", "Unknown Model"))
+            model_name = label_map.get(role_name, raw_model_name)
+
+            attempted_rounds = int(_safe_float(stats.get("attempted_meta_rounds"), 0) or 0)
+            valid_rounds = int(_safe_float(stats.get("valid_meta_rounds"), 0) or 0)
+            death_count, _ = _parse_death_count(stats.get("death_count", "0/0"))
+
+            item = grouped.setdefault(
+                model_name,
+                {
+                    "attempted_rounds": 0.0,
+                    "valid_rounds": 0.0,
+                    "deaths": 0.0,
+                    "survival_weighted_sum": 0.0,
+                    "daily_bid_weighted_sum": 0.0,
+                    "complexity_weighted_sum": 0.0,
+                    "strict_success_attempted_weighted_sum": 0.0,
+                    "admission_attempted_weighted_sum": 0.0,
+                    "outcome_valid_attempted_weighted_sum": 0.0,
+                    "one_shot_strict_attempted_weighted_sum": 0.0,
+                    "post_repair_strict_attempted_weighted_sum": 0.0,
+                    "repair_used_attempted_weighted_sum": 0.0,
+                    "repair_attempts_attempted_weighted_sum": 0.0,
+                    "json_parse_fail_attempted_weighted_sum": 0.0,
+                    "code_extraction_fail_attempted_weighted_sum": 0.0,
+                    "one_shot_runtime_fail_attempted_weighted_sum": 0.0,
+                    "admission_fail_attempted_weighted_sum": 0.0,
+                },
+            )
+
+            item["attempted_rounds"] += attempted_rounds
+            item["valid_rounds"] += valid_rounds
+            item["deaths"] += death_count
+
+            avg_survival_days = _safe_float(stats.get("avg_survival_days"), None)
+            avg_daily_bid = _safe_float(stats.get("avg_daily_bid"), None)
+            avg_strategy_complexity = _safe_float(stats.get("avg_strategy_complexity"), None)
+
+            if avg_survival_days is not None and valid_rounds > 0:
+                item["survival_weighted_sum"] += avg_survival_days * valid_rounds
+            if avg_daily_bid is not None and valid_rounds > 0:
+                item["daily_bid_weighted_sum"] += avg_daily_bid * valid_rounds
+            if avg_strategy_complexity is not None and valid_rounds > 0:
+                item["complexity_weighted_sum"] += avg_strategy_complexity * valid_rounds
+
+            if attempted_rounds > 0:
+                item["strict_success_attempted_weighted_sum"] += (_safe_float(stats.get("avg_strict_success_rate"), 0.0) or 0.0) * attempted_rounds
+                item["admission_attempted_weighted_sum"] += (_safe_float(stats.get("admission_rate"), 0.0) or 0.0) * attempted_rounds
+                item["outcome_valid_attempted_weighted_sum"] += (_safe_float(stats.get("outcome_valid_rate"), 0.0) or 0.0) * attempted_rounds
+                item["one_shot_strict_attempted_weighted_sum"] += (_safe_float(stats.get("one_shot_strict_success_rate"), 0.0) or 0.0) * attempted_rounds
+                item["post_repair_strict_attempted_weighted_sum"] += (_safe_float(stats.get("post_repair_strict_success_rate"), 0.0) or 0.0) * attempted_rounds
+                item["repair_used_attempted_weighted_sum"] += (_safe_float(stats.get("repair_used_rate"), 0.0) or 0.0) * attempted_rounds
+                item["repair_attempts_attempted_weighted_sum"] += (_safe_float(stats.get("avg_repair_attempts"), 0.0) or 0.0) * attempted_rounds
+
+                json_parse_fail_rate = _safe_float(stats.get("json_parse_fail_rate"), 0.0) or 0.0
+                one_shot_code_extracted_rate = _safe_float(stats.get("one_shot_code_extracted_rate"), 0.0) or 0.0
+                one_shot_runtime_success_rate = _safe_float(stats.get("one_shot_runtime_success_rate"), 0.0) or 0.0
+                admission_rate = _safe_float(stats.get("admission_rate"), 0.0) or 0.0
+
+                item["json_parse_fail_attempted_weighted_sum"] += json_parse_fail_rate * attempted_rounds
+                item["code_extraction_fail_attempted_weighted_sum"] += (1.0 - one_shot_code_extracted_rate) * attempted_rounds
+                item["one_shot_runtime_fail_attempted_weighted_sum"] += (1.0 - one_shot_runtime_success_rate) * attempted_rounds
+                item["admission_fail_attempted_weighted_sum"] += (1.0 - admission_rate) * attempted_rounds
+
+    return grouped
 
 
 def _load_backend_label_map(exp_dir: str) -> Dict[str, str]:
@@ -200,10 +299,10 @@ def _build_role_model_rows_from_batch(batch_dir: str, agent_id: str) -> List[Dic
 
         entry["deaths"] += death_count
         entry["rounds"] += round_count
-        entry["weighted_sums"]["Survival Days"] += float(stats.get("avg_survival_days", 0.0)) * round_count
-        entry["weighted_sums"]["Daily Bid"] += float(stats.get("avg_daily_bid", 0.0)) * round_count
-        entry["weighted_sums"]["Strict Success Rate (%)"] += float(stats.get("avg_strict_success_rate", 0.0)) * round_count * 100.0
-        entry["weighted_sums"]["Code Complexity"] += float(stats.get("avg_strategy_complexity", 0.0)) * round_count
+        entry["weighted_sums"]["Survival Days"] += (_safe_float(stats.get("avg_survival_days"), 0.0) or 0.0) * round_count
+        entry["weighted_sums"]["Daily Bid"] += (_safe_float(stats.get("avg_daily_bid"), 0.0) or 0.0) * round_count
+        entry["weighted_sums"]["Strict Success Rate (%)"] += (_safe_float(stats.get("avg_strict_success_rate"), 0.0) or 0.0) * round_count * 100.0
+        entry["weighted_sums"]["Code Complexity"] += (_safe_float(stats.get("avg_strategy_complexity"), 0.0) or 0.0) * round_count
 
     rows = []
     for model_name, entry in grouped.items():
@@ -232,11 +331,11 @@ def _build_model_rows(perf_by_model: Dict[str, Dict[str, object]]) -> List[Dict[
         rows.append(
             {
                 "Model": model_name,
-                "Survival Days": float(stats.get("grand_avg_survival_days", 0.0)),
+                "Survival Days": _safe_float(stats.get("grand_avg_survival_days"), 0.0) or 0.0,
                 "Mortality Rate (%)": mortality_str,
-                "Daily Bid": float(stats.get("grand_avg_daily_bid", 0.0)),
-                "Strict Success Rate (%)": float(stats.get("grand_avg_strict_success_rate", 0.0)) * 100.0,
-                "Code Complexity": float(stats.get("grand_avg_strategy_complexity", 0.0)),
+                "Daily Bid": _safe_float(stats.get("grand_avg_daily_bid"), 0.0) or 0.0,
+                "Strict Success Rate (%)": (_safe_float(stats.get("grand_avg_strict_success_rate"), 0.0) or 0.0) * 100.0,
+                "Code Complexity": _safe_float(stats.get("grand_avg_strategy_complexity"), 0.0) or 0.0,
                 "_mortality_numeric": _parse_percent(mortality_str),
             }
         )
@@ -287,10 +386,10 @@ def _build_model_rows_from_batch(batch_dir: str) -> List[Dict[str, object]]:
 
             entry["deaths"] += death_count
             entry["rounds"] += round_count
-            entry["weighted_sums"]["Survival Days"] += float(stats.get("avg_survival_days", 0.0)) * round_count
-            entry["weighted_sums"]["Daily Bid"] += float(stats.get("avg_daily_bid", 0.0)) * round_count
-            entry["weighted_sums"]["Strict Success Rate (%)"] += float(stats.get("avg_strict_success_rate", 0.0)) * round_count * 100.0
-            entry["weighted_sums"]["Code Complexity"] += float(stats.get("avg_strategy_complexity", 0.0)) * round_count
+            entry["weighted_sums"]["Survival Days"] += (_safe_float(stats.get("avg_survival_days"), 0.0) or 0.0) * round_count
+            entry["weighted_sums"]["Daily Bid"] += (_safe_float(stats.get("avg_daily_bid"), 0.0) or 0.0) * round_count
+            entry["weighted_sums"]["Strict Success Rate (%)"] += (_safe_float(stats.get("avg_strict_success_rate"), 0.0) or 0.0) * round_count * 100.0
+            entry["weighted_sums"]["Code Complexity"] += (_safe_float(stats.get("avg_strategy_complexity"), 0.0) or 0.0) * round_count
 
     rows: List[Dict[str, object]] = []
     for model_name, entry in grouped.items():
@@ -329,11 +428,11 @@ def _build_role_rows(perf_by_agent: Dict[str, Dict[str, object]]) -> List[Dict[s
         rows.append(
             {
                 "Role": role_label,
-                "Survival Days": float(stats.get("grand_avg_survival_days", 0.0)),
+                "Survival Days": _safe_float(stats.get("grand_avg_survival_days"), 0.0) or 0.0,
                 "Mortality Rate (%)": mortality_str,
-                "Daily Bid": float(stats.get("grand_avg_daily_bid", 0.0)),
-                "Strict Success Rate (%)": float(stats.get("grand_avg_strict_success_rate", 0.0)) * 100.0,
-                "Code Complexity": float(stats.get("grand_avg_strategy_complexity", 0.0)),
+                "Daily Bid": _safe_float(stats.get("grand_avg_daily_bid"), 0.0) or 0.0,
+                "Strict Success Rate (%)": (_safe_float(stats.get("grand_avg_strict_success_rate"), 0.0) or 0.0) * 100.0,
+                "Code Complexity": _safe_float(stats.get("grand_avg_strategy_complexity"), 0.0) or 0.0,
                 "_mortality_numeric": _parse_percent(mortality_str),
             }
         )
@@ -545,6 +644,124 @@ def _save_role_model_matrix(batch_dir: str, output_dir: str, matrix: pd.DataFram
     plt.close(fig)
 
 
+def _pct_or_na(value: float) -> str:
+    val = _safe_float(value, None)
+    if val is None:
+        return "N/A"
+    return f"{val * 100.0:.2f}%"
+
+
+def _num_or_na(value: float, decimals: int = 2) -> str:
+    val = _safe_float(value, None)
+    if val is None:
+        return "N/A"
+    return f"{val:.{decimals}f}"
+
+
+def _build_model_reliability_rows(grouped: Dict[str, Dict[str, float]]) -> List[Dict[str, object]]:
+    rows: List[Dict[str, object]] = []
+    for model_name, item in sorted(grouped.items()):
+        attempted = item.get("attempted_rounds", 0.0)
+        if attempted <= 0:
+            continue
+
+        admission_rate = item["admission_attempted_weighted_sum"] / attempted
+        outcome_valid_rate = item["outcome_valid_attempted_weighted_sum"] / attempted
+        one_shot_strict_success = item["one_shot_strict_attempted_weighted_sum"] / attempted
+        post_repair_strict_success = item["post_repair_strict_attempted_weighted_sum"] / attempted
+        repair_used_rate = item["repair_used_attempted_weighted_sum"] / attempted
+        avg_repair_attempts = item["repair_attempts_attempted_weighted_sum"] / attempted
+
+        rows.append(
+            {
+                "Model": model_name,
+                "Admission Rate (%)": _pct_or_na(admission_rate),
+                "Outcome-valid Rate (%)": _pct_or_na(outcome_valid_rate),
+                "One-shot Strict Success (%)": _pct_or_na(one_shot_strict_success),
+                "Post-repair Strict Success (%)": _pct_or_na(post_repair_strict_success),
+                "Repair Used (%)": _pct_or_na(repair_used_rate),
+                "Avg Repair Attempts": _num_or_na(avg_repair_attempts, 4),
+                "_sort": _safe_float(post_repair_strict_success, 0.0) or 0.0,
+            }
+        )
+    return rows
+
+
+def _build_model_valid_performance_rows(grouped: Dict[str, Dict[str, float]]) -> List[Dict[str, object]]:
+    rows: List[Dict[str, object]] = []
+    for model_name, item in sorted(grouped.items()):
+        valid_rounds = int(item.get("valid_rounds", 0.0))
+        attempted = item.get("attempted_rounds", 0.0)
+
+        if valid_rounds > 0:
+            survival_days = item["survival_weighted_sum"] / valid_rounds
+            daily_bid = item["daily_bid_weighted_sum"] / valid_rounds
+            code_complexity = item["complexity_weighted_sum"] / valid_rounds
+            mortality_rate = (item["deaths"] / valid_rounds) * 100.0
+            mortality_text = f"{mortality_rate:.1f}%"
+            survival_text = _num_or_na(survival_days, 2)
+            daily_bid_text = _num_or_na(daily_bid, 2)
+            complexity_text = _num_or_na(code_complexity, 2)
+        else:
+            mortality_text = "N/A"
+            survival_text = "N/A"
+            daily_bid_text = "N/A"
+            complexity_text = "N/A"
+
+        strict_success_rate = None
+        if attempted > 0:
+            strict_success_rate = item["strict_success_attempted_weighted_sum"] / attempted
+
+        rows.append(
+            {
+                "Model": model_name,
+                "Valid Rounds": valid_rounds,
+                "Survival Days": survival_text,
+                "Mortality Rate (%)": mortality_text,
+                "Daily Bid": daily_bid_text,
+                "Strict Success Rate (%)": _pct_or_na(strict_success_rate),
+                "Code Complexity": complexity_text,
+                "_sort": _safe_float(strict_success_rate, 0.0) or 0.0,
+            }
+        )
+    return rows
+
+
+def _build_model_failure_breakdown_rows(grouped: Dict[str, Dict[str, float]]) -> List[Dict[str, object]]:
+    rows: List[Dict[str, object]] = []
+    for model_name, item in sorted(grouped.items()):
+        attempted = item.get("attempted_rounds", 0.0)
+        if attempted <= 0:
+            continue
+
+        rows.append(
+            {
+                "Model": model_name,
+                "JSON Parse Fail (%)": _pct_or_na(item["json_parse_fail_attempted_weighted_sum"] / attempted),
+                "Code Extraction Fail (%)": _pct_or_na(item["code_extraction_fail_attempted_weighted_sum"] / attempted),
+                "One-shot Runtime Fail (%)": _pct_or_na(item["one_shot_runtime_fail_attempted_weighted_sum"] / attempted),
+                "Validation/Admission Fail (%)": _pct_or_na(item["admission_fail_attempted_weighted_sum"] / attempted),
+                "Repair Used (%)": _pct_or_na(item["repair_used_attempted_weighted_sum"] / attempted),
+                "Post-repair Strict Success (%)": _pct_or_na(item["post_repair_strict_attempted_weighted_sum"] / attempted),
+                "_sort": _safe_float(item["admission_fail_attempted_weighted_sum"] / attempted, 0.0) or 0.0,
+            }
+        )
+    return rows
+
+
+def _save_simple_table(rows: List[Dict[str, object]], output_dir: str, file_stem: str, title: str, sort_key: str = "_sort", descending: bool = True) -> None:
+    if not rows:
+        return
+
+    df = pd.DataFrame(rows)
+    if sort_key in df.columns:
+        df = df.sort_values(sort_key, ascending=not descending)
+        df = df.drop(columns=[sort_key])
+
+    _save_markdown_table(df, os.path.join(output_dir, f"{file_stem}.md"))
+    _save_table_png(df, os.path.join(output_dir, f"{file_stem}.png"), title=title)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Build model-level summary tables and figures.")
     parser.add_argument("--log-dir", type=str, default="log", help="Root log directory.")
@@ -562,6 +779,34 @@ def main() -> None:
 
     with open(report_path, "r", encoding="utf-8") as handle:
         report = json.load(handle)
+
+    grouped = _aggregate_model_stats_from_batch(batch_dir)
+
+    reliability_rows = _build_model_reliability_rows(grouped)
+    _save_simple_table(
+        reliability_rows,
+        output_dir,
+        "model_reliability_table",
+        "Model Reliability Summary",
+    )
+
+    valid_perf_rows = _build_model_valid_performance_rows(grouped)
+    _save_simple_table(
+        valid_perf_rows,
+        output_dir,
+        "model_valid_performance_table",
+        "Model Valid-only Performance Summary",
+    )
+
+    failure_rows = _build_model_failure_breakdown_rows(grouped)
+    _save_simple_table(
+        failure_rows,
+        output_dir,
+        "model_failure_breakdown_table",
+        "Model Failure Breakdown Summary",
+        sort_key="_sort",
+        descending=True,
+    )
 
     rows = _build_model_rows_from_batch(batch_dir)
     if not rows:
@@ -585,7 +830,7 @@ def main() -> None:
     formatted_table = _format_table(table_df)
 
     _save_markdown_table(formatted_table, os.path.join(output_dir, "model_summary_table.md"))
-    _save_table_png(formatted_table, os.path.join(output_dir, "model_summary_table.png"))
+    _save_table_png(formatted_table, os.path.join(output_dir, "model_summary_table.png"), title="Model Summary Table")
 
     _bar_chart(
         df,

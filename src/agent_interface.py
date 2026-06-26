@@ -572,6 +572,8 @@ class AgentRunner:
         code_repair_used = 0
         code_repair_success = 0
         total_repair_attempts = 0
+        json_repair_error = None
+        code_repair_error = None
 
         if evaluation_mode == "repair_assisted":
             if one_shot_json_valid == 0:
@@ -589,6 +591,7 @@ class AgentRunner:
                         candidate_code = repaired_code
                         json_repair_success = 1
                         break
+                    json_repair_error = json_stats.get("json_repair_error")
 
             final_validation = validate_strategy_code(candidate_code)
 
@@ -607,6 +610,7 @@ class AgentRunner:
                     if repaired_reasoning:
                         candidate_reasoning = repaired_reasoning
                     candidate_code = repaired_code
+                    code_repair_error = code_stats.get("code_repair_error")
 
                     final_validation = validate_strategy_code(candidate_code)
                     if final_validation.admitted and int(code_stats.get("code_repair_success", 0)) == 1:
@@ -650,6 +654,13 @@ class AgentRunner:
             "strict_success_rate": int(strict_success_rate),
             "final_error_type": final_validation.error_type,
             "final_error_message": final_validation.error_message,
+            "one_shot_reasoning": reasoning_cot,
+            "one_shot_code": strategy_code,
+            "final_reasoning": candidate_reasoning,
+            "final_code": candidate_code,
+            "json_repair_error": json_repair_error,
+            "code_repair_error": code_repair_error,
+            "validation_test_results": final_validation.test_results,
             "json_parse_failed": int(generation_stats.get("json_parse_failed", 0)),
             "default_code_used": 0,
             "generation_success": int(generation_stats.get("generation_success", 0)),
