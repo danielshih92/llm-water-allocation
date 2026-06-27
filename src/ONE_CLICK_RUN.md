@@ -33,9 +33,9 @@ Batch run (permutations)
 3) Run multiple slices into the same batch folder:
    python3 src/run_all_permutations.py --slice-start 1 --slice-end 120 --no-plots --batch-name batch_004 --opponent-info-mode full_code_access
 
-   python3 src/run_all_permutations.py --slice-start 51 --slice-end 120 --no-plots --batch-name batch_014_full_code_access_all_med --meta-rounds 3 --opponent-info-mode full_code_access --seed 42 --scenario medium
+   python3 src/run_all_permutations.py --slice-start 1 --slice-end 3 --no-plots --batch-name test_all_the_same --meta-rounds 3 --opponent-info-mode full_code_access --seed 42 --scenario medium
 
-   python3 src/run_all_permutations.py --slice-start 51 --slice-end 120 --no-plots --batch-name batch_015_no_opp_info_med --meta-rounds 2 --opponent-info-mode full_code_access --seed 42 --scenario medium
+   python3 src/run_all_permutations.py --slice-start 1 --slice-end 3 --no-plots --batch-name batch_015_no_opp_info_med --meta-rounds 2 --opponent-info-mode full_code_access --seed 42 --scenario medium
 
 Config-only settings
 - All backend/model settings are defined in [Alympics/src/config.py](Alympics/src/config.py).
@@ -51,7 +51,7 @@ Key flags (run.py)
 - --backend-model, --backend-temperature, --backend-base-url (uniform only)
 - --output-dir: log
 - --experiment-id: custom name
-- --opponent-info-mode: full_code_access | outcome_only | no_opponent_info
+- --opponent-info-mode: full_code_access | no_opponent_info
 - --no-plots, --compact-meta-log
 
 Key flags (run_all_permutations.py)
@@ -59,7 +59,7 @@ Key flags (run_all_permutations.py)
 - --meta-rounds: number of meta-rounds per experiment
 - --seed: base random seed (optional, default None)
 - --no-plots: skip plots
-- --opponent-info-mode: full_code_access | outcome_only | no_opponent_info
+- --opponent-info-mode: full_code_access | no_opponent_info
 - --batch-name: reuse a specific batch folder name
 
 What scripts output
@@ -80,8 +80,8 @@ tmux attach -t alympics
 source venv/bin/activate
 
 ---
-python temp/batch_table_plot.py --log-dir log --batch batch_015_no_opp_info_med
-python temp/exp_plot.py --log-dir log --batch batch_008_full_code_access_test_gemini_3-5_flash --exp exp_008
+python temp/batch_table_plot.py --log-dir log --batch test_all_the_same --meta-first-round false
+python temp/exp_plot.py --log-dir log --batch test_all_the_same --exp exp_001
 
 
 ---

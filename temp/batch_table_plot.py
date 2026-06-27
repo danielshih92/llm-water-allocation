@@ -3,6 +3,7 @@ import argparse
 from collections import defaultdict
 import json
 import os
+import re
 import sys
 from typing import Dict, List
 
@@ -62,90 +63,200 @@ def _collect_agent_average_files(batch_dir: str) -> List[str]:
     return sorted(paths)
 
 
-def _aggregate_model_stats_from_batch(batch_dir: str) -> Dict[str, Dict[str, float]]:
-    grouped: Dict[str, Dict[str, float]] = {}
+META_ROUND_PATTERN = re.compile(r"^meta_round_(\d+)\.json$")
 
-    for summary_path in _collect_agent_average_files(batch_dir):
-        exp_dir = os.path.dirname(summary_path)
+
+def _str2bool(value):
+    if isinstance(value, bool):
+        return value
+    text = str(value).strip().lower()
+    if text in {"true", "1", "yes", "y", "t"}:
+        return True
+    if text in {"false", "0", "no", "n", "f"}:
+        return False
+    raise argparse.ArgumentTypeError("Expected true/false")
+
+
+def _iter_meta_round_files(exp_dir: str):
+    for name in sorted(os.listdir(exp_dir)):
+        match = META_ROUND_PATTERN.match(name)
+        if not match:
+            continue
+        path = os.path.join(exp_dir, name)
+        if not os.path.isfile(path):
+            continue
+        yield int(match.group(1)), path
+
+
+def _collect_agent_round_records(batch_dir: str, include_meta_first_round: bool = True) -> List[Dict[str, object]]:
+    records: List[Dict[str, object]] = []
+
+    for entry in sorted(os.listdir(batch_dir)):
+        if not entry.startswith("exp_"):
+            continue
+
+        exp_dir = os.path.join(batch_dir, entry)
+        if not os.path.isdir(exp_dir):
+            continue
+
         label_map = _load_backend_label_map(exp_dir)
 
-        try:
-            with open(summary_path, "r", encoding="utf-8") as handle:
-                exp_data = json.load(handle)
-        except Exception:
-            continue
-
-        averages = exp_data.get("agent_averages", {})
-        if not isinstance(averages, dict):
-            continue
-
-        for role_name, stats in averages.items():
-            if not isinstance(stats, dict):
+        for meta_round_id, meta_path in _iter_meta_round_files(exp_dir):
+            if (not include_meta_first_round) and meta_round_id == 1:
                 continue
 
-            raw_model_name = str(stats.get("model_used", "Unknown Model"))
-            model_name = label_map.get(role_name, raw_model_name)
+            try:
+                with open(meta_path, "r", encoding="utf-8") as handle:
+                    payload = json.load(handle)
+            except Exception:
+                continue
 
-            attempted_rounds = int(_safe_float(stats.get("attempted_meta_rounds"), 0) or 0)
-            valid_rounds = int(_safe_float(stats.get("valid_meta_rounds"), 0) or 0)
-            death_count, _ = _parse_death_count(stats.get("death_count", "0/0"))
+            if not isinstance(payload, list) or not payload:
+                continue
 
-            item = grouped.setdefault(
-                model_name,
-                {
-                    "attempted_rounds": 0.0,
-                    "valid_rounds": 0.0,
-                    "deaths": 0.0,
-                    "survival_weighted_sum": 0.0,
-                    "daily_bid_weighted_sum": 0.0,
-                    "complexity_weighted_sum": 0.0,
-                    "strict_success_attempted_weighted_sum": 0.0,
-                    "admission_attempted_weighted_sum": 0.0,
-                    "outcome_valid_attempted_weighted_sum": 0.0,
-                    "one_shot_strict_attempted_weighted_sum": 0.0,
-                    "post_repair_strict_attempted_weighted_sum": 0.0,
-                    "repair_used_attempted_weighted_sum": 0.0,
-                    "repair_attempts_attempted_weighted_sum": 0.0,
-                    "json_parse_fail_attempted_weighted_sum": 0.0,
-                    "code_extraction_fail_attempted_weighted_sum": 0.0,
-                    "one_shot_runtime_fail_attempted_weighted_sum": 0.0,
-                    "admission_fail_attempted_weighted_sum": 0.0,
-                },
-            )
+            record = payload[0]
+            if not isinstance(record, dict):
+                continue
 
-            item["attempted_rounds"] += attempted_rounds
-            item["valid_rounds"] += valid_rounds
-            item["deaths"] += death_count
+            record_outcome_valid = int(_safe_float(record.get("outcome_valid"), 0) or 0)
 
-            avg_survival_days = _safe_float(stats.get("avg_survival_days"), None)
-            avg_daily_bid = _safe_float(stats.get("avg_daily_bid"), None)
-            avg_strategy_complexity = _safe_float(stats.get("avg_strategy_complexity"), None)
+            agents = record.get("agents", [])
+            if not isinstance(agents, list):
+                continue
 
-            if avg_survival_days is not None and valid_rounds > 0:
-                item["survival_weighted_sum"] += avg_survival_days * valid_rounds
-            if avg_daily_bid is not None and valid_rounds > 0:
-                item["daily_bid_weighted_sum"] += avg_daily_bid * valid_rounds
-            if avg_strategy_complexity is not None and valid_rounds > 0:
-                item["complexity_weighted_sum"] += avg_strategy_complexity * valid_rounds
+            for agent in agents:
+                if not isinstance(agent, dict):
+                    continue
 
-            if attempted_rounds > 0:
-                item["strict_success_attempted_weighted_sum"] += (_safe_float(stats.get("avg_strict_success_rate"), 0.0) or 0.0) * attempted_rounds
-                item["admission_attempted_weighted_sum"] += (_safe_float(stats.get("admission_rate"), 0.0) or 0.0) * attempted_rounds
-                item["outcome_valid_attempted_weighted_sum"] += (_safe_float(stats.get("outcome_valid_rate"), 0.0) or 0.0) * attempted_rounds
-                item["one_shot_strict_attempted_weighted_sum"] += (_safe_float(stats.get("one_shot_strict_success_rate"), 0.0) or 0.0) * attempted_rounds
-                item["post_repair_strict_attempted_weighted_sum"] += (_safe_float(stats.get("post_repair_strict_success_rate"), 0.0) or 0.0) * attempted_rounds
-                item["repair_used_attempted_weighted_sum"] += (_safe_float(stats.get("repair_used_rate"), 0.0) or 0.0) * attempted_rounds
-                item["repair_attempts_attempted_weighted_sum"] += (_safe_float(stats.get("avg_repair_attempts"), 0.0) or 0.0) * attempted_rounds
+                role_name = str(agent.get("agent_id", "unknown"))
+                model_name = label_map.get(role_name, "Unknown Model")
 
-                json_parse_fail_rate = _safe_float(stats.get("json_parse_fail_rate"), 0.0) or 0.0
-                one_shot_code_extracted_rate = _safe_float(stats.get("one_shot_code_extracted_rate"), 0.0) or 0.0
-                one_shot_runtime_success_rate = _safe_float(stats.get("one_shot_runtime_success_rate"), 0.0) or 0.0
-                admission_rate = _safe_float(stats.get("admission_rate"), 0.0) or 0.0
+                generation_stats = agent.get("generation_stats", {})
+                if not isinstance(generation_stats, dict):
+                    generation_stats = {}
 
-                item["json_parse_fail_attempted_weighted_sum"] += json_parse_fail_rate * attempted_rounds
-                item["code_extraction_fail_attempted_weighted_sum"] += (1.0 - one_shot_code_extracted_rate) * attempted_rounds
-                item["one_shot_runtime_fail_attempted_weighted_sum"] += (1.0 - one_shot_runtime_success_rate) * attempted_rounds
-                item["admission_fail_attempted_weighted_sum"] += (1.0 - admission_rate) * attempted_rounds
+                admitted = int(
+                    _safe_float(
+                        agent.get("admitted", generation_stats.get("admitted", 0)),
+                        0,
+                    )
+                    or 0
+                )
+                outcome_valid = int(
+                    _safe_float(
+                        agent.get("outcome_valid", record_outcome_valid),
+                        record_outcome_valid,
+                    )
+                    or 0
+                )
+
+                metrics = agent.get("metrics")
+                if not isinstance(metrics, dict):
+                    metrics = None
+
+                daily_trace = agent.get("daily_trace", [])
+                if not isinstance(daily_trace, list):
+                    daily_trace = []
+
+                performance_valid = bool(outcome_valid == 1 and admitted == 1 and metrics is not None)
+
+                records.append(
+                    {
+                        "exp_id": entry,
+                        "meta_round_id": meta_round_id,
+                        "role": role_name,
+                        "model": model_name,
+                        "admitted": admitted,
+                        "outcome_valid": outcome_valid,
+                        "strict_success_rate": int(_safe_float(generation_stats.get("strict_success_rate"), 0) or 0),
+                        "one_shot_strict_success": int(_safe_float(generation_stats.get("one_shot_strict_success"), 0) or 0),
+                        "one_shot_code_extracted": int(_safe_float(generation_stats.get("one_shot_code_extracted"), 0) or 0),
+                        "one_shot_runtime_success": int(_safe_float(generation_stats.get("one_shot_runtime_success"), 0) or 0),
+                        "post_repair_strict_success": int(_safe_float(generation_stats.get("post_repair_strict_success"), 0) or 0),
+                        "repair_used": int(_safe_float(generation_stats.get("repair_used"), 0) or 0),
+                        "repair_attempts": _safe_float(generation_stats.get("repair_attempts"), 0.0) or 0.0,
+                        "json_parse_failed": int(_safe_float(generation_stats.get("json_parse_failed"), 0) or 0),
+                        "performance_valid": performance_valid,
+                        "survival_days": _safe_float(metrics.get("survival_days"), None) if metrics else None,
+                        "final_hp": _safe_float(metrics.get("final_hp"), None) if metrics else None,
+                        "average_bid": _safe_float(metrics.get("average_bid"), None) if metrics else None,
+                        "strategy_complexity": _safe_float(metrics.get("strategy_complexity"), None) if metrics else None,
+                    }
+                )
+
+    return records
+
+
+def _aggregate_model_stats_from_batch(batch_dir: str, include_meta_first_round: bool = True) -> Dict[str, Dict[str, float]]:
+    grouped: Dict[str, Dict[str, float]] = {}
+
+    round_records = _collect_agent_round_records(
+        batch_dir,
+        include_meta_first_round=include_meta_first_round,
+    )
+
+    for row in round_records:
+        model_name = str(row.get("model", "Unknown Model"))
+        attempted_rounds = 1
+        valid_rounds = 1 if bool(row.get("performance_valid", False)) else 0
+        death_count = 1 if (valid_rounds == 1 and (_safe_float(row.get("final_hp"), 1.0) or 1.0) <= 0) else 0
+
+        item = grouped.setdefault(
+            model_name,
+            {
+                "attempted_rounds": 0.0,
+                "valid_rounds": 0.0,
+                "deaths": 0.0,
+                "survival_weighted_sum": 0.0,
+                "daily_bid_weighted_sum": 0.0,
+                "complexity_weighted_sum": 0.0,
+                "strict_success_attempted_weighted_sum": 0.0,
+                "admission_attempted_weighted_sum": 0.0,
+                "outcome_valid_attempted_weighted_sum": 0.0,
+                "one_shot_strict_attempted_weighted_sum": 0.0,
+                "post_repair_strict_attempted_weighted_sum": 0.0,
+                "repair_used_attempted_weighted_sum": 0.0,
+                "repair_attempts_attempted_weighted_sum": 0.0,
+                "json_parse_fail_attempted_weighted_sum": 0.0,
+                "code_extraction_fail_attempted_weighted_sum": 0.0,
+                "one_shot_runtime_fail_attempted_weighted_sum": 0.0,
+                "admission_fail_attempted_weighted_sum": 0.0,
+            },
+        )
+
+        item["attempted_rounds"] += attempted_rounds
+        item["valid_rounds"] += valid_rounds
+        item["deaths"] += death_count
+
+        avg_survival_days = _safe_float(row.get("survival_days"), None)
+        avg_daily_bid = _safe_float(row.get("average_bid"), None)
+        avg_strategy_complexity = _safe_float(row.get("strategy_complexity"), None)
+
+        if avg_survival_days is not None and valid_rounds > 0:
+            item["survival_weighted_sum"] += avg_survival_days * valid_rounds
+        if avg_daily_bid is not None and valid_rounds > 0:
+            item["daily_bid_weighted_sum"] += avg_daily_bid * valid_rounds
+        if avg_strategy_complexity is not None and valid_rounds > 0:
+            item["complexity_weighted_sum"] += avg_strategy_complexity * valid_rounds
+
+        if attempted_rounds > 0:
+            item["strict_success_attempted_weighted_sum"] += (_safe_float(row.get("strict_success_rate"), 0.0) or 0.0) * attempted_rounds
+            item["admission_attempted_weighted_sum"] += (_safe_float(row.get("admitted"), 0.0) or 0.0) * attempted_rounds
+            item["outcome_valid_attempted_weighted_sum"] += (_safe_float(row.get("outcome_valid"), 0.0) or 0.0) * attempted_rounds
+            item["one_shot_strict_attempted_weighted_sum"] += (_safe_float(row.get("one_shot_strict_success"), 0.0) or 0.0) * attempted_rounds
+            item["post_repair_strict_attempted_weighted_sum"] += (_safe_float(row.get("post_repair_strict_success"), 0.0) or 0.0) * attempted_rounds
+            item["repair_used_attempted_weighted_sum"] += (_safe_float(row.get("repair_used"), 0.0) or 0.0) * attempted_rounds
+            item["repair_attempts_attempted_weighted_sum"] += (_safe_float(row.get("repair_attempts"), 0.0) or 0.0) * attempted_rounds
+
+            json_parse_fail_rate = _safe_float(row.get("json_parse_failed"), 0.0) or 0.0
+            one_shot_code_extracted_rate = _safe_float(row.get("one_shot_code_extracted"), 0.0) or 0.0
+            one_shot_runtime_success_rate = _safe_float(row.get("one_shot_runtime_success"), 0.0) or 0.0
+            admission_rate = _safe_float(row.get("admitted"), 0.0) or 0.0
+
+            item["json_parse_fail_attempted_weighted_sum"] += json_parse_fail_rate * attempted_rounds
+            item["code_extraction_fail_attempted_weighted_sum"] += (1.0 - one_shot_code_extracted_rate) * attempted_rounds
+            item["one_shot_runtime_fail_attempted_weighted_sum"] += (1.0 - one_shot_runtime_success_rate) * attempted_rounds
+            item["admission_fail_attempted_weighted_sum"] += (1.0 - admission_rate) * attempted_rounds
 
     return grouped
 
@@ -203,39 +314,39 @@ def _get_agent_profiles() -> List[str]:
     return [profile.agent_id for profile in default_agent_profiles()]
 
 
-def _build_role_model_metric_matrix(batch_dir: str, source_key: str) -> pd.DataFrame:
+def _build_role_model_metric_matrix(batch_dir: str, source_key: str, include_meta_first_round: bool = True) -> pd.DataFrame:
     roles = _get_agent_profiles()
     grouped: Dict[str, Dict[str, Dict[str, float]]] = {}
 
-    for summary_path in _collect_agent_average_files(batch_dir):
-        exp_dir = os.path.dirname(summary_path)
-        label_map = _load_backend_label_map(exp_dir)
+    round_records = _collect_agent_round_records(
+        batch_dir,
+        include_meta_first_round=include_meta_first_round,
+    )
 
-        try:
-            with open(summary_path, "r", encoding="utf-8") as handle:
-                exp_data = json.load(handle)
-        except Exception:
+    key_map = {
+        "avg_survival_days": "survival_days",
+        "avg_strategy_complexity": "strategy_complexity",
+    }
+    row_key = key_map.get(source_key)
+    if row_key is None:
+        return pd.DataFrame(index=roles)
+
+    for row in round_records:
+        if not bool(row.get("performance_valid", False)):
             continue
 
-        averages = exp_data.get("agent_averages", {})
-        if not isinstance(averages, dict):
+        role_name = str(row.get("role", ""))
+        if role_name not in roles:
+            continue
+        model_name = str(row.get("model", "Unknown Model"))
+        value = _safe_float(row.get(row_key), None)
+        if value is None:
             continue
 
-        for role_name in roles:
-            stats = averages.get(role_name)
-            if not isinstance(stats, dict):
-                continue
-
-            raw_model_name = str(stats.get("model_used", "Unknown Model"))
-            model_name = label_map.get(role_name, raw_model_name)
-            _, round_count = _parse_death_count(stats.get("death_count", "0/0"))
-            if round_count <= 0:
-                continue
-
-            model_bucket = grouped.setdefault(model_name, {})
-            role_bucket = model_bucket.setdefault(role_name, {"weighted_sum": 0.0, "rounds": 0.0})
-            role_bucket["weighted_sum"] += float(stats.get(source_key, 0.0)) * round_count
-            role_bucket["rounds"] += float(round_count)
+        model_bucket = grouped.setdefault(model_name, {})
+        role_bucket = model_bucket.setdefault(role_name, {"weighted_sum": 0.0, "rounds": 0.0})
+        role_bucket["weighted_sum"] += float(value)
+        role_bucket["rounds"] += 1.0
 
     model_names = sorted(grouped.keys())
     matrix = pd.DataFrame(index=roles, columns=model_names, dtype=float)
@@ -251,37 +362,31 @@ def _build_role_model_metric_matrix(batch_dir: str, source_key: str) -> pd.DataF
     return matrix
 
 
-def _build_role_model_survival_matrix(batch_dir: str) -> pd.DataFrame:
-    return _build_role_model_metric_matrix(batch_dir, "avg_survival_days")
+def _build_role_model_survival_matrix(batch_dir: str, include_meta_first_round: bool = True) -> pd.DataFrame:
+    return _build_role_model_metric_matrix(batch_dir, "avg_survival_days", include_meta_first_round=include_meta_first_round)
 
 
-def _build_role_model_complexity_matrix(batch_dir: str) -> pd.DataFrame:
-    return _build_role_model_metric_matrix(batch_dir, "avg_strategy_complexity")
+def _build_role_model_complexity_matrix(batch_dir: str, include_meta_first_round: bool = True) -> pd.DataFrame:
+    return _build_role_model_metric_matrix(batch_dir, "avg_strategy_complexity", include_meta_first_round=include_meta_first_round)
 
 
-def _build_role_model_rows_from_batch(batch_dir: str, agent_id: str) -> List[Dict[str, object]]:
+def _build_role_model_rows_from_batch(batch_dir: str, agent_id: str, include_meta_first_round: bool = True) -> List[Dict[str, object]]:
     grouped: Dict[str, Dict[str, object]] = {}
 
-    for summary_path in _collect_agent_average_files(batch_dir):
-        exp_dir = os.path.dirname(summary_path)
-        label_map = _load_backend_label_map(exp_dir)
+    round_records = _collect_agent_round_records(
+        batch_dir,
+        include_meta_first_round=include_meta_first_round,
+    )
 
-        try:
-            with open(summary_path, "r", encoding="utf-8") as handle:
-                exp_data = json.load(handle)
-        except Exception:
+    for row in round_records:
+        if str(row.get("role")) != agent_id:
             continue
 
-        averages = exp_data.get("agent_averages", {})
-        stats = averages.get(agent_id)
-        if not isinstance(stats, dict):
-            continue
-
-        raw_model_name = str(stats.get("model_used", "Unknown Model"))
-        model_name = label_map.get(agent_id, raw_model_name)
-        death_count, round_count = _parse_death_count(stats.get("death_count", "0/0"))
+        model_name = str(row.get("model", "Unknown Model"))
+        round_count = 1 if bool(row.get("performance_valid", False)) else 0
         if round_count <= 0:
             continue
+        death_count = 1 if (_safe_float(row.get("final_hp"), 1.0) or 1.0) <= 0 else 0
 
         entry = grouped.setdefault(
             model_name,
@@ -299,10 +404,10 @@ def _build_role_model_rows_from_batch(batch_dir: str, agent_id: str) -> List[Dic
 
         entry["deaths"] += death_count
         entry["rounds"] += round_count
-        entry["weighted_sums"]["Survival Days"] += (_safe_float(stats.get("avg_survival_days"), 0.0) or 0.0) * round_count
-        entry["weighted_sums"]["Daily Bid"] += (_safe_float(stats.get("avg_daily_bid"), 0.0) or 0.0) * round_count
-        entry["weighted_sums"]["Strict Success Rate (%)"] += (_safe_float(stats.get("avg_strict_success_rate"), 0.0) or 0.0) * round_count * 100.0
-        entry["weighted_sums"]["Code Complexity"] += (_safe_float(stats.get("avg_strategy_complexity"), 0.0) or 0.0) * round_count
+        entry["weighted_sums"]["Survival Days"] += (_safe_float(row.get("survival_days"), 0.0) or 0.0) * round_count
+        entry["weighted_sums"]["Daily Bid"] += (_safe_float(row.get("average_bid"), 0.0) or 0.0) * round_count
+        entry["weighted_sums"]["Strict Success Rate (%)"] += (_safe_float(row.get("strict_success_rate"), 0.0) or 0.0) * round_count * 100.0
+        entry["weighted_sums"]["Code Complexity"] += (_safe_float(row.get("strategy_complexity"), 0.0) or 0.0) * round_count
 
     rows = []
     for model_name, entry in grouped.items():
@@ -342,54 +447,42 @@ def _build_model_rows(perf_by_model: Dict[str, Dict[str, object]]) -> List[Dict[
     return rows
 
 
-def _build_model_rows_from_batch(batch_dir: str) -> List[Dict[str, object]]:
+def _build_model_rows_from_batch(batch_dir: str, include_meta_first_round: bool = True) -> List[Dict[str, object]]:
     grouped: Dict[str, Dict[str, object]] = {}
 
-    for summary_path in _collect_agent_average_files(batch_dir):
-        exp_dir = os.path.dirname(summary_path)
-        label_map = _load_backend_label_map(exp_dir)
+    round_records = _collect_agent_round_records(
+        batch_dir,
+        include_meta_first_round=include_meta_first_round,
+    )
 
-        try:
-            with open(summary_path, "r", encoding="utf-8") as handle:
-                exp_data = json.load(handle)
-        except Exception:
+    for row in round_records:
+        model_name = str(row.get("model", "Unknown Model"))
+
+        round_count = 1 if bool(row.get("performance_valid", False)) else 0
+        if round_count <= 0:
             continue
+        death_count = 1 if (_safe_float(row.get("final_hp"), 1.0) or 1.0) <= 0 else 0
 
-        averages = exp_data.get("agent_averages", {})
-        if not isinstance(averages, dict):
-            continue
-
-        for role_name, stats in averages.items():
-            if not isinstance(stats, dict):
-                continue
-
-            raw_model_name = str(stats.get("model_used", "Unknown Model"))
-            model_name = label_map.get(role_name, raw_model_name)
-
-            death_count, round_count = _parse_death_count(stats.get("death_count", "0/0"))
-            if round_count <= 0:
-                continue
-
-            entry = grouped.setdefault(
-                model_name,
-                {
-                    "deaths": 0,
-                    "rounds": 0,
-                    "weighted_sums": {
-                        "Survival Days": 0.0,
-                        "Daily Bid": 0.0,
-                        "Strict Success Rate (%)": 0.0,
-                        "Code Complexity": 0.0,
-                    },
+        entry = grouped.setdefault(
+            model_name,
+            {
+                "deaths": 0,
+                "rounds": 0,
+                "weighted_sums": {
+                    "Survival Days": 0.0,
+                    "Daily Bid": 0.0,
+                    "Strict Success Rate (%)": 0.0,
+                    "Code Complexity": 0.0,
                 },
-            )
+            },
+        )
 
-            entry["deaths"] += death_count
-            entry["rounds"] += round_count
-            entry["weighted_sums"]["Survival Days"] += (_safe_float(stats.get("avg_survival_days"), 0.0) or 0.0) * round_count
-            entry["weighted_sums"]["Daily Bid"] += (_safe_float(stats.get("avg_daily_bid"), 0.0) or 0.0) * round_count
-            entry["weighted_sums"]["Strict Success Rate (%)"] += (_safe_float(stats.get("avg_strict_success_rate"), 0.0) or 0.0) * round_count * 100.0
-            entry["weighted_sums"]["Code Complexity"] += (_safe_float(stats.get("avg_strategy_complexity"), 0.0) or 0.0) * round_count
+        entry["deaths"] += death_count
+        entry["rounds"] += round_count
+        entry["weighted_sums"]["Survival Days"] += (_safe_float(row.get("survival_days"), 0.0) or 0.0) * round_count
+        entry["weighted_sums"]["Daily Bid"] += (_safe_float(row.get("average_bid"), 0.0) or 0.0) * round_count
+        entry["weighted_sums"]["Strict Success Rate (%)"] += (_safe_float(row.get("strict_success_rate"), 0.0) or 0.0) * round_count * 100.0
+        entry["weighted_sums"]["Code Complexity"] += (_safe_float(row.get("strategy_complexity"), 0.0) or 0.0) * round_count
 
     rows: List[Dict[str, object]] = []
     for model_name, entry in grouped.items():
@@ -412,30 +505,65 @@ def _build_model_rows_from_batch(batch_dir: str) -> List[Dict[str, object]]:
     return rows
 
 
-def _build_role_rows(perf_by_agent: Dict[str, Dict[str, object]]) -> List[Dict[str, object]]:
-    profile_map = {
-        profile.agent_id: profile
-        for profile in default_agent_profiles()
-    }
+def _build_role_rows_from_batch(batch_dir: str, include_meta_first_round: bool = True) -> List[Dict[str, object]]:
+    profile_map = {profile.agent_id: profile for profile in default_agent_profiles()}
+    grouped: Dict[str, Dict[str, object]] = {}
+
+    round_records = _collect_agent_round_records(
+        batch_dir,
+        include_meta_first_round=include_meta_first_round,
+    )
+
+    for row in round_records:
+        role = str(row.get("role", "unknown"))
+        round_count = 1 if bool(row.get("performance_valid", False)) else 0
+        if round_count <= 0:
+            continue
+
+        death_count = 1 if (_safe_float(row.get("final_hp"), 1.0) or 1.0) <= 0 else 0
+        entry = grouped.setdefault(
+            role,
+            {
+                "deaths": 0,
+                "rounds": 0,
+                "weighted_sums": {
+                    "Survival Days": 0.0,
+                    "Daily Bid": 0.0,
+                    "Strict Success Rate (%)": 0.0,
+                    "Code Complexity": 0.0,
+                },
+            },
+        )
+
+        entry["deaths"] += death_count
+        entry["rounds"] += round_count
+        entry["weighted_sums"]["Survival Days"] += (_safe_float(row.get("survival_days"), 0.0) or 0.0)
+        entry["weighted_sums"]["Daily Bid"] += (_safe_float(row.get("average_bid"), 0.0) or 0.0)
+        entry["weighted_sums"]["Strict Success Rate (%)"] += (_safe_float(row.get("strict_success_rate"), 0.0) or 0.0) * 100.0
+        entry["weighted_sums"]["Code Complexity"] += (_safe_float(row.get("strategy_complexity"), 0.0) or 0.0)
+
     rows = []
-    for agent_id, stats in perf_by_agent.items():
-        mortality_str = str(stats.get("global_mortality_rate", "0%"))
-        profile = profile_map.get(agent_id)
-        if profile is None:
-            role_label = agent_id
-        else:
-            role_label = f"{agent_id}({int(profile.daily_salary)},{int(profile.water_requirement)})"
+    for role, entry in grouped.items():
+        rounds = entry["rounds"]
+        if rounds <= 0:
+            continue
+
+        profile = profile_map.get(role)
+        role_label = role if profile is None else f"{role}({int(profile.daily_salary)},{int(profile.water_requirement)})"
+        mortality_pct = (entry["deaths"] / rounds) * 100.0
+
         rows.append(
             {
                 "Role": role_label,
-                "Survival Days": _safe_float(stats.get("grand_avg_survival_days"), 0.0) or 0.0,
-                "Mortality Rate (%)": mortality_str,
-                "Daily Bid": _safe_float(stats.get("grand_avg_daily_bid"), 0.0) or 0.0,
-                "Strict Success Rate (%)": (_safe_float(stats.get("grand_avg_strict_success_rate"), 0.0) or 0.0) * 100.0,
-                "Code Complexity": _safe_float(stats.get("grand_avg_strategy_complexity"), 0.0) or 0.0,
-                "_mortality_numeric": _parse_percent(mortality_str),
+                "Survival Days": entry["weighted_sums"]["Survival Days"] / rounds,
+                "Mortality Rate (%)": f"{mortality_pct:.1f}%",
+                "Daily Bid": entry["weighted_sums"]["Daily Bid"] / rounds,
+                "Strict Success Rate (%)": entry["weighted_sums"]["Strict Success Rate (%)"] / rounds,
+                "Code Complexity": entry["weighted_sums"]["Code Complexity"] / rounds,
+                "_mortality_numeric": mortality_pct,
             }
         )
+
     return rows
 
 
@@ -767,6 +895,12 @@ def main() -> None:
     parser.add_argument("--log-dir", type=str, default="log", help="Root log directory.")
     parser.add_argument("--batch", type=str, required=True, help="Batch folder name (e.g., batch_004).")
     parser.add_argument("--output-dir", type=str, default=None, help="Output folder (defaults to batch/output_analysis).")
+    parser.add_argument(
+        "--meta-first-round",
+        type=_str2bool,
+        default=True,
+        help="Whether to include meta round 1 in statistics (true/false).",
+    )
     args = parser.parse_args()
 
     batch_dir = os.path.join(args.log_dir, args.batch)
@@ -780,7 +914,12 @@ def main() -> None:
     with open(report_path, "r", encoding="utf-8") as handle:
         report = json.load(handle)
 
-    grouped = _aggregate_model_stats_from_batch(batch_dir)
+    include_meta_first_round = bool(args.meta_first_round)
+
+    grouped = _aggregate_model_stats_from_batch(
+        batch_dir,
+        include_meta_first_round=include_meta_first_round,
+    )
 
     reliability_rows = _build_model_reliability_rows(grouped)
     _save_simple_table(
@@ -808,7 +947,10 @@ def main() -> None:
         descending=True,
     )
 
-    rows = _build_model_rows_from_batch(batch_dir)
+    rows = _build_model_rows_from_batch(
+        batch_dir,
+        include_meta_first_round=include_meta_first_round,
+    )
     if not rows:
         perf_by_model = report.get("performance_by_model", {})
         rows = _build_model_rows(perf_by_model)
@@ -882,7 +1024,10 @@ def main() -> None:
         path=os.path.join(output_dir, "fig_complexity_survival_runtime_bubble.png"),
     )
 
-    survival_matrix = _build_role_model_survival_matrix(batch_dir)
+    survival_matrix = _build_role_model_survival_matrix(
+        batch_dir,
+        include_meta_first_round=include_meta_first_round,
+    )
     _save_role_model_matrix(
         batch_dir,
         output_dir,
@@ -891,7 +1036,10 @@ def main() -> None:
         "Average Survival Days by Role and Model",
     )
 
-    complexity_matrix = _build_role_model_complexity_matrix(batch_dir)
+    complexity_matrix = _build_role_model_complexity_matrix(
+        batch_dir,
+        include_meta_first_round=include_meta_first_round,
+    )
     _save_role_model_matrix(
         batch_dir,
         output_dir,
@@ -900,8 +1048,10 @@ def main() -> None:
         "Average Code Complexity by Role and Model",
     )
 
-    perf_by_agent = report.get("performance_by_agent", {})
-    role_rows = _build_role_rows(perf_by_agent)
+    role_rows = _build_role_rows_from_batch(
+        batch_dir,
+        include_meta_first_round=include_meta_first_round,
+    )
     if role_rows:
         role_df = pd.DataFrame(role_rows)
         role_df_sorted = role_df.sort_values("Survival Days", ascending=False)
@@ -917,10 +1067,18 @@ def main() -> None:
         _save_markdown_table(formatted_role_table, os.path.join(output_dir, "role_summary_table.md"))
         _save_table_png(formatted_role_table, os.path.join(output_dir, "role_summary_table.png"), title="Role-Level Performance Summary")
 
-    alex_rows = _build_role_model_rows_from_batch(batch_dir, "Alex")
+    alex_rows = _build_role_model_rows_from_batch(
+        batch_dir,
+        "Alex",
+        include_meta_first_round=include_meta_first_round,
+    )
     _save_model_comparison_table(alex_rows, output_dir, "Alex_table", "Model Performance When Selected as Alex")
 
-    eric_rows = _build_role_model_rows_from_batch(batch_dir, "Eric")
+    eric_rows = _build_role_model_rows_from_batch(
+        batch_dir,
+        "Eric",
+        include_meta_first_round=include_meta_first_round,
+    )
     _save_model_comparison_table(eric_rows, output_dir, "Eric_table", "Model Performance When Selected as Eric")
 
 

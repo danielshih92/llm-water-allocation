@@ -2,7 +2,7 @@
 REVEAL_OPPONENT_CODE = True
 
 # Opponent info exposure across meta-rounds:
-# full_code_access | outcome_only | no_opponent_info
+# full_code_access | no_opponent_info
 OPPONENT_INFO_MODE = "full_code_access"
 
 OPENAI_ENGINE = "gpt-5.4"

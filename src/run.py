@@ -8,7 +8,7 @@ from typing import Any, Dict, List, Optional
 
 import config
 from agent_interface import AgentRunner, create_backend
-from prompt_builder import PromptBuilder
+from prompt_builder import PromptBuilder, normalize_opponent_info_mode
 from wac_programmatic import (
     SCENARIOS,
     AgentProfile,
@@ -836,6 +836,7 @@ def run_experiment(
         )
 
     prompt_builder = PromptBuilder()
+    opponent_info_mode = normalize_opponent_info_mode(args.opponent_info_mode)
 
     if args.backend_mode == "per-agent":
         backend_map = {}
@@ -975,8 +976,6 @@ def run_experiment(
                 f"  Model: {model_name}"
             )
 
-            opponent_info_mode = args.opponent_info_mode
-
             if opponent_info_mode == "full_code_access":
                 opponent_code = {
                     agent_id: code
@@ -985,20 +984,6 @@ def run_experiment(
                 }
             else:
                 opponent_code = {}
-
-            opponent_history = {}
-            self_summary = None
-
-            if history.get("agent_summaries"):
-                summaries = history["agent_summaries"]
-                self_summary = summaries.get(profile.agent_id)
-
-                if opponent_info_mode in ["full_code_access", "outcome_only"]:
-                    opponent_history = {
-                        agent_id: summary
-                        for agent_id, summary in summaries.items()
-                        if agent_id != profile.agent_id
-                    }
 
             print(
                 "  Generating reasoning/code..."
@@ -1016,8 +1001,6 @@ def run_experiment(
                     "last_meta_round": history.get(
                         "last_meta_round"
                     ),
-                    "self_summary": self_summary,
-                    "opponent_summaries": opponent_history,
                 },
                 opponent_info_mode=opponent_info_mode,
                 show_opponent_code=(
@@ -1441,11 +1424,6 @@ def main() -> None:
         "--opponent-info-mode",
         type=str,
         default=config.OPPONENT_INFO_MODE,
-        choices=[
-            "full_code_access",
-            "outcome_only",
-            "no_opponent_info",
-        ],
         help="Opponent info exposure across meta-rounds",
     )
 

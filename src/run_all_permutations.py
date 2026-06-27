@@ -8,6 +8,7 @@ from datetime import datetime
 
 import config
 import run as run_module
+from prompt_builder import normalize_opponent_info_mode
 
 AGENTS = config.AGENTS
 MODELS = config.BATCH_MODELS
@@ -481,11 +482,6 @@ def main():
         "--opponent-info-mode",
         type=str,
         default=None,
-        choices=[
-            "full_code_access",
-            "outcome_only",
-            "no_opponent_info",
-        ],
         help="Opponent info exposure across meta-rounds (optional).",
     )
     parser.add_argument(
@@ -529,6 +525,9 @@ def main():
 
     batch_start_time = time.time()
     experiment_summary = []
+    effective_opponent_info_mode = normalize_opponent_info_mode(
+        args.opponent_info_mode or config.OPPONENT_INFO_MODE
+    )
 
     for offset, perm in enumerate(permutations_slice):
         experiment_start_time = time.time()
@@ -562,7 +561,7 @@ def main():
             backend_base_url=None,
             output_dir=os.path.join(project_root, "log"),
             experiment_id=experiment_id,
-            opponent_info_mode=(args.opponent_info_mode or config.OPPONENT_INFO_MODE),
+            opponent_info_mode=effective_opponent_info_mode,
             no_plots=args.no_plots,
             compact_meta_log=True,
             evaluation_mode=args.evaluation_mode,

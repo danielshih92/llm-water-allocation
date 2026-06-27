@@ -1,8 +1,31 @@
 import json
-import re
 from typing import Any, Dict, Optional
 
 import config
+
+
+ALLOWED_OPPONENT_INFO_MODES = {
+    "full_code_access",
+    "no_opponent_info",
+}
+
+
+def normalize_opponent_info_mode(opponent_info_mode: Optional[str]) -> str:
+    mode = opponent_info_mode or config.OPPONENT_INFO_MODE
+
+    if mode == "outcome_only":
+        raise ValueError(
+            "opponent_info_mode='outcome_only' has been removed. "
+            "Use 'full_code_access' or 'no_opponent_info'."
+        )
+
+    if mode not in ALLOWED_OPPONENT_INFO_MODES:
+        raise ValueError(
+            f"Unsupported opponent_info_mode='{mode}'. "
+            "Use 'full_code_access' or 'no_opponent_info'."
+        )
+
+    return mode
 
 
 class PromptBuilder:
@@ -20,47 +43,14 @@ class PromptBuilder:
         if history and isinstance(history, dict):
             last_meta_round = history.get("last_meta_round")
             if last_meta_round is not None:
-                history_payload["last_meta_round"] = last_meta_round
-
-            if history.get("self_summary") is not None:
-                history_payload["self_summary"] = history.get("self_summary")
-
-            if history.get("opponent_summaries") is not None:
-                history_payload["opponent_summaries"] = history.get("opponent_summaries")
-
-            if not history_payload:
-                keys = list(history.keys())
-                if keys:
-                    try:
-                        latest_key = max(
-                            keys,
-                            key=lambda x: tuple(int(s) for s in re.findall(r"\d+", x))
-                            if re.findall(r"\d+", x)
-                            else (0,),
-                        )
-                        data = history[latest_key]
-                        
-                        if isinstance(data, dict) and "summary" in data:
-                            history_payload = data["summary"]
-                        else:
-                            history_payload = data
-                    except Exception:
-                        latest_key = keys[-1]
-                        history_payload = history[latest_key]
+                history_payload["previous_meta_round_index"] = last_meta_round
 
         
         if show_opponent_code is None:
             show_opponent_code = config.REVEAL_OPPONENT_CODE
 
-        if opponent_info_mode is None:
-            if show_opponent_code:
-                opponent_info_mode = "full_code_access"
-            elif history_payload.get("opponent_summaries"):
-                opponent_info_mode = "outcome_only"
-            else:
-                opponent_info_mode = "no_opponent_info"
+        opponent_info_mode = normalize_opponent_info_mode(opponent_info_mode)
 
-        history_block = json.dumps(history_payload, indent=2)
         state_block = json.dumps(game_state or {}, indent=2)      
         profile_block = json.dumps(agent_profile or {}, indent=2)  
 
@@ -75,14 +65,23 @@ class PromptBuilder:
 
         opponent_code_section = ""
 
-        if show_opponent_code and opponent_code:
+        if opponent_info_mode == "full_code_access" and show_opponent_code and opponent_code:
             opponent_block = json.dumps(opponent_code or {}, indent=2)
 
             opponent_code_section = (
-                f"=== CRITICAL: OPPONENT SOURCE CODE ===\n"
-                f"Below is the exact Python code currently used by your opponents in this meta-round.\n"
-                f"Analyze it to find their tactical flaws:\n"
+                f"=== PREVIOUS META-ROUND OPPONENT STRATEGY CODE ===\n"
+                f"Below is the Python strategy code used by your opponents in the previous meta-round.\n"
+                f"This is historical code evidence only. Current-day opponent bids are simultaneous and hidden.\n"
+                f"Use the code to infer robust bidding tendencies, possible weaknesses, and potential risks.\n"
+                f"Do not overfit to a single opponent rule. Prioritize your own survival, budget discipline, and calibrated risk control.\n"
                 f"{opponent_block}\n\n"
+            )
+
+        latest_meta_context_section = ""
+        if history_payload:
+            latest_meta_context_section = (
+                f"LATEST METAROUND INDEX (NON-OUTCOME METADATA):\n"
+                f"{json.dumps(history_payload, indent=2)}\n\n"
             )
 
         intro_line = (
@@ -91,24 +90,20 @@ class PromptBuilder:
 
         if opponent_info_mode == "full_code_access":
             context_line = (
-                "You have opponent source code and last meta-round outcomes.\n"
+                "You have access only to opponents' previous meta-round strategy code. "
+                "You do not receive their previous outcomes or performance summaries.\n"
             )
             reasoning_focus = (
-                "Keep reasoning under 60 words, focusing on how you exploit their YESTERDAY code/trace.\n"
-            )
-        elif opponent_info_mode == "outcome_only":
-            context_line = (
-                "You have last meta-round outcomes for all agents, but no opponent code.\n"
-            )
-            reasoning_focus = (
-                "Keep reasoning under 60 words, focusing on outcome patterns from the last meta-round.\n"
+                "Keep reasoning under 60 words. Focus on robust interpretation of opponent code, "
+                "calibrated bidding, budget discipline, and avoiding unnecessary overbidding.\n"
             )
         else:
             context_line = (
-                "No opponent info is available; only your own last meta-round outcome is provided.\n"
+                "No cross-round opponent memory is available. Use only your profile, current meta-round state, "
+                "game rules, and the runtime opponent status fields available inside get_bid during the simulation.\n"
             )
             reasoning_focus = (
-                "Keep reasoning under 60 words, focusing on your own last outcome and survival.\n"
+                "Keep reasoning under 60 words. Focus on budget-safe reasoning, calibrated risk control, and survival.\n"
             )
 
         return (
@@ -122,8 +117,7 @@ class PromptBuilder:
             f"Your Profile:\n{profile_block}\n\n"
             f"Current Meta-Round State:\n{state_block}\n\n"
             f"{opponent_code_section}"
-            
-            f"LATEST METAROUND CONTEXT (YESTERDAY):\n{history_block}\n\n"
+            f"{latest_meta_context_section}"
 
             # ============================================================
             # Code Prompt
@@ -141,32 +135,23 @@ class PromptBuilder:
             "8. Bidding is simultaneous. Current-day opponent bids are hidden.\n\n"
             "9. CRITICAL INDEX RULE: In Python, list/array indices MUST be integers. Since day_context['supply'] is passed as a float (e.g., 19.0), any mathematical operations like floor division (e.g., supply // WATER_REQ) will produce a FLOAT (e.g., 1.0). You MUST explicitly wrap ALL list indices or subscript selectors with int() (e.g., my_list[int(target_index)]) to strictly prevent float index RuntimeErrors.\n\n"
 
-            "10. High-Level Game Theory Example:\n"
+            "10. Minimal Safe Interface Example only. This example only demonstrates valid input handling and budget-safe return values. Do NOT copy it as the final strategy.\n"
             "def get_bid(day_context, my_status, opponents_status):\n"
             "    DAILY_SALARY = 70\n"
-            "    alive_opponents = [o for o in opponents_status.values() if o['alive']]\n"
-            "    if not alive_opponents:\n"
-            "        return min(my_status['budget'], DAILY_SALARY * 0.4)\n\n"
-            "    # 1. Look at yesterday's situation\n"
-            "    yesterday_bids = []\n"
-            "    for opp in alive_opponents:\n"
-            "        last_bid = opp.get('last_bid', 0.0)\n"
-            "        if last_bid is not None:\n"
-            "            try:\n"
-            "                yesterday_bids.append(float(last_bid))\n"
-            "            except Exception:\n"
-            "                pass\n\n"
-            "    # 2. Decision logic based on yesterday's highest pressure\n"
-            "    if yesterday_bids:\n"
-            "        highest_prev_bid = max(yesterday_bids)\n"
-            "        if highest_prev_bid >= DAILY_SALARY * 0.85:\n"
-            "            if my_status['hp'] > 3:\n"
-            "                return min(my_status['budget'], DAILY_SALARY * 0.3)\n"
-            "            return min(my_status['budget'], DAILY_SALARY * 0.95)\n"
-            "        return min(my_status['budget'], max(DAILY_SALARY * 0.5, highest_prev_bid + 1.5))\n\n"
-            "    if my_status['hp'] <= 2:\n"
-            "        return min(my_status['budget'], DAILY_SALARY * 0.9)\n"
-            "    return min(my_status['budget'], DAILY_SALARY * 0.55)\n\n"
+            "    hp = float(my_status.get('hp', 0))\n"
+            "    budget = float(my_status.get('budget', 0))\n"
+            "    no_water_days = int(my_status.get('no_water_days', 0))\n\n"
+            "    if budget <= 0:\n"
+            "        return 0.0\n\n"
+            "    # Basic risk-aware fallback. This is only an interface example,\n"
+            "    # not a recommended final strategy.\n"
+            "    if hp <= 2 or no_water_days >= 2:\n"
+            "        bid = DAILY_SALARY * 0.90\n"
+            "    elif hp <= 4 or no_water_days >= 1:\n"
+            "        bid = DAILY_SALARY * 0.65\n"
+            "    else:\n"
+            "        bid = DAILY_SALARY * 0.45\n\n"
+            "    return max(0.0, min(budget, bid))\n\n"
 
             "11. DO NOT use undefined variables.\n"
             "12. DO NOT use markdown code fences (```).\n\n"
