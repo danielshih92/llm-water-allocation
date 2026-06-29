@@ -398,7 +398,12 @@ def build_inference_for_experiment(exp_dir, source_log_dir):
             reasoning_cot = ""
             for agent_entry in payload.get("agents", []):
                 if agent_entry.get("agent_id") == agent_id:
-                    reasoning_cot = agent_entry.get("reasoning_cot") or ""
+                    generation_stats = agent_entry.get("generation_stats") or {}
+                    reasoning_cot = (
+                        generation_stats.get("one_shot_reasoning")
+                        or agent_entry.get("reasoning_cot")
+                        or ""
+                    )
                     break
 
             cot_history.append({

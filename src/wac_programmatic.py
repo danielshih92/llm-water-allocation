@@ -39,16 +39,11 @@ class AgentSubmission:
 
 def default_agent_profiles() -> List[AgentProfile]:
     return [
-        # AgentProfile("Alex", 13, 70),
-        # AgentProfile("Bob", 9, 90),
-        # AgentProfile("Cindy", 13, 150),
-        # AgentProfile("David", 7, 80),
-        # AgentProfile("Eric", 8, 140),
-        AgentProfile("Alex", 7, 70),
-        AgentProfile("Bob", 7, 70),
-        AgentProfile("Cindy", 7, 70),
-        AgentProfile("David", 7, 70),
-        AgentProfile("Eric", 7, 70),
+        AgentProfile("Alex", 13, 70),
+        AgentProfile("Bob", 9, 90),
+        AgentProfile("Cindy", 13, 150),
+        AgentProfile("David", 7, 80),
+        AgentProfile("Eric", 8, 140),
     ]
 
 
@@ -150,7 +145,6 @@ class WACProgrammaticEnv:
                 "hp_after": None,
                 "budget_after": None,
                 "status": None,
-                "error": None,
             }
 
         bid = trace.get(
@@ -168,7 +162,6 @@ class WACProgrammaticEnv:
             "hp_after": trace.get("hp_after"),
             "budget_after": trace.get("budget_after"),
             "status": trace.get("status"),
-            "error": trace.get("error"),
         }    
     
     def _build_opponents_status(

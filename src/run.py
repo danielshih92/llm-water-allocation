@@ -54,12 +54,14 @@ def _build_game_state(
     supply_range: List[int],
     episode_days: int,
     meta_round_id: int,
+    players: List[Dict[str, object]],
 ) -> Dict[str, object]:
     return {
         "scenario": scenario,
         "supply_range": supply_range,
         "episode_days": episode_days,
         "meta_round_id": meta_round_id,
+        "players": players,
     }
 
 
@@ -934,6 +936,14 @@ def run_experiment(
             ),
             env.episode_days,
             meta_round_id,
+            [
+                {
+                    "agent_id": p.agent_id,
+                    "water_requirement": p.water_requirement,
+                    "daily_salary": p.daily_salary,
+                }
+                for p in profiles
+            ],
         )
 
         submissions: List[AgentSubmission] = []
@@ -1282,13 +1292,19 @@ def run_experiment(
             f"meta_round_{meta_round_id}"
         ] = round_summary
 
-        if int(record.get("outcome_valid", 0)) == 1:
-            previous_codes = {
-                submission.agent_id: submission.strategy_code
-                for submission in submissions
-            }
-        else:
-            previous_codes = {}
+        next_previous_codes: Dict[str, str] = {}
+        for submission in submissions:
+            agent_id = submission.agent_id
+            admitted = int(
+                generation_stats_by_agent.get(agent_id, {}).get("admitted", 0)
+            )
+
+            if admitted == 1:
+                next_previous_codes[agent_id] = submission.strategy_code
+            else:
+                next_previous_codes[agent_id] = "did not generate valid code successfully"
+
+        previous_codes = next_previous_codes
 
         meta_round_elapsed = (
             time.time()

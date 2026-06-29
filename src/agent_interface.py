@@ -503,7 +503,18 @@ class AgentRunner:
             "8. Always return a finite float or int.\n"
             "9. Never return a bid larger than my_status[\"budget\"].\n"
             "10. Be robust to missing opponent fields, e.g. use opp.get(\"last_bid\", 0).\n"
-            "11. Do not use markdown or code fences."
+            "11. Available builtins only: min, max, abs, round, float, int, len, sum, any, all, isinstance, dict, list, tuple, range, sorted, enumerate.\n"
+            "12. The math module is available as math, but imports are forbidden.\n"
+            "13. Do not use bool, str, type, hasattr, set, zip, map, filter, reversed, globals, locals, vars, compile.\n"
+            "14. Do not use dunder names or attributes containing double underscores.\n"
+            "15. Do not use float('inf'), float('-inf'), NaN, or infinity checks that require unavailable helpers.\n"
+            "16. If the broken code contains a forbidden name, remove every occurrence from the repaired code.\n"
+            "17. The returned value must always be a finite float in [0.0, my_status[\"budget\"]]. If you apply any minimum bid or urgency floor, clamp to budget AFTER that floor.\n"
+            "18. End with this safety pattern or an equivalent final clamp:\n"
+            "    bid = max(0.0, bid)\n"
+            "    bid = min(budget, bid)\n"
+            "    return float(bid)\n"
+            "19. Do not use markdown or code fences."
         )
 
         repair_error = None

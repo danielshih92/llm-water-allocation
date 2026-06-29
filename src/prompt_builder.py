@@ -53,6 +53,10 @@ class PromptBuilder:
 
         state_block = json.dumps(game_state or {}, indent=2)      
         profile_block = json.dumps(agent_profile or {}, indent=2)  
+        players_block = json.dumps(
+            game_state.get("players", []) if isinstance(game_state, dict) else [],
+            indent=2,
+        )
 
         supply_range = game_state.get("supply_range", [10, 20]) if isinstance(game_state, dict) else [10, 20]
 
@@ -70,10 +74,8 @@ class PromptBuilder:
 
             opponent_code_section = (
                 f"=== PREVIOUS META-ROUND OPPONENT STRATEGY CODE ===\n"
-                f"Below is the Python strategy code used by your opponents in the previous meta-round.\n"
-                f"This is historical code evidence only. Current-day opponent bids are simultaneous and hidden.\n"
-                f"Use the code to infer robust bidding tendencies, possible weaknesses, and potential risks.\n"
-                f"Do not overfit to a single opponent rule. Prioritize your own survival, budget discipline, and calibrated risk control.\n"
+                f"Historical code only (from previous meta-round), not current-day hidden bids.\n"
+                f"Use it to infer robust tendencies and risks; avoid brittle overfitting.\n"
                 f"{opponent_block}\n\n"
             )
 
@@ -84,23 +86,39 @@ class PromptBuilder:
                 f"{json.dumps(history_payload, indent=2)}\n\n"
             )
 
+        all_agents_static_section = ""
+        if isinstance(game_state, dict) and game_state.get("players"):
+            all_agents_static_section = (
+                "ALL AGENTS INITIAL STATIC PROFILE (KNOWN BEFORE SIMULATION):\n"
+                "Public setup constants: agent_id, water_requirement, daily_salary.\n"
+                f"{players_block}\n\n"
+            )
+
         intro_line = (
             "You are participating in the Water Allocation Challenge programmatic game.\n"
+            "Episode length is 10 simulation days per meta-round; your submission is strategy code only.\n"
+            "Daily supply is randomly sampled in [MIN_SUPPLY, MAX_SUPPLY].\n"
+            "Initial state: HP=8, max HP=10, no_water_days=1.\n"
+            "Each day: alive agents get salary, then submit simultaneous bids (current-day opponent bids are hidden).\n"
+            "Allocation rule: a winner must fit remaining supply by water_requirement.\n"
+            "Winner update: HP += 2 (cap 10), budget -= bid, no_water_days = 1.\n"
+            "Non-winner update: HP -= no_water_days, then no_water_days += 1.\n"
+            "Death rule: HP <= 0 means dead. Tie-break at same bid: lower water_requirement first.\n"
         )
 
         if opponent_info_mode == "full_code_access":
             context_line = (
-                "You have access only to opponents' previous meta-round strategy code. "
-                "You do not receive their previous outcomes or performance summaries.\n"
+                "You can use opponents' previous meta-round strategy code only (no prior outcomes). "
+                "Assume opponents also adapt from last meta-round code; avoid one-step exploitation.\n"
             )
             reasoning_focus = (
-                "Keep reasoning under 60 words. Focus on robust interpretation of opponent code, "
+                "Keep reasoning under 100 words. Focus on robust interpretation of opponent code, "
                 "calibrated bidding, budget discipline, and avoiding unnecessary overbidding.\n"
             )
         else:
             context_line = (
                 "No cross-round opponent memory is available. Use only your profile, current meta-round state, "
-                "game rules, and the runtime opponent status fields available inside get_bid during the simulation.\n"
+                "game rules, and runtime opponents_status inside get_bid.\n"
             )
             reasoning_focus = (
                 "Keep reasoning under 60 words. Focus on budget-safe reasoning, calibrated risk control, and survival.\n"
@@ -112,10 +130,11 @@ class PromptBuilder:
             # ============================================================
             f"{intro_line}"
             f"{context_line}"
-            "Analyze the available context to generate a winning bidding strategy.\n\n"
+            "Analyze the available context to generate a robust survival-oriented bidding strategy.\n\n"
 
             f"Your Profile:\n{profile_block}\n\n"
             f"Current Meta-Round State:\n{state_block}\n\n"
+            f"{all_agents_static_section}"
             f"{opponent_code_section}"
             f"{latest_meta_context_section}"
 
@@ -126,35 +145,74 @@ class PromptBuilder:
 
             "CRITICAL PYTHON RULES:\n"
             "1. Function MUST be exactly: def get_bid(day_context, my_status, opponents_status):\n"
-            "2. 'day_context' ONLY has fields: ['supply', 'day']\n"
-            "3. 'my_status' ONLY has fields: ['hp', 'budget', 'no_water_days']\n"
-            "4. 'opponents_status' is a dictionary keyed by opponent agent_id.\n"
-            "5. Each opponent state has: ['agent_id', 'hp', 'budget', 'no_water_days', 'alive', 'water_requirement', 'daily_salary', 'last_bid', 'last_status', 'last_hp_after', 'last_budget_after', 'trace_history'].\n"
-            "6. 'trace_history' is a compact list of that opponent's recent 2 day records. Each record has: ['day', 'bid', 'supply', 'hp_after', 'budget_after', 'status', 'error'].\n"
-            "7. Use 'last_bid', 'last_status', 'last_hp_after', and 'last_budget_after' for quick yesterday information. Use 'trace_history' only when you need the last 2 days of trend analysis.\n"
+            "2. day_context format:\n"
+            "   - day_context['day']: int, current simulation day index (1..10).\n"
+            "   - day_context['supply']: float, current day total water supply.\n"
+            "3. my_status format:\n"
+            "   - my_status['hp']: int, current HP.\n"
+            "   - my_status['budget']: float, current budget after salary accrual.\n"
+            "   - my_status['no_water_days']: int, current no-water counter for today's failure penalty.\n"
+            "4. opponents_status format:\n"
+            "   - Dictionary keyed by opponent agent_id.\n"
+            "   - Each opponent record may include these fields, but validation tests can omit optional fields:\n"
+            "     ['agent_id', 'hp', 'budget', 'no_water_days', 'alive', 'water_requirement', 'daily_salary', 'last_bid', 'last_status', 'last_hp_after', 'last_budget_after', 'trace_history'].\n"
+            "   - Always use .get(..., fallback) for opponent fields; never assume optional fields exist.\n"
+            "5. Field semantics and value types:\n"
+            "   - alive: truth value.\n"
+            "   - last_bid: float, opponent bid from previous simulation day (or 0.0 if unavailable).\n"
+            "   - last_status: text value or None. Typical values are 'alive' or 'dead'.\n"
+            "   - last_hp_after: int or null, opponent HP after previous day resolution.\n"
+            "   - last_budget_after: float or null, opponent budget after previous day resolution.\n"
+            "6. trace_history format and meaning:\n"
+            "   - A compact list containing the opponent's recent up-to-2 resolved day records.\n"
+            "   - Each record has ['day', 'bid', 'supply', 'hp_after', 'budget_after', 'status'].\n"
+            "   - status is a string: 'alive' or 'dead'.\n"
+            "7. trace_history extraction example (one opponent):\n"
+            "   trace_history = [\n"
+            "     {'day': 4, 'bid': 42.0, 'supply': 16.0, 'hp_after': 8, 'budget_after': 120.0, 'status': 'alive'},\n"
+            "     {'day': 5, 'bid': 30.0, 'supply': 11.0, 'hp_after': 7, 'budget_after': 160.0, 'status': 'alive'}\n"
+            "   ]\n"
+            "   Use trace_history[-1]['bid'] for the most recent resolved-day bid.\n"
             "8. Bidding is simultaneous. Current-day opponent bids are hidden.\n\n"
-            "9. CRITICAL INDEX RULE: In Python, list/array indices MUST be integers. Since day_context['supply'] is passed as a float (e.g., 19.0), any mathematical operations like floor division (e.g., supply // WATER_REQ) will produce a FLOAT (e.g., 1.0). You MUST explicitly wrap ALL list indices or subscript selectors with int() (e.g., my_list[int(target_index)]) to strictly prevent float index RuntimeErrors.\n\n"
+            "9. RESTRICTED PYTHON RUNTIME:\n"
+            "   - Available builtins only: min, max, abs, round, float, int, len, sum, any, all, isinstance, dict, list, tuple, range, sorted, enumerate.\n"
+            "   - The math module is available as math, but imports are forbidden.\n"
+            "   - Do NOT use: bool, str, type, hasattr, set, zip, map, filter, reversed, open, eval, exec, compile, globals, locals, vars.\n"
+            "   - Do NOT use import/from, file/network access, dunder names, or attributes containing double underscores.\n"
+            "   - Do NOT use float('inf'), float('-inf'), NaN, or infinity checks that require unavailable helpers.\n\n"
+            "10. CRITICAL INDEX RULE: In Python, list/array indices MUST be integers. Since day_context['supply'] is passed as a float (e.g., 19.0), any mathematical operations like floor division (e.g., supply // WATER_REQ) will produce a FLOAT (e.g., 1.0). You MUST explicitly wrap ALL list indices or subscript selectors with int() (e.g., my_list[int(target_index)]) to strictly prevent float index RuntimeErrors.\n\n"
+            "11. FINAL BID RULE: The returned value must always be a finite float in [0.0, budget]. If you apply any minimum bid or urgency floor, clamp to budget AFTER that floor.\n"
+            "   Safe final pattern:\n"
+            "   bid = max(0.0, bid)\n"
+            "   bid = min(budget, bid)\n"
+            "   return float(bid)\n\n"
 
-            "10. Minimal Safe Interface Example only. This example only demonstrates valid input handling and budget-safe return values. Do NOT copy it as the final strategy.\n"
+            "12. Minimal Safe Data-Access Example only. This demonstrates robust extraction of fields and types. Do NOT copy it as the final strategy.\n"
             "def get_bid(day_context, my_status, opponents_status):\n"
-            "    DAILY_SALARY = 70\n"
-            "    hp = float(my_status.get('hp', 0))\n"
-            "    budget = float(my_status.get('budget', 0))\n"
+            "    day = int(day_context.get('day', 1))\n"
+            "    supply = float(day_context.get('supply', 0.0))\n"
+            "    hp = int(my_status.get('hp', 0))\n"
+            "    budget = float(my_status.get('budget', 0.0))\n"
             "    no_water_days = int(my_status.get('no_water_days', 0))\n\n"
-            "    if budget <= 0:\n"
-            "        return 0.0\n\n"
-            "    # Basic risk-aware fallback. This is only an interface example,\n"
-            "    # not a recommended final strategy.\n"
-            "    if hp <= 2 or no_water_days >= 2:\n"
-            "        bid = DAILY_SALARY * 0.90\n"
-            "    elif hp <= 4 or no_water_days >= 1:\n"
-            "        bid = DAILY_SALARY * 0.65\n"
-            "    else:\n"
-            "        bid = DAILY_SALARY * 0.45\n\n"
-            "    return max(0.0, min(budget, bid))\n\n"
+            "    last_bids = []\n"
+            "    alive_opponents = 0\n"
+            "    for opp_id, opp in (opponents_status or {}).items():\n"
+            "        if opp.get('alive', False):\n"
+            "            alive_opponents += 1\n"
+            "        last_bid = float(opp.get('last_bid', 0.0) or 0.0)\n"
+            "        last_bids.append(last_bid)\n"
+            "        trace = opp.get('trace_history', [])\n"
+            "        if trace:\n"
+            "            recent = trace[-1]\n"
+            "            recent_status = recent.get('status')  # 'alive' or 'dead'\n"
+            "            _ = recent_status\n\n"
+            "    baseline = 0.0\n"
+            "    if budget > 0:\n"
+            "        baseline = min(budget, max(0.0, budget * 0.4))\n"
+            "    return float(max(0.0, min(budget, baseline)))\n\n"
 
-            "11. DO NOT use undefined variables.\n"
-            "12. DO NOT use markdown code fences (```).\n\n"
+            "13. DO NOT use undefined variables.\n"
+            "14. DO NOT use markdown code fences (```).\n\n"
 
             f"Agent Constants:\n"
             f"WATER_REQ = {agent_profile['water_requirement']}\n"

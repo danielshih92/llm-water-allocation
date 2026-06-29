@@ -33,7 +33,7 @@ Batch run (permutations)
 3) Run multiple slices into the same batch folder:
    python3 src/run_all_permutations.py --slice-start 1 --slice-end 120 --no-plots --batch-name batch_004 --opponent-info-mode full_code_access
 
-   python3 src/run_all_permutations.py --slice-start 1 --slice-end 3 --no-plots --batch-name test_all_the_same --meta-rounds 3 --opponent-info-mode full_code_access --seed 42 --scenario medium
+   python3 src/run_all_permutations.py --slice-start 1 --slice-end 3 --no-plots --batch-name batch_016_full_code_access_med --meta-rounds 3 --opponent-info-mode full_code_access --seed 42 --scenario medium
 
    python3 src/run_all_permutations.py --slice-start 1 --slice-end 3 --no-plots --batch-name batch_015_no_opp_info_med --meta-rounds 2 --opponent-info-mode full_code_access --seed 42 --scenario medium
 
@@ -80,8 +80,8 @@ tmux attach -t alympics
 source venv/bin/activate
 
 ---
-python temp/batch_table_plot.py --log-dir log --batch test_all_the_same --meta-first-round false
-python temp/exp_plot.py --log-dir log --batch test_all_the_same --exp exp_001
+python temp/batch_table_plot.py --log-dir log --batch test_all_the_same_prompt_fixed_v2_water_demand_high --meta-first-round false
+python temp/exp_plot.py --log-dir log --batch batch_016_full_code_access_med --exp exp_001
 
 
 ---
