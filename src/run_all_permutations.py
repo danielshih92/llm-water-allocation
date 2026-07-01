@@ -466,6 +466,12 @@ def main():
         help="Number of meta-rounds to run for each experiment.",
     )
     parser.add_argument(
+        "--episode-days",
+        type=int,
+        default=20,
+        help="Number of simulation days per meta-round.",
+    )
+    parser.add_argument(
         "--scenario",
         type=str,
         default="low",
@@ -476,7 +482,10 @@ def main():
         "--seed",
         type=int,
         default=None,
-        help="Base random seed forwarded to run.py (default: None for random supply).",
+        help=(
+            "Random seed forwarded to run.py. The same seed is reused for every "
+            "meta-round (default: None for random supply)."
+        ),
     )
     parser.add_argument(
         "--no-plots",
@@ -519,6 +528,8 @@ def main():
         raise SystemExit("--slice-start must be >= 1")
     if slice_end < slice_start:
         raise SystemExit("--slice-end must be >= --slice-start")
+    if args.episode_days <= 0:
+        raise SystemExit("--episode-days must be a positive integer")
 
     all_permutations = list(itertools.permutations(MODELS))
     start_index = slice_start - 1
@@ -558,6 +569,7 @@ def main():
         run_args = argparse.Namespace(
             scenario=args.scenario,
             meta_rounds=args.meta_rounds,
+            episode_days=args.episode_days,
             seed=args.seed,
             backend_mode="per-agent",
             backend=None,
@@ -598,6 +610,7 @@ def main():
     manifest_data = {
         "batch_id": batch_id,
         "scenario": args.scenario,
+        "episode_days": args.episode_days,
         "evaluation_mode": args.evaluation_mode,
         "max_json_repair_attempts": args.max_json_repair_attempts,
         "max_code_repair_attempts": args.max_code_repair_attempts,

@@ -34,16 +34,30 @@ class PromptBuilder:
         agent_profile: Dict[str, Any],
         game_state: Dict[str, Any],
         opponent_code: Dict[str, str],
+        self_previous_code: str = "",
         history: Optional[Dict[str, Any]] = None,
         opponent_info_mode: Optional[str] = None,
         show_opponent_code: Optional[bool] = None,
     ) -> str:
 
         history_payload: Dict[str, Any] = {}
+        previous_final_results: Dict[str, Any] = {}
         if history and isinstance(history, dict):
             last_meta_round = history.get("last_meta_round")
             if last_meta_round is not None:
                 history_payload["previous_meta_round_index"] = last_meta_round
+
+            agent_summaries = history.get("agent_summaries")
+            if isinstance(agent_summaries, dict):
+                for agent_id in sorted(agent_summaries):
+                    summary = agent_summaries.get(agent_id)
+                    if not isinstance(summary, dict):
+                        continue
+
+                    previous_final_results[agent_id] = {
+                        "valid": bool(summary.get("valid", False)),
+                        "survival_days": summary.get("survival_days"),
+                    }
 
         
         if show_opponent_code is None:
@@ -59,6 +73,7 @@ class PromptBuilder:
         )
 
         supply_range = game_state.get("supply_range", [10, 20]) if isinstance(game_state, dict) else [10, 20]
+        episode_days = game_state.get("episode_days", 20) if isinstance(game_state, dict) else 20
 
         try:
             min_supply = int(supply_range[0])
@@ -66,6 +81,14 @@ class PromptBuilder:
         except Exception:
             min_supply = 10
             max_supply = 20
+
+        try:
+            episode_days = int(episode_days)
+        except Exception:
+            episode_days = 20
+
+        if episode_days <= 0:
+            episode_days = 20
 
         opponent_code_section = ""
 
@@ -79,11 +102,30 @@ class PromptBuilder:
                 f"{opponent_block}\n\n"
             )
 
+        self_previous_code_section = ""
+        if self_previous_code:
+            self_previous_code_section = (
+                f"=== YOUR PREVIOUS META-ROUND STRATEGY CODE ===\n"
+                f"Historical code only (from your own previous meta-round submission), not current-day hidden bids.\n"
+                f"Use it to preserve useful structure when appropriate, fix weaknesses, and make substantial changes "
+                f"when the prior strategy appears brittle or poorly calibrated.\n"
+                f"{self_previous_code}\n\n"
+            )
+
         latest_meta_context_section = ""
         if history_payload:
             latest_meta_context_section = (
                 f"LATEST METAROUND INDEX (NON-OUTCOME METADATA):\n"
                 f"{json.dumps(history_payload, indent=2)}\n\n"
+            )
+
+        previous_final_results_section = ""
+        if previous_final_results:
+            previous_final_results_section = (
+                f"=== LAST META-ROUND FINAL RESULTS ===\n"
+                f"The following results are from the last meta-round.\n"
+                f"Each survival_days value is the number of simulation days that agent survived.\n"
+                f"{json.dumps(previous_final_results, indent=2)}\n\n"
             )
 
         all_agents_static_section = ""
@@ -96,7 +138,7 @@ class PromptBuilder:
 
         intro_line = (
             "You are participating in the Water Allocation Challenge programmatic game.\n"
-            "Episode length is 10 simulation days per meta-round; your submission is strategy code only.\n"
+            f"Episode length is {episode_days} simulation days per meta-round; your submission is strategy code only.\n"
             "Daily supply is randomly sampled in [MIN_SUPPLY, MAX_SUPPLY].\n"
             "Initial state: HP=8, max HP=10, no_water_days=1.\n"
             "Each day: alive agents get salary, then submit simultaneous bids (current-day opponent bids are hidden).\n"
@@ -106,22 +148,44 @@ class PromptBuilder:
             "Death rule: HP <= 0 means dead. Tie-break at same bid: lower water_requirement first.\n"
         )
 
+        has_last_meta_round_context = bool(
+            self_previous_code_section
+            or opponent_code_section
+            or previous_final_results_section
+            or latest_meta_context_section
+        )
+
         if opponent_info_mode == "full_code_access":
-            context_line = (
-                "You can use opponents' previous meta-round strategy code only (no prior outcomes). "
-                "Assume opponents also adapt from last meta-round code; avoid one-step exploitation.\n"
-            )
+            if has_last_meta_round_context:
+                context_line = (
+                    "Last meta-round strategy code and final survival results may be provided below. "
+                    "Assume other agents may also adapt across meta-rounds; avoid one-step exploitation.\n"
+                )
+            else:
+                context_line = (
+                    "No last meta-round information is available yet. Generate an initial robust "
+                    "survival-oriented strategy.\n"
+                )
             reasoning_focus = (
-                "Keep reasoning under 100 words. Focus on robust interpretation of opponent code, "
-                "calibrated bidding, budget discipline, and avoiding unnecessary overbidding.\n"
+                "Keep reasoning under 100 words. Focus on improving your previous strategy, robust interpretation "
+                "of opponent code and prior survival results, calibrated bidding, budget discipline, and avoiding "
+                "unnecessary overbidding.\n"
             )
         else:
-            context_line = (
-                "No cross-round opponent memory is available. Use only your profile, current meta-round state, "
-                "game rules, and runtime opponents_status inside get_bid.\n"
-            )
+            if has_last_meta_round_context:
+                context_line = (
+                    "Last meta-round self strategy code and final survival results may be provided below, alongside "
+                    "your profile, current meta-round state, game rules, and runtime opponents_status inside get_bid.\n"
+                )
+            else:
+                context_line = (
+                    "No last meta-round information is available yet. Generate an initial robust "
+                    "survival-oriented strategy using your profile, current meta-round state, game rules, "
+                    "and runtime opponents_status inside get_bid.\n"
+                )
             reasoning_focus = (
-                "Keep reasoning under 60 words. Focus on budget-safe reasoning, calibrated risk control, and survival.\n"
+                "Keep reasoning under 60 words. Focus on improving your previous strategy, interpreting prior "
+                "survival results, budget-safe reasoning, calibrated risk control, and survival.\n"
             )
 
         return (
@@ -135,7 +199,9 @@ class PromptBuilder:
             f"Your Profile:\n{profile_block}\n\n"
             f"Current Meta-Round State:\n{state_block}\n\n"
             f"{all_agents_static_section}"
+            f"{self_previous_code_section}"
             f"{opponent_code_section}"
+            f"{previous_final_results_section}"
             f"{latest_meta_context_section}"
 
             # ============================================================
@@ -146,7 +212,7 @@ class PromptBuilder:
             "CRITICAL PYTHON RULES:\n"
             "1. Function MUST be exactly: def get_bid(day_context, my_status, opponents_status):\n"
             "2. day_context format:\n"
-            "   - day_context['day']: int, current simulation day index (1..10).\n"
+            f"   - day_context['day']: int, current simulation day index (1..{episode_days}).\n"
             "   - day_context['supply']: float, current day total water supply.\n"
             "3. my_status format:\n"
             "   - my_status['hp']: int, current HP.\n"

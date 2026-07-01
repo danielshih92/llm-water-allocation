@@ -769,7 +769,7 @@ def run_experiment(
     total_start_time = time.time()
 
     env = WACProgrammaticEnv(
-        episode_days=10
+        episode_days=getattr(args, "episode_days", 20)
     )
 
     profiles: List[AgentProfile] = default_agent_profiles()
@@ -916,10 +916,7 @@ def run_experiment(
     ):
         meta_round_start_time = time.time()
 
-        if args.seed is None:
-            seed_for_round = None
-        else:
-            seed_for_round = args.seed + meta_round_id
+        seed_for_round = args.seed
 
         supply_list = build_supply_list(
             scenario=args.scenario,
@@ -995,6 +992,11 @@ def run_experiment(
             else:
                 opponent_code = {}
 
+            self_previous_code = previous_codes.get(
+                profile.agent_id,
+                "",
+            )
+
             print(
                 "  Generating reasoning/code..."
             )
@@ -1007,9 +1009,14 @@ def run_experiment(
                 },
                 game_state=game_state,
                 opponent_code=opponent_code,
+                self_previous_code=self_previous_code,
                 history={
                     "last_meta_round": history.get(
                         "last_meta_round"
+                    ),
+                    "agent_summaries": history.get(
+                        "agent_summaries",
+                        {},
                     ),
                 },
                 opponent_info_mode=opponent_info_mode,
@@ -1370,10 +1377,20 @@ def main() -> None:
     )
 
     parser.add_argument(
+        "--episode-days",
+        type=int,
+        default=20,
+        help="Number of simulation days per meta-round",
+    )
+
+    parser.add_argument(
         "--seed",
         type=int,
         default=None,
-        help="Base random seed for deterministic supply generation",
+        help=(
+            "Random seed for deterministic supply generation. "
+            "The same seed is reused for every meta-round."
+        ),
     )
 
     parser.add_argument(
@@ -1480,6 +1497,10 @@ def main() -> None:
     )
 
     args = parser.parse_args()
+
+    if args.episode_days <= 0:
+        parser.error("--episode-days must be a positive integer")
+
     run_experiment(args)
 
 

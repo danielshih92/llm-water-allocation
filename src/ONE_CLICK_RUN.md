@@ -31,11 +31,9 @@ Batch run (permutations)
    python3 src/run_all_permutations.py --slice-start 1 --slice-end 120 --opponent-info-mode full_code_access
 
 3) Run multiple slices into the same batch folder:
-   python3 src/run_all_permutations.py --slice-start 1 --slice-end 120 --no-plots --batch-name batch_004 --opponent-info-mode full_code_access
+   python3 src/run_all_permutations.py --slice-start 11 --slice-end 11 --no-plots --batch-name batch_019_full_code_access_med_20days --meta-rounds 3 --episode-days 20 --opponent-info-mode full_code_access --seed 42 --scenario medium
 
-   python3 src/run_all_permutations.py --slice-start 1 --slice-end 3 --no-plots --batch-name batch_016_full_code_access_med --meta-rounds 3 --opponent-info-mode full_code_access --seed 42 --scenario medium
-
-   python3 src/run_all_permutations.py --slice-start 1 --slice-end 3 --no-plots --batch-name batch_015_no_opp_info_med --meta-rounds 2 --opponent-info-mode full_code_access --seed 42 --scenario medium
+   python3 src/run_all_permutations.py --slice-start 72 --slice-end 72 --no-plots --batch-name batch_020_no_opp_info_med_20days --meta-rounds 3 --episode-days 20 --opponent-info-mode no_opponent_info --seed 42 --scenario medium
 
 Config-only settings
 - All backend/model settings are defined in [Alympics/src/config.py](Alympics/src/config.py).
@@ -45,7 +43,8 @@ Config-only settings
 Key flags (run.py)
 - --scenario: low, medium, high
 - --meta-rounds: number of meta-rounds
-- --seed: base random seed (optional)
+- --episode-days: number of simulation days per meta-round
+- --seed: random seed reused for every meta-round (optional)
 - --backend-mode: uniform | per-agent
 - --backend: mock | openai | gemini | ollama | deepseek (uniform only)
 - --backend-model, --backend-temperature, --backend-base-url (uniform only)
@@ -57,7 +56,8 @@ Key flags (run.py)
 Key flags (run_all_permutations.py)
 - --slice-start, --slice-end: permutation slice range
 - --meta-rounds: number of meta-rounds per experiment
-- --seed: base random seed (optional, default None)
+- --episode-days: number of simulation days per meta-round
+- --seed: random seed reused for every meta-round (optional, default None)
 - --no-plots: skip plots
 - --opponent-info-mode: full_code_access | no_opponent_info
 - --batch-name: reuse a specific batch folder name
@@ -77,11 +77,16 @@ tmux new -s alympics
 tmux new -s alympics_v2
 tmux ls
 tmux attach -t alympics
+tmux attach -t alympics_v2
+tmux display-message -p '#S'
+
 source venv/bin/activate
 
 ---
-python temp/batch_table_plot.py --log-dir log --batch test_all_the_same_prompt_fixed_v2_water_demand_high --meta-first-round false
-python temp/exp_plot.py --log-dir log --batch batch_016_full_code_access_med --exp exp_001
+python temp/batch_table_plot.py --log-dir log --batch batch_019_full_code_access_med_20days --meta-first-round false
+python temp/batch_table_plot.py --log-dir log --batch batch_020_no_opp_info_med_20days --meta-first-round false
+
+python temp/exp_plot.py --log-dir log --batch batch_017_full_code_access_med_20days --exp exp_001
 
 
 ---

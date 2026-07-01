@@ -44,6 +44,11 @@ def default_agent_profiles() -> List[AgentProfile]:
         AgentProfile("Cindy", 13, 150),
         AgentProfile("David", 7, 80),
         AgentProfile("Eric", 8, 140),
+        # AgentProfile("Alex", 12, 70),
+        # AgentProfile("Bob", 12, 70),
+        # AgentProfile("Cindy", 12, 70),
+        # AgentProfile("David", 12, 70),
+        # AgentProfile("Eric", 12, 70),
     ]
 
 

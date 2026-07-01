@@ -5,7 +5,7 @@ import json
 import os
 import re
 import sys
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -177,10 +177,14 @@ def _collect_agent_round_records(batch_dir: str, include_meta_first_round: bool 
                         "repair_attempts": _safe_float(generation_stats.get("repair_attempts"), 0.0) or 0.0,
                         "json_parse_failed": int(_safe_float(generation_stats.get("json_parse_failed"), 0) or 0),
                         "performance_valid": performance_valid,
+                        "strategy_code": str(agent.get("strategy_code", "") or ""),
+                        "reasoning_cot": str(agent.get("reasoning_cot", "") or ""),
                         "survival_days": _safe_float(metrics.get("survival_days"), None) if metrics else None,
                         "final_hp": _safe_float(metrics.get("final_hp"), None) if metrics else None,
                         "average_bid": _safe_float(metrics.get("average_bid"), None) if metrics else None,
+                        "opponent_awareness_score": _safe_float(metrics.get("opponent_awareness_score"), None) if metrics else None,
                         "strategy_complexity": _safe_float(metrics.get("strategy_complexity"), None) if metrics else None,
+                        "branch_count": _safe_float(metrics.get("branch_count"), None) if metrics else None,
                     }
                 )
 
@@ -439,7 +443,7 @@ def _build_model_rows(perf_by_model: Dict[str, Dict[str, object]]) -> List[Dict[
                 "Survival Days": _safe_float(stats.get("grand_avg_survival_days"), 0.0) or 0.0,
                 "Mortality Rate (%)": mortality_str,
                 "Daily Bid": _safe_float(stats.get("grand_avg_daily_bid"), 0.0) or 0.0,
-                "Strict Success Rate (%)": (_safe_float(stats.get("grand_avg_strict_success_rate"), 0.0) or 0.0) * 100.0,
+                "Opponent Awareness": _safe_float(stats.get("grand_avg_opponent_awareness_score"), 0.0) or 0.0,
                 "Code Complexity": _safe_float(stats.get("grand_avg_strategy_complexity"), 0.0) or 0.0,
                 "_mortality_numeric": _parse_percent(mortality_str),
             }
@@ -471,7 +475,7 @@ def _build_model_rows_from_batch(batch_dir: str, include_meta_first_round: bool 
                 "weighted_sums": {
                     "Survival Days": 0.0,
                     "Daily Bid": 0.0,
-                    "Strict Success Rate (%)": 0.0,
+                    "Opponent Awareness": 0.0,
                     "Code Complexity": 0.0,
                 },
             },
@@ -481,7 +485,7 @@ def _build_model_rows_from_batch(batch_dir: str, include_meta_first_round: bool 
         entry["rounds"] += round_count
         entry["weighted_sums"]["Survival Days"] += (_safe_float(row.get("survival_days"), 0.0) or 0.0) * round_count
         entry["weighted_sums"]["Daily Bid"] += (_safe_float(row.get("average_bid"), 0.0) or 0.0) * round_count
-        entry["weighted_sums"]["Strict Success Rate (%)"] += (_safe_float(row.get("strict_success_rate"), 0.0) or 0.0) * round_count * 100.0
+        entry["weighted_sums"]["Opponent Awareness"] += (_safe_float(row.get("opponent_awareness_score"), 0.0) or 0.0) * round_count
         entry["weighted_sums"]["Code Complexity"] += (_safe_float(row.get("strategy_complexity"), 0.0) or 0.0) * round_count
 
     rows: List[Dict[str, object]] = []
@@ -496,7 +500,7 @@ def _build_model_rows_from_batch(batch_dir: str, include_meta_first_round: bool 
                 "Survival Days": entry["weighted_sums"]["Survival Days"] / rounds,
                 "Mortality Rate (%)": f"{(entry['deaths'] / rounds) * 100:.1f}%",
                 "Daily Bid": entry["weighted_sums"]["Daily Bid"] / rounds,
-                "Strict Success Rate (%)": entry["weighted_sums"]["Strict Success Rate (%)"] / rounds,
+                "Opponent Awareness": entry["weighted_sums"]["Opponent Awareness"] / rounds,
                 "Code Complexity": entry["weighted_sums"]["Code Complexity"] / rounds,
                 "_mortality_numeric": (entry["deaths"] / rounds) * 100.0,
             }
@@ -573,6 +577,34 @@ def _format_table(df: pd.DataFrame) -> pd.DataFrame:
     table["Daily Bid"] = table["Daily Bid"].map(lambda v: f"{v:.2f}")
     table["Code Complexity"] = table["Code Complexity"].map(lambda v: f"{v:.2f}")
     table["Strict Success Rate (%)"] = table["Strict Success Rate (%)"].map(lambda v: f"{v:.2f}%")
+    return table
+
+
+def _append_average_row(df: pd.DataFrame, label_col: str, label: str = "Average") -> pd.DataFrame:
+    if df.empty:
+        return df
+
+    avg_row: Dict[str, object] = {label_col: label}
+    for col in df.columns:
+        if col == label_col:
+            continue
+        if col == "Mortality Rate (%)":
+            values = [_parse_percent(value) for value in df[col].tolist()]
+            avg_row[col] = f"{(sum(values) / len(values)):.1f}%" if values else "N/A"
+            continue
+        numeric_values = [_safe_float(value, None) for value in df[col].tolist()]
+        numeric_values = [value for value in numeric_values if value is not None]
+        avg_row[col] = (sum(numeric_values) / len(numeric_values)) if numeric_values else "N/A"
+
+    return pd.concat([df, pd.DataFrame([avg_row])], ignore_index=True)
+
+
+def _format_model_summary_table(df: pd.DataFrame) -> pd.DataFrame:
+    table = df.copy()
+    table["Survival Days"] = table["Survival Days"].map(lambda v: _num_or_na(v, 2))
+    table["Daily Bid"] = table["Daily Bid"].map(lambda v: _num_or_na(v, 2))
+    table["Opponent Awareness"] = table["Opponent Awareness"].map(lambda v: _num_or_na(v, 2))
+    table["Code Complexity"] = table["Code Complexity"].map(lambda v: _num_or_na(v, 2))
     return table
 
 
@@ -890,10 +922,196 @@ def _save_simple_table(rows: List[Dict[str, object]], output_dir: str, file_stem
     _save_table_png(df, os.path.join(output_dir, f"{file_stem}.png"), title=title)
 
 
+STRATEGY_PATTERN_SPECS: List[Tuple[str, re.Pattern]] = [
+    ("Uses `trace_history`", re.compile(r"trace_history")),
+    ("Uses `last_bid`", re.compile(r"last_bid")),
+    ("Uses max opponent bid logic", re.compile(r"max_opp|max_recent|max_bid|max_observed|highest|max\s*\(", re.I)),
+    ("Names Alex/Bob/Cindy/David/Eric in code", re.compile(r"Alex|Bob|Cindy|David|Eric")),
+]
+
+PREVIOUS_CODE_REASON_PATTERN = re.compile(
+    r"previous meta-round code|previous codes|opponents.? prior code|"
+    r"opponents.? previous code|opponent code|analyzes opponent|"
+    r"analyze opponent strategies|From previous code|From past codes|"
+    r"Opponents.? codes show|code suggests|strategy.*code",
+    re.I,
+)
+
+
+def _count_pattern(records: List[Dict[str, object]], pattern: re.Pattern) -> str:
+    total = len(records)
+    count = sum(1 for row in records if pattern.search(str(row.get("strategy_code", "") or "")))
+    return f"{count}/{total}"
+
+
+def _build_strategy_pattern_rows(batch_dir: str) -> List[Dict[str, object]]:
+    records = _collect_agent_round_records(batch_dir, include_meta_first_round=True)
+    rows: List[Dict[str, object]] = []
+    round_ids = sorted({int(row.get("meta_round_id", 0) or 0) for row in records})
+
+    for label, pattern in STRATEGY_PATTERN_SPECS:
+        row: Dict[str, object] = {"pattern": label}
+        for round_id in round_ids:
+            round_records = [row for row in records if int(row.get("meta_round_id", 0) or 0) == round_id]
+            row[f"R{round_id}"] = _count_pattern(round_records, pattern)
+        rows.append(row)
+
+    return rows
+
+
+def _strategy_code_similarity(left: str, right: str) -> float:
+    import difflib
+
+    return difflib.SequenceMatcher(None, left or "", right or "").ratio()
+
+
+def _build_model_code_adaptation_rows(batch_dir: str) -> List[Dict[str, object]]:
+    records = _collect_agent_round_records(batch_dir, include_meta_first_round=True)
+    by_key: Dict[Tuple[str, str, int], Dict[str, object]] = {}
+    model_order: List[str] = []
+
+    for row in records:
+        model_name = str(row.get("model", "Unknown Model"))
+        if model_name not in model_order:
+            model_order.append(model_name)
+        key = (
+            str(row.get("exp_id", "")),
+            str(row.get("role", "")),
+            int(row.get("meta_round_id", 0) or 0),
+        )
+        by_key[key] = row
+
+    rows: List[Dict[str, object]] = []
+    for model_name in model_order:
+        model_records = [row for row in records if str(row.get("model", "")) == model_name]
+        later_records = [row for row in model_records if int(row.get("meta_round_id", 0) or 0) in {2, 3}]
+        previous_code_mentions = sum(
+            1
+            for row in later_records
+            if PREVIOUS_CODE_REASON_PATTERN.search(str(row.get("reasoning_cot", "") or ""))
+        )
+
+        sim_12: List[float] = []
+        sim_23: List[float] = []
+        for row in model_records:
+            round_id = int(row.get("meta_round_id", 0) or 0)
+            if round_id != 1:
+                continue
+
+            exp_id = str(row.get("exp_id", ""))
+            role = str(row.get("role", ""))
+            r1 = by_key.get((exp_id, role, 1))
+            r2 = by_key.get((exp_id, role, 2))
+            r3 = by_key.get((exp_id, role, 3))
+            if r1 and r2:
+                sim_12.append(
+                    _strategy_code_similarity(
+                        str(r1.get("strategy_code", "") or ""),
+                        str(r2.get("strategy_code", "") or ""),
+                    )
+                )
+            if r2 and r3:
+                sim_23.append(
+                    _strategy_code_similarity(
+                        str(r2.get("strategy_code", "") or ""),
+                        str(r3.get("strategy_code", "") or ""),
+                    )
+                )
+
+        rows.append(
+            {
+                "model": model_name,
+                "Explicit previous/opponent code mentions R2+R3": f"{previous_code_mentions}/{len(later_records)}",
+                "Code similarity R1->R2 / R2->R3": f"{(sum(sim_12) / len(sim_12)):.3f} / {(sum(sim_23) / len(sim_23)):.3f}"
+                if sim_12 and sim_23
+                else "N/A",
+            }
+        )
+
+    return rows
+
+
+def _mean_metric(rows: List[Dict[str, object]], metric: str) -> float:
+    values = [_safe_float(row.get(metric), None) for row in rows if bool(row.get("performance_valid", False))]
+    values = [value for value in values if value is not None]
+    if not values:
+        return float("nan")
+    return sum(values) / len(values)
+
+
+def _format_mean(value: float, decimals: int = 2) -> str:
+    if pd.isna(value):
+        return "N/A"
+    return f"{value:.{decimals}f}"
+
+
+def _batch_short_label(batch_name: str) -> str:
+    match = re.search(r"batch_(\d+)", batch_name)
+    prefix = match.group(1) if match else batch_name
+    if "no_opp" in batch_name or "no-opponent" in batch_name:
+        suffix = "noopp"
+    elif "full_code" in batch_name:
+        suffix = "full"
+    else:
+        suffix = ""
+    return f"{prefix} {suffix}".strip()
+
+
+def _build_batch_round_comparison_rows(batch_dirs: List[Tuple[str, str]]) -> List[Dict[str, object]]:
+    rows: List[Dict[str, object]] = []
+    records_by_batch: List[Tuple[str, List[Dict[str, object]]]] = []
+    all_round_ids = set()
+
+    for batch_name, batch_dir in batch_dirs:
+        records = _collect_agent_round_records(batch_dir, include_meta_first_round=True)
+        records_by_batch.append((batch_name, records))
+        all_round_ids.update(int(row.get("meta_round_id", 0) or 0) for row in records)
+
+    records_by_batch = sorted(records_by_batch, key=lambda item: _batch_short_label(item[0]))
+
+    for round_id in sorted(all_round_ids):
+        for batch_name, records in records_by_batch:
+            round_records = [row for row in records if int(row.get("meta_round_id", 0) or 0) == round_id]
+            if not round_records:
+                continue
+            valid_records = [row for row in round_records if bool(row.get("performance_valid", False))]
+            rows.append(
+                {
+                    "round": f"R{round_id}",
+                    "batch": _batch_short_label(batch_name),
+                    "valid": f"{len(valid_records)}/{len(round_records)}",
+                    "avg survival": _format_mean(_mean_metric(round_records, "survival_days"), 2),
+                    "avg bid": _format_mean(_mean_metric(round_records, "average_bid"), 1),
+                    "opp awareness": _format_mean(_mean_metric(round_records, "opponent_awareness_score"), 2),
+                    "complexity": _format_mean(_mean_metric(round_records, "strategy_complexity"), 1),
+                    "trace / last bid": (
+                        f"{sum(1 for row in round_records if re.search(r'trace_history', str(row.get('strategy_code', '') or '')))}"
+                        f" / {sum(1 for row in round_records if re.search(r'last_bid', str(row.get('strategy_code', '') or '')))}"
+                    ),
+                }
+            )
+    return rows
+
+
+def _cleanup_removed_outputs(output_dir: str) -> None:
+    if not os.path.isdir(output_dir):
+        return
+
+    for name in os.listdir(output_dir):
+        if name.startswith("fig_") and name.endswith(".png"):
+            os.remove(os.path.join(output_dir, name))
+            continue
+        if name.startswith("model_valid_performance_table.") and (
+            name.endswith(".md") or name.endswith(".png")
+        ):
+            os.remove(os.path.join(output_dir, name))
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Build model-level summary tables and figures.")
     parser.add_argument("--log-dir", type=str, default="log", help="Root log directory.")
     parser.add_argument("--batch", type=str, required=True, help="Batch folder name (e.g., batch_004).")
+    parser.add_argument("--compare-batch", type=str, default=None, help="Optional second batch folder for round-level comparison tables.")
     parser.add_argument("--output-dir", type=str, default=None, help="Output folder (defaults to batch/output_analysis).")
     parser.add_argument(
         "--meta-first-round",
@@ -910,6 +1128,7 @@ def main() -> None:
 
     output_dir = args.output_dir or os.path.join(batch_dir, "output_analysis")
     _ensure_dir(output_dir)
+    _cleanup_removed_outputs(output_dir)
 
     with open(report_path, "r", encoding="utf-8") as handle:
         report = json.load(handle)
@@ -927,14 +1146,6 @@ def main() -> None:
         output_dir,
         "model_reliability_table",
         "Model Reliability Summary",
-    )
-
-    valid_perf_rows = _build_model_valid_performance_rows(grouped)
-    _save_simple_table(
-        valid_perf_rows,
-        output_dir,
-        "model_valid_performance_table",
-        "Model Valid-only Performance Summary",
     )
 
     failure_rows = _build_model_failure_breakdown_rows(grouped)
@@ -965,64 +1176,51 @@ def main() -> None:
         "Survival Days",
         "Mortality Rate (%)",
         "Daily Bid",
-        "Strict Success Rate (%)",
+        "Opponent Awareness",
         "Code Complexity",
     ]]
+    table_df = _append_average_row(table_df, "Model")
 
-    formatted_table = _format_table(table_df)
+    formatted_table = _format_model_summary_table(table_df)
 
     _save_markdown_table(formatted_table, os.path.join(output_dir, "model_summary_table.md"))
     _save_table_png(formatted_table, os.path.join(output_dir, "model_summary_table.png"), title="Model Summary Table")
 
-    _bar_chart(
-        df,
-        x="Model",
-        y="Survival Days",
-        title="Average Survival Days by Model",
-        path=os.path.join(output_dir, "fig_survival_days_by_model.png"),
-        sort_by="Survival Days",
-        ascending=False,
+    strategy_pattern_rows = _build_strategy_pattern_rows(batch_dir)
+    _save_simple_table(
+        strategy_pattern_rows,
+        output_dir,
+        "strategy_pattern_by_round_table",
+        "Strategy Pattern Counts by Meta Round",
+        sort_key="",
     )
 
-    _bar_chart(
-        df,
-        x="Model",
-        y="_mortality_numeric",
-        title="Mortality Rate by Model",
-        path=os.path.join(output_dir, "fig_mortality_rate_by_model.png"),
-        sort_by="_mortality_numeric",
-        ascending=True,
-        y_label="Mortality Rate (%)",
+    model_code_adaptation_rows = _build_model_code_adaptation_rows(batch_dir)
+    _save_simple_table(
+        model_code_adaptation_rows,
+        output_dir,
+        "model_code_adaptation_table",
+        "Model Code Adaptation Summary",
+        sort_key="",
     )
 
-    _scatter_with_labels(
-        df,
-        x="Daily Bid",
-        y="Survival Days",
-        title="Daily Bid vs. Survival Days",
-        path=os.path.join(output_dir, "fig_daily_bid_vs_survival.png"),
-    )
-
-    _scatter_with_labels(
-        df,
-        x="Code Complexity",
-        y="Survival Days",
-        title="Code Complexity vs. Survival Days",
-        path=os.path.join(output_dir, "fig_complexity_vs_survival.png"),
-    )
-
-    _scatter_with_labels(
-        df,
-        x="Code Complexity",
-        y="Strict Success Rate (%)",
-        title="Code Complexity vs. Strict Success Rate",
-        path=os.path.join(output_dir, "fig_complexity_vs_strict_success_rate.png"),
-    )
-
-    _bubble_chart(
-        df,
-        path=os.path.join(output_dir, "fig_complexity_survival_runtime_bubble.png"),
-    )
+    if args.compare_batch:
+        compare_batch_dir = os.path.join(args.log_dir, args.compare_batch)
+        if not os.path.isdir(compare_batch_dir):
+            raise SystemExit(f"compare batch not found: {compare_batch_dir}")
+        batch_round_comparison_rows = _build_batch_round_comparison_rows(
+            [
+                (args.batch, batch_dir),
+                (args.compare_batch, compare_batch_dir),
+            ]
+        )
+        _save_simple_table(
+            batch_round_comparison_rows,
+            output_dir,
+            "batch_round_comparison_table",
+            "Batch Round Comparison Summary",
+            sort_key="",
+        )
 
     survival_matrix = _build_role_model_survival_matrix(
         batch_dir,

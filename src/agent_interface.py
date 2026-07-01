@@ -55,7 +55,7 @@ class OpenAIBackend(LLMBackend):
                     "content": prompt,
                 },
             ],
-            "max_completion_tokens": 2000,
+            "max_completion_tokens": 3500,
         }
         if self.temperature is not None:
             payload["temperature"] = self.temperature
@@ -182,7 +182,7 @@ class DeepSeekBackend(LLMBackend):
                     "content": prompt,
                 },
             ],
-            "max_tokens": 2000,
+            "max_tokens": 3500,
             "extra_body": {
                 "thinking": {
                     "type": "enabled"
@@ -372,6 +372,7 @@ class AgentRunner:
         agent_profile: Dict[str, Any],
         game_state: Dict[str, Any],
         opponent_code: Dict[str, str],
+        self_previous_code: str = "",
         history: Optional[Dict[str, Any]] = None,
         opponent_info_mode: Optional[str] = None,
         show_opponent_code: Optional[bool] = None,
@@ -381,6 +382,7 @@ class AgentRunner:
             agent_profile=agent_profile,
             game_state=game_state,
             opponent_code=opponent_code,
+            self_previous_code=self_previous_code,
             history=history,
             opponent_info_mode=opponent_info_mode,
             show_opponent_code=show_opponent_code,
@@ -546,6 +548,7 @@ class AgentRunner:
         agent_profile: Dict[str, Any],
         game_state: Dict[str, Any],
         opponent_code: Dict[str, str],
+        self_previous_code: str = "",
         history: Optional[Dict[str, Any]] = None,
         opponent_info_mode: Optional[str] = None,
         show_opponent_code: Optional[bool] = None,
@@ -557,6 +560,7 @@ class AgentRunner:
             agent_profile=agent_profile,
             game_state=game_state,
             opponent_code=opponent_code,
+            self_previous_code=self_previous_code,
             history=history,
             opponent_info_mode=opponent_info_mode,
             show_opponent_code=show_opponent_code,
