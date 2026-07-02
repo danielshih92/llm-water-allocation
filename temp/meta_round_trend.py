@@ -129,6 +129,11 @@ def _collect_agent_records(batch_dir: str) -> List[Dict[str, object]]:
                 performance_valid = admitted == 1 and outcome_valid == 1 and metrics is not None
                 final_hp = _safe_float(metrics.get("final_hp"), None) if metrics else None
                 survival_days = _safe_float(metrics.get("survival_days"), None) if metrics else None
+                strategy_complexity = (
+                    _safe_float(metrics.get("strategy_complexity"), None)
+                    if metrics
+                    else None
+                )
 
                 records.append(
                     {
@@ -138,6 +143,7 @@ def _collect_agent_records(batch_dir: str) -> List[Dict[str, object]]:
                         "performance_valid": performance_valid,
                         "survival_days": survival_days,
                         "final_hp": final_hp,
+                        "strategy_complexity": strategy_complexity,
                         "seed": environment.get("seed"),
                     }
                 )
@@ -158,6 +164,11 @@ def _summarize_round(records: List[Dict[str, object]]) -> Dict[str, object]:
         for row in valid
         if _safe_float(row.get("survival_days"), None) is not None
     ]
+    complexity_values = [
+        _safe_float(row.get("strategy_complexity"), None)
+        for row in valid
+        if _safe_float(row.get("strategy_complexity"), None) is not None
+    ]
     deaths = sum(
         1
         for row in valid
@@ -171,6 +182,7 @@ def _summarize_round(records: List[Dict[str, object]]) -> Dict[str, object]:
 
     return {
         "avg_survival": _mean(survival_values),
+        "avg_complexity": _mean(complexity_values),
         "mortality_rate": mortality_rate,
         "valid_agents": len(valid),
         "total_agents": len(records),
@@ -246,6 +258,9 @@ def _build_rows(
         mr1_survival = summary.get(1, {}).get("avg_survival")
         mr2_survival = summary.get(2, {}).get("avg_survival")
         mr3_survival = summary.get(3, {}).get("avg_survival")
+        mr1_complexity = summary.get(1, {}).get("avg_complexity")
+        mr2_complexity = summary.get(2, {}).get("avg_complexity")
+        mr3_complexity = summary.get(3, {}).get("avg_complexity")
 
         rows.append(
             {
@@ -262,6 +277,9 @@ def _build_rows(
                 "MR1 Mort.": _format_percent(summary.get(1, {}).get("mortality_rate"), 1),
                 "MR2 Mort.": _format_percent(summary.get(2, {}).get("mortality_rate"), 1),
                 "MR3 Mort.": _format_percent(summary.get(3, {}).get("mortality_rate"), 1),
+                "MR1 Complexity": _format_number(mr1_complexity, 1),
+                "MR2 Complexity": _format_number(mr2_complexity, 1),
+                "MR3 Complexity": _format_number(mr3_complexity, 1),
             }
         )
 
@@ -280,6 +298,9 @@ def _build_rows(
         mr1_survival = average_summary.get(1, {}).get("avg_survival")
         mr2_survival = average_summary.get(2, {}).get("avg_survival")
         mr3_survival = average_summary.get(3, {}).get("avg_survival")
+        mr1_complexity = average_summary.get(1, {}).get("avg_complexity")
+        mr2_complexity = average_summary.get(2, {}).get("avg_complexity")
+        mr3_complexity = average_summary.get(3, {}).get("avg_complexity")
         rows.append(
             {
                 "Model": "Average",
@@ -295,6 +316,9 @@ def _build_rows(
                 "MR1 Mort.": _format_percent(average_summary.get(1, {}).get("mortality_rate"), 1),
                 "MR2 Mort.": _format_percent(average_summary.get(2, {}).get("mortality_rate"), 1),
                 "MR3 Mort.": _format_percent(average_summary.get(3, {}).get("mortality_rate"), 1),
+                "MR1 Complexity": _format_number(mr1_complexity, 1),
+                "MR2 Complexity": _format_number(mr2_complexity, 1),
+                "MR3 Complexity": _format_number(mr3_complexity, 1),
             }
         )
 
@@ -328,6 +352,7 @@ def _write_detail_csv(
                     "Meta Round": f"MR{round_id}",
                     "Avg Survival": _format_number(summary.get("avg_survival"), 4),
                     "Mortality Rate": _format_percent(summary.get("mortality_rate"), 4),
+                    "Avg Complexity": _format_number(summary.get("avg_complexity"), 4),
                     "Valid Agents": str(summary.get("valid_agents", 0)),
                     "Total Agents": str(summary.get("total_agents", 0)),
                 }
@@ -423,6 +448,61 @@ def _write_trend_plot(
 
     handles, plot_labels = axes[0].get_legend_handles_labels()
     fig.legend(handles, plot_labels, loc="lower center", ncol=min(3, len(plot_labels)))
+    fig.suptitle(title, fontsize=13)
+    fig.tight_layout(rect=(0, 0.12, 1, 0.92))
+    fig.savefig(path, dpi=300)
+    plt.close(fig)
+    return True
+
+
+def _write_complexity_plot(
+    summaries: Dict[str, Dict[int, Dict[str, object]]],
+    path: str,
+    title: str,
+) -> bool:
+    try:
+        import matplotlib.pyplot as plt
+    except Exception as exc:
+        print(f"Skipping complexity plot because matplotlib is unavailable: {exc}")
+        return False
+
+    labels = [label for label in sorted(summaries) if label != "Average"]
+    if not labels:
+        return False
+
+    round_ids = sorted(
+        {
+            round_id
+            for label in labels
+            for round_id in summaries.get(label, {})
+        }
+    )
+    round_ids = [round_id for round_id in round_ids if 1 <= round_id <= 3]
+    if not round_ids:
+        return False
+
+    fig, ax = plt.subplots(figsize=(7.2, 4.4))
+
+    for label in labels:
+        complexity_values = [
+            summaries[label].get(round_id, {}).get("avg_complexity")
+            for round_id in round_ids
+        ]
+        ax.plot(round_ids, complexity_values, marker="o", linewidth=2, label=label)
+
+    if "Average" in summaries:
+        average_complexity = [
+            summaries["Average"].get(round_id, {}).get("avg_complexity")
+            for round_id in round_ids
+        ]
+        ax.plot(round_ids, average_complexity, marker="o", linewidth=3.5, color="black", label="Average")
+
+    ax.set_title("Code Complexity")
+    ax.set_xlabel("Meta Round")
+    ax.set_ylabel("Average Strategy Complexity")
+    ax.set_xticks(round_ids)
+    ax.grid(True, alpha=0.25)
+    ax.legend(loc="lower center", bbox_to_anchor=(0.5, -0.34), ncol=min(3, len(labels) + 1))
     fig.suptitle(title, fontsize=13)
     fig.tight_layout(rect=(0, 0.12, 1, 0.92))
     fig.savefig(path, dpi=300)
@@ -534,16 +614,24 @@ def main() -> None:
     csv_path = os.path.join(output_dir, f"{output_prefix}.csv")
     detail_csv_path = os.path.join(output_dir, f"{output_prefix}_details.csv")
     png_path = os.path.join(output_dir, f"{output_prefix}.png")
+    complexity_png_path = os.path.join(output_dir, f"{output_prefix}_complexity.png")
 
     _write_csv(rows, csv_path)
     _write_detail_csv(summaries, detail_csv_path)
     wrote_png = _write_trend_plot(summaries, png_path, "Meta-Round Trend")
+    wrote_complexity_png = _write_complexity_plot(
+        summaries,
+        complexity_png_path,
+        "Meta-Round Code Complexity",
+    )
     _print_valid_agent_totals(summaries)
 
     print(f"Wrote summary CSV: {csv_path}")
     print(f"Wrote detail CSV: {detail_csv_path}")
     if wrote_png:
         print(f"Wrote trend PNG: {png_path}")
+    if wrote_complexity_png:
+        print(f"Wrote complexity PNG: {complexity_png_path}")
 
 
 if __name__ == "__main__":
