@@ -7,31 +7,38 @@ from judge_prompt import ALLOWED_FAILURE_LABELS
 
 SCORE_KEYS = [
     "strategy_quality_score",
-    "budget_management_score",
-    "risk_management_score",
-    "supply_adaptation_score",
-    "opponent_awareness_score",
-    "reasoning_policy_consistency",
-    "policy_trajectory_consistency",
+    "survival_risk_management_score",
+    "budget_efficiency_score",
+    "opponent_supply_adaptation_score",
+    "temporal_planning_score",
+    "reasoning_code_trace_consistency_score",
     "implementation_quality_score",
     "judge_confidence",
 ]
+
+SCORE_ALIASES = {
+    "survival_risk_management_score": "risk_management_score",
+    "budget_efficiency_score": "budget_management_score",
+    "opponent_supply_adaptation_score": "opponent_awareness_score",
+    "reasoning_code_trace_consistency_score": "reasoning_policy_consistency",
+}
 
 
 def _default_output() -> Dict[str, Any]:
     return {
         "strategy_quality_score": 1,
-        "budget_management_score": 1,
-        "risk_management_score": 1,
-        "supply_adaptation_score": 1,
-        "opponent_awareness_score": 1,
-        "reasoning_policy_consistency": 1,
-        "policy_trajectory_consistency": 1,
+        "survival_risk_management_score": 1,
+        "budget_efficiency_score": 1,
+        "opponent_supply_adaptation_score": 1,
+        "temporal_planning_score": 1,
+        "reasoning_code_trace_consistency_score": 1,
         "implementation_quality_score": 1,
         "primary_failure_mode": "format_failure",
         "failure_labels": ["format_failure"],
+        "failure_annotations": [],
         "strengths": [],
         "weaknesses": ["Judge response could not be parsed."],
+        "evidence_summary": "",
         "short_diagnosis": "Judge response parsing failed.",
         "judge_confidence": 1,
     }
@@ -90,6 +97,55 @@ def _normalize_labels(labels: Any) -> List[str]:
     return dedup
 
 
+def _normalize_days(days: Any) -> List[Any]:
+    if not isinstance(days, list):
+        return []
+    out: List[Any] = []
+    for value in days[:10]:
+        try:
+            out.append(int(value))
+        except Exception:
+            text = str(value).strip()
+            if text:
+                out.append(text)
+    return out
+
+
+def _normalize_failure_annotations(annotations: Any, fallback_labels: List[str]) -> List[Dict[str, Any]]:
+    normalized: List[Dict[str, Any]] = []
+    if isinstance(annotations, list):
+        for item in annotations[:8]:
+            if not isinstance(item, dict):
+                continue
+            label = str(item.get("label", "")).strip()
+            if label not in ALLOWED_FAILURE_LABELS:
+                continue
+            normalized.append(
+                {
+                    "label": label,
+                    "severity": _to_int_score(item.get("severity", 1), 1),
+                    "confidence": _to_int_score(item.get("confidence", 1), 1),
+                    "evidence_days": _normalize_days(item.get("evidence_days", [])),
+                    "rationale": str(item.get("rationale", "")).strip(),
+                }
+            )
+
+    if normalized:
+        return normalized
+
+    return [
+        {
+            "label": label,
+            "severity": 1,
+            "confidence": 1,
+            "evidence_days": [],
+            "rationale": "",
+        }
+        for label in fallback_labels
+        if label != "none"
+    ]
+
+
 def parse_judge_response(response: str) -> Dict[str, Any]:
     default = _default_output()
 
@@ -107,7 +163,10 @@ def parse_judge_response(response: str) -> Dict[str, Any]:
     normalized = dict(default)
 
     for key in SCORE_KEYS:
-        normalized[key] = _to_int_score(parsed.get(key, default[key]), default[key])
+        value = parsed.get(key)
+        if value is None and key in SCORE_ALIASES:
+            value = parsed.get(SCORE_ALIASES[key])
+        normalized[key] = _to_int_score(value, default[key])
 
     primary_failure_mode = str(parsed.get("primary_failure_mode", "none")).strip()
     if primary_failure_mode not in ALLOWED_FAILURE_LABELS:
@@ -128,8 +187,13 @@ def parse_judge_response(response: str) -> Dict[str, Any]:
         {
             "primary_failure_mode": primary_failure_mode,
             "failure_labels": failure_labels,
+            "failure_annotations": _normalize_failure_annotations(
+                parsed.get("failure_annotations", []),
+                failure_labels,
+            ),
             "strengths": [str(x) for x in strengths[:8]],
             "weaknesses": [str(x) for x in weaknesses[:8]],
+            "evidence_summary": str(parsed.get("evidence_summary", "")).strip(),
             "short_diagnosis": str(parsed.get("short_diagnosis", "")).strip(),
         }
     )

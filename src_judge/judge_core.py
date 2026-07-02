@@ -5,11 +5,9 @@ from datetime import datetime
 from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 from judge_aggregation import aggregate_judge_records
-from judge_backend import JudgeBackend
 from judge_parser import parse_judge_response
 from judge_prompt import build_judge_prompt
 from judge_sampling import stratified_sample_items
-from judge_table_plot import generate_judge_tables
 
 
 def _load_json(path: str) -> Any:
@@ -49,6 +47,161 @@ def _safe_generation_stats(agent: Dict[str, Any]) -> Dict[str, Any]:
     return {}
 
 
+def _safe_float(value: Any, default: Optional[float] = None) -> Optional[float]:
+    try:
+        return float(value)
+    except Exception:
+        return default
+
+
+def _round_or_none(value: Any, digits: int = 4) -> Optional[float]:
+    value = _safe_float(value)
+    if value is None:
+        return None
+    return round(value, digits)
+
+
+def _find_agent_profile(environment: Dict[str, Any], agent_id: str) -> Dict[str, Any]:
+    players = environment.get("players", [])
+    if not isinstance(players, list):
+        return {}
+    for player in players:
+        if isinstance(player, dict) and str(player.get("agent_id")) == str(agent_id):
+            return dict(player)
+    return {}
+
+
+def _compact_trace_rows(rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    compact: List[Dict[str, Any]] = []
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        compact.append(
+            {
+                "day": row.get("day"),
+                "bid": _round_or_none(row.get("bid"), 3),
+                "supply": row.get("supply"),
+                "hp_after": row.get("hp_after"),
+                "budget_after": _round_or_none(row.get("budget_after"), 3),
+                "status": row.get("status"),
+                "error": row.get("error"),
+            }
+        )
+    return compact
+
+
+def _build_evidence_summary(
+    record: Dict[str, Any],
+    agent: Dict[str, Any],
+    agent_id: str,
+    admitted: int,
+    outcome_valid: int,
+    daily_trace: Any,
+) -> Dict[str, Any]:
+    trace = daily_trace if isinstance(daily_trace, list) else []
+    environment = record.get("environment", {}) if isinstance(record.get("environment"), dict) else {}
+    metrics = agent.get("metrics") if isinstance(agent.get("metrics"), dict) else {}
+    profile = _find_agent_profile(environment, str(agent_id))
+
+    death_index: Optional[int] = None
+    for idx, row in enumerate(trace):
+        if isinstance(row, dict) and row.get("status") == "dead":
+            death_index = idx
+            break
+
+    final_row = trace[-1] if trace and isinstance(trace[-1], dict) else {}
+    death_row = trace[death_index] if death_index is not None and isinstance(trace[death_index], dict) else {}
+    reference_index = death_index if death_index is not None else len(trace) - 1
+    evidence_window = []
+    if reference_index >= 0:
+        start = max(0, reference_index - 3)
+        evidence_window = _compact_trace_rows(trace[start : reference_index + 1])
+
+    bids = [
+        _safe_float(row.get("bid"))
+        for row in trace
+        if isinstance(row, dict) and _safe_float(row.get("bid")) is not None
+    ]
+    hp_values = [
+        _safe_float(row.get("hp_after"))
+        for row in trace
+        if isinstance(row, dict) and _safe_float(row.get("hp_after")) is not None
+    ]
+    budgets = [
+        _safe_float(row.get("budget_after"))
+        for row in trace
+        if isinstance(row, dict) and _safe_float(row.get("budget_after")) is not None
+    ]
+
+    salary = _safe_float(profile.get("daily_salary"))
+    water_requirement = _safe_float(profile.get("water_requirement"))
+    total_bid = _safe_float(metrics.get("total_bid"), sum(bids) if bids else 0.0)
+    avg_bid = _safe_float(metrics.get("average_bid"), (sum(bids) / len(bids)) if bids else 0.0)
+    final_budget = _safe_float(final_row.get("budget_after"), budgets[-1] if budgets else None)
+    budget_at_death = _safe_float(death_row.get("budget_after")) if death_row else None
+
+    early_count = max(1, len(bids) // 3) if bids else 0
+    early_total_bid = sum(bids[:early_count]) if early_count else 0.0
+
+    low_hp_days = [
+        row.get("day")
+        for row in trace
+        if isinstance(row, dict)
+        and _safe_float(row.get("hp_after")) is not None
+        and (_safe_float(row.get("hp_after")) or 0.0) <= 3.0
+    ]
+
+    high_budget_at_death = False
+    if budget_at_death is not None and salary and salary > 0:
+        high_budget_at_death = budget_at_death >= 2.0 * salary
+
+    early_overspending = False
+    if salary and salary > 0 and early_total_bid > 0:
+        early_overspending = early_total_bid >= 2.0 * salary * max(1, early_count)
+
+    return {
+        "valid_for_strategy_judging": bool(admitted == 1 and outcome_valid == 1 and len(trace) > 0),
+        "agent_profile": profile,
+        "episode_days": environment.get("episode_days"),
+        "trace_days_observed": len(trace),
+        "survival_days": metrics.get("survival_days"),
+        "death_day": death_row.get("day") if death_row else None,
+        "final_status": final_row.get("status"),
+        "final_hp": metrics.get("final_hp", final_row.get("hp_after")),
+        "final_budget": _round_or_none(final_budget, 3),
+        "budget_at_death": _round_or_none(budget_at_death, 3),
+        "budget_at_death_in_salary_units": (
+            round(budget_at_death / salary, 3)
+            if budget_at_death is not None and salary and salary > 0
+            else None
+        ),
+        "high_budget_at_death_flag": high_budget_at_death,
+        "total_bid": _round_or_none(total_bid, 3),
+        "average_bid": _round_or_none(avg_bid, 3),
+        "average_bid_salary_ratio": (
+            round(avg_bid / salary, 4)
+            if avg_bid is not None and salary and salary > 0
+            else None
+        ),
+        "early_total_bid": round(early_total_bid, 3),
+        "early_overspending_flag": early_overspending,
+        "min_hp_after": _round_or_none(min(hp_values), 3) if hp_values else None,
+        "low_hp_days": low_hp_days[:10],
+        "bid_entropy": metrics.get("bid_entropy"),
+        "bid_variance": metrics.get("bid_variance"),
+        "bid_supply_sensitivity": metrics.get("bid_supply_sensitivity"),
+        "supply_bid_correlation": metrics.get("supply_bid_correlation"),
+        "static_policy": metrics.get("static_policy"),
+        "strategy_complexity": metrics.get("strategy_complexity"),
+        "branch_count": metrics.get("branch_count"),
+        "loop_count": metrics.get("loop_count"),
+        "function_call_count": metrics.get("function_call_count"),
+        "water_requirement": water_requirement,
+        "daily_salary": salary,
+        "evidence_window_around_death_or_final": evidence_window,
+    }
+
+
 def build_judge_item(
     batch_name: str,
     condition_label: str,
@@ -70,6 +223,15 @@ def build_judge_item(
     outcome_valid = int(agent.get("outcome_valid", record.get("outcome_valid", 0)))
     daily_trace = agent.get("daily_trace", [])
     has_daily_trace = isinstance(daily_trace, list) and len(daily_trace) > 0
+    environment = record.get("environment", {}) if isinstance(record.get("environment"), dict) else {}
+    evidence_summary = _build_evidence_summary(
+        record=record,
+        agent=agent,
+        agent_id=str(agent_id),
+        admitted=admitted,
+        outcome_valid=outcome_valid,
+        daily_trace=daily_trace,
+    )
 
     return {
         "item_id": _build_item_id(batch_name, exp_id, meta_round_id, str(agent_id)),
@@ -81,10 +243,11 @@ def build_judge_item(
         "model_name": model_name,
         "evaluation_mode": record.get("evaluation_mode"),
         "environment": {
-            "scenario": record.get("environment", {}).get("scenario"),
-            "supply_range": record.get("environment", {}).get("supply_range"),
-            "episode_days": record.get("environment", {}).get("episode_days"),
-            "supply_list": record.get("environment", {}).get("supply_list"),
+            "scenario": environment.get("scenario"),
+            "supply_range": environment.get("supply_range"),
+            "episode_days": environment.get("episode_days"),
+            "supply_list": environment.get("supply_list"),
+            "players": environment.get("players"),
         },
         "submission_status": {
             "admitted": admitted,
@@ -110,6 +273,7 @@ def build_judge_item(
         "trajectory": {
             "daily_trace": daily_trace,
             "metrics": agent.get("metrics"),
+            "evidence_summary": evidence_summary,
         },
         "is_valid_item": bool(admitted == 1 and outcome_valid == 1 and has_daily_trace),
     }
@@ -251,6 +415,8 @@ def run_judge_pipeline(
     if max_items > 0:
         pending_items = stratified_sample_items(pending_items, max_items)
 
+    from judge_backend import JudgeBackend
+
     backend = JudgeBackend(
         backend_name=judge_backend,
         model=judge_model,
@@ -296,6 +462,8 @@ def run_judge_pipeline(
         os.path.join(output_dir, "judge_failure_label_distribution.json"),
         aggregation.get("failure_label_distribution", {}),
     )
+
+    from judge_table_plot import generate_judge_tables
 
     generate_judge_tables(aggregation=aggregation, output_dir=output_dir)
 

@@ -4,12 +4,11 @@ from typing import Any, Dict, Iterable, List, Tuple
 
 SCORE_KEYS = [
     "strategy_quality_score",
-    "budget_management_score",
-    "risk_management_score",
-    "supply_adaptation_score",
-    "opponent_awareness_score",
-    "reasoning_policy_consistency",
-    "policy_trajectory_consistency",
+    "survival_risk_management_score",
+    "budget_efficiency_score",
+    "opponent_supply_adaptation_score",
+    "temporal_planning_score",
+    "reasoning_code_trace_consistency_score",
     "implementation_quality_score",
     "judge_confidence",
 ]
@@ -42,6 +41,7 @@ def _aggregate_group(records: Iterable[Dict[str, Any]]) -> Dict[str, Any]:
     valid_score_lists: Dict[str, List[float]] = defaultdict(list)
     failure_counter: Counter = Counter()
     primary_failure_counter: Counter = Counter()
+    failure_severity_lists: Dict[str, List[float]] = defaultdict(list)
 
     valid_count = 0
     for record in records:
@@ -65,6 +65,16 @@ def _aggregate_group(records: Iterable[Dict[str, Any]]) -> Dict[str, Any]:
 
         primary_failure_counter[str(judge.get("primary_failure_mode", "none"))] += 1
 
+        annotations = judge.get("failure_annotations", [])
+        if isinstance(annotations, list):
+            for annotation in annotations:
+                if not isinstance(annotation, dict):
+                    continue
+                label = str(annotation.get("label", "")).strip()
+                severity = annotation.get("severity")
+                if label and isinstance(severity, (int, float)):
+                    failure_severity_lists[label].append(float(severity))
+
     output = {
         "count": len(records),
         "valid_item_count": valid_count,
@@ -76,6 +86,10 @@ def _aggregate_group(records: Iterable[Dict[str, Any]]) -> Dict[str, Any]:
         },
         "failure_label_distribution": dict(failure_counter),
         "primary_failure_distribution": dict(primary_failure_counter),
+        "avg_failure_severity": {
+            label: round(_safe_avg(values), 4)
+            for label, values in sorted(failure_severity_lists.items())
+        },
     }
 
     return output

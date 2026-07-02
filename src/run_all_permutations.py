@@ -24,6 +24,8 @@ def aggregate_batch_results(batch_folder, batch_manifest=None):
     import os
     import json
     import re
+    import ast
+    import statistics
     import time
     from collections import defaultdict
 
@@ -34,16 +36,12 @@ def aggregate_batch_results(batch_folder, batch_manifest=None):
         ("avg_total_bid", "total_bid", 2),
         ("avg_average_bid", "metric_average_bid", 2),
         ("avg_bid_variance", "bid_variance", 4),
-        ("avg_bid_entropy", "bid_entropy", 4),
         ("avg_bid_supply_sensitivity", "bid_supply_sensitivity", 4),
-        ("avg_opponent_awareness_score", "opponent_awareness_score", 4),
         ("avg_recovery_score", "recovery_score", 4),
         ("avg_supply_bid_correlation", "supply_bid_correlation", 4),
         ("avg_utility_score", "utility_score", 4),
-        ("avg_survival_efficiency", "survival_efficiency", 6),
         ("avg_strategy_complexity", "strategy_complexity", 4),
         ("avg_branch_count", "branch_count", 4),
-        ("avg_loop_count", "loop_count", 4),
         ("avg_function_call_count", "function_call_count", 4),
     ]
 
@@ -71,6 +69,131 @@ def aggregate_batch_results(batch_folder, batch_manifest=None):
         ("valid_round_rate", "valid_round_rate", 4),
     ]
 
+    OPP_CODE_PATTERNS = [
+        "opponents_status",
+        "opponent",
+        "opp",
+        "other",
+        "rival",
+        "competitor",
+        "last_bid",
+        "last_status",
+        "last_hp_after",
+        "last_budget_after",
+        "water_requirement",
+        "daily_salary",
+        "trace_history",
+    ]
+
+    REASONING_OPP_PATTERNS = [
+        "opponent",
+        "opponents",
+        "competition",
+        "competitor",
+        "rival",
+        "other agents",
+        "their bid",
+        "last bid",
+        "aggressive",
+        "conservative",
+    ]
+
+    TOKEN_PATTERN = re.compile(r"[A-Za-z_][A-Za-z0-9_]*|\d+(?:\.\d+)?")
+
+    def strip_get_bid_signature(code_text):
+        if not isinstance(code_text, str):
+            return ""
+
+        lines = code_text.splitlines()
+
+        for index, line in enumerate(lines):
+            if line.lstrip().startswith("def get_bid"):
+                return "\n".join(lines[index + 1:])
+
+        return code_text
+
+    def count_pattern_occurrences(text, patterns):
+        if not isinstance(text, str) or not text:
+            return 0
+
+        lowered = text.lower()
+        return sum(lowered.count(pattern.lower()) for pattern in patterns)
+
+    def compute_opp_code_aware_score(strategy_code):
+        return count_pattern_occurrences(
+            strip_get_bid_signature(strategy_code),
+            OPP_CODE_PATTERNS,
+        )
+
+    def uses_opponent_status(strategy_code):
+        if not isinstance(strategy_code, str) or not strategy_code.strip():
+            return False
+
+        try:
+            tree = ast.parse(strategy_code)
+        except Exception:
+            return compute_opp_code_aware_score(strategy_code) > 0
+
+        for node in ast.walk(tree):
+            if (
+                isinstance(node, ast.Name)
+                and node.id == "opponents_status"
+                and isinstance(node.ctx, ast.Load)
+            ):
+                return True
+
+        return False
+
+    def compute_reasoning_opp_aware_score(agent_entry):
+        generation_stats = agent_entry.get("generation_stats") or {}
+        reasoning_text = (
+            generation_stats.get("final_reasoning")
+            or generation_stats.get("one_shot_reasoning")
+            or agent_entry.get("reasoning_cot")
+            or ""
+        )
+        return count_pattern_occurrences(reasoning_text, REASONING_OPP_PATTERNS)
+
+    def tokenize_code(strategy_code):
+        if not isinstance(strategy_code, str):
+            return set()
+
+        return set(TOKEN_PATTERN.findall(strategy_code.lower()))
+
+    def compute_strategy_revision_score(previous_code, current_code):
+        previous_tokens = tokenize_code(previous_code)
+        current_tokens = tokenize_code(current_code)
+
+        union = previous_tokens | current_tokens
+        if not union:
+            return 0.0
+
+        intersection = previous_tokens & current_tokens
+        return 1.0 - (len(intersection) / len(union))
+
+    def get_numeric(mapping, key):
+        value = mapping.get(key)
+        if isinstance(value, bool):
+            value = int(value)
+        if isinstance(value, (int, float)):
+            return float(value)
+        return None
+
+    def new_round_item():
+        return {
+            "opp_code_aware_sum": 0.0,
+            "opp_code_used_sum": 0.0,
+            "code_count": 0,
+            "reasoning_opp_aware_sum": 0.0,
+            "reasoning_count": 0,
+            "survival_days_sum": 0.0,
+            "utility_score_sum": 0.0,
+            "performance_count": 0,
+            "death_count": 0,
+            "strategy_revision_sum": 0.0,
+            "strategy_revision_count": 0,
+        }
+
     def new_pool_item():
         return {
             "performance_weighted_sums": defaultdict(float),
@@ -80,6 +203,16 @@ def aggregate_batch_results(batch_folder, batch_manifest=None):
             "attempted_rounds": 0,
             "agent_observations": 0,
             "experiments": set(),
+            "round_metrics": defaultdict(new_round_item),
+            "opp_code_aware_sum": 0.0,
+            "opp_code_used_sum": 0.0,
+            "code_count": 0,
+            "reasoning_opp_aware_sum": 0.0,
+            "reasoning_count": 0,
+            "strategy_revision_sum": 0.0,
+            "strategy_revision_count": 0,
+            "role_survival_sums": defaultdict(float),
+            "role_survival_counts": defaultdict(int),
         }
 
     model_pool = defaultdict(new_pool_item)
@@ -142,6 +275,139 @@ def aggregate_batch_results(batch_folder, batch_manifest=None):
 
             if isinstance(value, (int, float)) and attempted_rounds > 0:
                 item["reliability_weighted_sums"][report_key] += float(value) * attempted_rounds
+
+    def add_code_observation(pool, group_name, meta_round_id, opp_score, opp_used, reasoning_score):
+        item = pool[group_name]
+        round_item = item["round_metrics"][meta_round_id]
+
+        round_item["opp_code_aware_sum"] += opp_score
+        round_item["opp_code_used_sum"] += 1.0 if opp_used else 0.0
+        round_item["code_count"] += 1
+        round_item["reasoning_opp_aware_sum"] += reasoning_score
+        round_item["reasoning_count"] += 1
+
+        item["opp_code_aware_sum"] += opp_score
+        item["opp_code_used_sum"] += 1.0 if opp_used else 0.0
+        item["code_count"] += 1
+        item["reasoning_opp_aware_sum"] += reasoning_score
+        item["reasoning_count"] += 1
+
+    def add_meta_performance(pool, group_name, meta_round_id, survival_days, utility_score, dead):
+        item = pool[group_name]
+        round_item = item["round_metrics"][meta_round_id]
+
+        round_item["survival_days_sum"] += survival_days
+        round_item["utility_score_sum"] += utility_score
+        round_item["performance_count"] += 1
+        round_item["death_count"] += 1 if dead else 0
+
+    def add_strategy_revision(pool, group_name, meta_round_id, revision_score):
+        item = pool[group_name]
+        round_item = item["round_metrics"][meta_round_id]
+
+        round_item["strategy_revision_sum"] += revision_score
+        round_item["strategy_revision_count"] += 1
+        item["strategy_revision_sum"] += revision_score
+        item["strategy_revision_count"] += 1
+
+    def add_role_survival(model_name, agent_id, survival_days):
+        item = model_pool[model_name]
+        item["role_survival_sums"][agent_id] += survival_days
+        item["role_survival_counts"][agent_id] += 1
+
+    def add_meta_round_stats(exp_dir, averages):
+        meta_rounds = load_meta_rounds(exp_dir)
+        previous_code_by_agent = {}
+
+        for meta_round_id, payload in meta_rounds:
+            agents = payload.get("agents", [])
+            if not isinstance(agents, list):
+                continue
+
+            for agent_entry in agents:
+                if not isinstance(agent_entry, dict):
+                    continue
+
+                agent_id = agent_entry.get("agent_id")
+                if not agent_id:
+                    continue
+
+                stats = averages.get(agent_id) or {}
+                model_name = stats.get("model_used", "Unknown Model")
+                agent_name = stats.get("developer_name", agent_id)
+                strategy_code = agent_entry.get("strategy_code") or ""
+
+                opp_score = compute_opp_code_aware_score(strategy_code)
+                opp_used = uses_opponent_status(strategy_code)
+                reasoning_score = compute_reasoning_opp_aware_score(agent_entry)
+
+                add_code_observation(
+                    pool=model_pool,
+                    group_name=model_name,
+                    meta_round_id=meta_round_id,
+                    opp_score=opp_score,
+                    opp_used=opp_used,
+                    reasoning_score=reasoning_score,
+                )
+                add_code_observation(
+                    pool=agent_pool,
+                    group_name=agent_name,
+                    meta_round_id=meta_round_id,
+                    opp_score=opp_score,
+                    opp_used=opp_used,
+                    reasoning_score=reasoning_score,
+                )
+
+                metrics = agent_entry.get("metrics") or {}
+                admitted = int(agent_entry.get("admitted", 0) or 0) == 1
+                outcome_valid = int(agent_entry.get("outcome_valid", 0) or 0) == 1
+                survival_days = get_numeric(metrics, "survival_days")
+                utility_score = get_numeric(metrics, "utility_score")
+                final_hp = get_numeric(metrics, "final_hp")
+
+                if admitted and outcome_valid and survival_days is not None and utility_score is not None:
+                    dead = bool(final_hp is not None and final_hp <= 0)
+                    add_meta_performance(
+                        pool=model_pool,
+                        group_name=model_name,
+                        meta_round_id=meta_round_id,
+                        survival_days=survival_days,
+                        utility_score=utility_score,
+                        dead=dead,
+                    )
+                    add_meta_performance(
+                        pool=agent_pool,
+                        group_name=agent_name,
+                        meta_round_id=meta_round_id,
+                        survival_days=survival_days,
+                        utility_score=utility_score,
+                        dead=dead,
+                    )
+                    add_role_survival(
+                        model_name=model_name,
+                        agent_id=agent_name,
+                        survival_days=survival_days,
+                    )
+
+                if agent_id in previous_code_by_agent:
+                    revision_score = compute_strategy_revision_score(
+                        previous_code_by_agent[agent_id],
+                        strategy_code,
+                    )
+                    add_strategy_revision(
+                        pool=model_pool,
+                        group_name=model_name,
+                        meta_round_id=meta_round_id,
+                        revision_score=revision_score,
+                    )
+                    add_strategy_revision(
+                        pool=agent_pool,
+                        group_name=agent_name,
+                        meta_round_id=meta_round_id,
+                        revision_score=revision_score,
+                    )
+
+                previous_code_by_agent[agent_id] = strategy_code
 
     for root, _, files in os.walk(batch_folder):
         if "agent_averages.json" not in files:
@@ -219,7 +485,148 @@ def aggregate_batch_results(batch_folder, batch_manifest=None):
                 experiment_id=experiment_id,
             )
 
-    def finalize_pool(pool):
+        add_meta_round_stats(root, averages)
+
+    def finalize_meta_round_fields(row, data):
+        all_round_ids = sorted(data["round_metrics"].keys())
+
+        for meta_round_id in all_round_ids:
+            round_item = data["round_metrics"][meta_round_id]
+            prefix = f"meta_round_{meta_round_id}"
+
+            code_count = round_item["code_count"]
+            reasoning_count = round_item["reasoning_count"]
+            performance_count = round_item["performance_count"]
+            revision_count = round_item["strategy_revision_count"]
+
+            row[f"{prefix}_opp_code_aware_score"] = (
+                round(round_item["opp_code_aware_sum"] / code_count, 4)
+                if code_count > 0 else None
+            )
+            row[f"{prefix}_opp_code_use_rate"] = (
+                round(round_item["opp_code_used_sum"] / code_count, 4)
+                if code_count > 0 else None
+            )
+            row[f"{prefix}_reasoning_opp_aware_score"] = (
+                round(round_item["reasoning_opp_aware_sum"] / reasoning_count, 4)
+                if reasoning_count > 0 else None
+            )
+            row[f"{prefix}_avg_survival_days"] = (
+                round(round_item["survival_days_sum"] / performance_count, 2)
+                if performance_count > 0 else None
+            )
+            row[f"{prefix}_avg_utility_score"] = (
+                round(round_item["utility_score_sum"] / performance_count, 4)
+                if performance_count > 0 else None
+            )
+            row[f"{prefix}_mortality_rate"] = (
+                f"{(round_item['death_count'] / performance_count) * 100:.1f}%"
+                if performance_count > 0 else "N/A"
+            )
+
+            if meta_round_id > 1:
+                row[f"{prefix}_strategy_revision_score"] = (
+                    round(round_item["strategy_revision_sum"] / revision_count, 4)
+                    if revision_count > 0 else None
+                )
+
+        code_count = data["code_count"]
+        reasoning_count = data["reasoning_count"]
+        revision_count = data["strategy_revision_count"]
+
+        row["grand_avg_opp_code_aware_score"] = (
+            round(data["opp_code_aware_sum"] / code_count, 4)
+            if code_count > 0 else None
+        )
+        row["grand_avg_opp_code_use_rate"] = (
+            round(data["opp_code_used_sum"] / code_count, 4)
+            if code_count > 0 else None
+        )
+        row["grand_avg_reasoning_opp_aware_score"] = (
+            round(data["reasoning_opp_aware_sum"] / reasoning_count, 4)
+            if reasoning_count > 0 else None
+        )
+
+        if (
+            row["grand_avg_reasoning_opp_aware_score"] is not None
+            and row["grand_avg_opp_code_aware_score"] is not None
+        ):
+            row["grand_avg_opp_awareness_gap"] = round(
+                row["grand_avg_reasoning_opp_aware_score"]
+                - row["grand_avg_opp_code_aware_score"],
+                4,
+            )
+        else:
+            row["grand_avg_opp_awareness_gap"] = None
+
+        row["grand_avg_strategy_revision_score"] = (
+            round(data["strategy_revision_sum"] / revision_count, 4)
+            if revision_count > 0 else None
+        )
+
+        first_round = data["round_metrics"].get(1)
+        third_round = data["round_metrics"].get(3)
+
+        if first_round and third_round:
+            first_performance_count = first_round["performance_count"]
+            third_performance_count = third_round["performance_count"]
+            first_code_count = first_round["code_count"]
+            third_code_count = third_round["code_count"]
+
+            row["survival_delta_mr3_mr1"] = (
+                round(
+                    (third_round["survival_days_sum"] / third_performance_count)
+                    - (first_round["survival_days_sum"] / first_performance_count),
+                    2,
+                )
+                if first_performance_count > 0 and third_performance_count > 0 else None
+            )
+            row["utility_delta_mr3_mr1"] = (
+                round(
+                    (third_round["utility_score_sum"] / third_performance_count)
+                    - (first_round["utility_score_sum"] / first_performance_count),
+                    4,
+                )
+                if first_performance_count > 0 and third_performance_count > 0 else None
+            )
+            row["opp_code_aware_delta_mr3_mr1"] = (
+                round(
+                    (third_round["opp_code_aware_sum"] / third_code_count)
+                    - (first_round["opp_code_aware_sum"] / first_code_count),
+                    4,
+                )
+                if first_code_count > 0 and third_code_count > 0 else None
+            )
+        else:
+            row["survival_delta_mr3_mr1"] = None
+            row["utility_delta_mr3_mr1"] = None
+            row["opp_code_aware_delta_mr3_mr1"] = None
+
+    def finalize_role_fields(row, data):
+        role_averages = {}
+
+        for role, total in data["role_survival_sums"].items():
+            count = data["role_survival_counts"].get(role, 0)
+            if count > 0:
+                role_averages[role] = total / count
+
+        if not role_averages:
+            row["role_sensitivity_score"] = None
+            row["best_role_survival_days"] = None
+            row["worst_role_survival_days"] = None
+            row["best-worst_gap"] = None
+            return
+
+        values = list(role_averages.values())
+        row["role_sensitivity_score"] = (
+            round(statistics.pstdev(values), 4)
+            if len(values) > 1 else 0.0
+        )
+        row["best_role_survival_days"] = round(max(values), 2)
+        row["worst_role_survival_days"] = round(min(values), 2)
+        row["best-worst_gap"] = round(max(values) - min(values), 2)
+
+    def finalize_pool(pool, include_role_metrics=False):
         output = {}
 
         for group_name, data in pool.items():
@@ -266,6 +673,11 @@ def aggregate_batch_results(batch_folder, batch_manifest=None):
                 else:
                     row[f"grand_avg_{report_key}"] = round(weighted_sum / attempted_rounds, decimals)
 
+            finalize_meta_round_fields(row, data)
+
+            if include_role_metrics:
+                finalize_role_fields(row, data)
+
             output[group_name] = row
 
         return output
@@ -276,7 +688,7 @@ def aggregate_batch_results(batch_folder, batch_manifest=None):
             "source_batch": batch_folder,
         },
         "batch_execution_manifest": batch_manifest or {},
-        "performance_by_model": finalize_pool(model_pool),
+        "performance_by_model": finalize_pool(model_pool, include_role_metrics=True),
         "performance_by_agent": finalize_pool(agent_pool),
     }
 

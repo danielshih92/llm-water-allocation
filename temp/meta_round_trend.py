@@ -483,21 +483,21 @@ def _write_trend_plot(
             label="Average",
         )
 
-    axes[0].set_title("Average Survival")
+    # axes[0].set_title("Average Survival")
     axes[0].set_xlabel("Meta Round")
     axes[0].set_ylabel("Survival Days")
     axes[0].set_xticks(round_ids)
     axes[0].grid(True, alpha=0.25)
 
-    axes[1].set_title("Mortality Rate")
+    # axes[1].set_title("Mortality Rate")
     axes[1].set_xlabel("Meta Round")
-    axes[1].set_ylabel("Mortality (%)")
+    axes[1].set_ylabel("Mortality Rate(%)")
     axes[1].set_xticks(round_ids)
     axes[1].grid(True, alpha=0.25)
 
     handles, plot_labels = axes[0].get_legend_handles_labels()
     fig.legend(handles, plot_labels, loc="lower center", ncol=min(3, len(plot_labels)))
-    fig.suptitle(title, fontsize=13)
+    # fig.suptitle(title, fontsize=13)
     fig.tight_layout(rect=(0, 0.12, 1, 0.92))
     fig.savefig(path, dpi=300)
     plt.close(fig)
@@ -684,7 +684,7 @@ def main() -> None:
 
     _write_csv(rows, csv_path)
     _write_detail_csv(summaries, detail_csv_path)
-    wrote_png = _write_trend_plot(summaries, png_path, "Meta-Round Trend")
+    wrote_png = _write_trend_plot(summaries, png_path, "")
     wrote_complexity_png = _write_complexity_plot(
         summaries,
         complexity_png_path,

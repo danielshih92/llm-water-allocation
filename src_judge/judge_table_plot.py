@@ -66,8 +66,11 @@ def _summary_rows(summary: Dict[str, Dict[str, Any]], key_name: str) -> List[Dic
                 "Count": int(stats.get("count", 0)),
                 "Valid Item Rate": _to_pct(stats.get("valid_item_rate")),
                 "Strategy Quality": _to_score(avg.get("strategy_quality_score")),
-                "Reasoning-Policy Consistency": _to_score(avg.get("reasoning_policy_consistency")),
-                "Policy-Trajectory Consistency": _to_score(avg.get("policy_trajectory_consistency")),
+                "Survival Risk": _to_score(avg.get("survival_risk_management_score")),
+                "Budget Efficiency": _to_score(avg.get("budget_efficiency_score")),
+                "Opponent/Supply Adaptation": _to_score(avg.get("opponent_supply_adaptation_score")),
+                "Temporal Planning": _to_score(avg.get("temporal_planning_score")),
+                "Reasoning-Code-Trace": _to_score(avg.get("reasoning_code_trace_consistency_score")),
                 "Implementation Quality": _to_score(avg.get("implementation_quality_score")),
                 "Judge Confidence": _to_score(avg.get("judge_confidence")),
             }

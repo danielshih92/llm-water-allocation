@@ -34,9 +34,9 @@ Batch run (permutations)
    python3 src/run_all_permutations.py --slice-start 1 --slice-end 120 --opponent-info-mode full_code_access
 
 3) Run multiple slices into the same batch folder:
-   python3 src/run_all_permutations.py --slice-start 13 --slice-end 13 --no-plots --batch-name batch_028_full_code_access_med_20days --meta-rounds 3 --episode-days 20 --opponent-info-mode full_code_access --seed 42 --scenario medium
+   python3 src/run_all_permutations.py --slice-start 1 --slice-end 3 --no-plots --batch-name batch_031_full_code_access_c_med_20days --meta-rounds 3 --episode-days 20 --opponent-info-mode full_code_access --seed 42 --scenario medium
 
-   python3 src/run_all_permutations.py --slice-start 1 --slice-end 120 --no-plots --batch-name batch_029_no_opp_info_med_20days --meta-rounds 3 --episode-days 20 --opponent-info-mode no_opponent_info --seed 42 --scenario medium
+   python3 src/run_all_permutations.py --slice-start 1 --slice-end 3 --no-plots --batch-name batch_032_no_opp_info_c_med_20days --meta-rounds 3 --episode-days 20 --opponent-info-mode no_opponent_info --seed 42 --scenario medium
 
    python3 src/run_all_permutations.py --slice-start 6 --slice-end 10 --no-plots --batch-name batch_030_full_code_access_claude_seed42 --meta-rounds 3 --episode-days 20 --opponent-info-mode full_code_access --seed 42 --scenario medium
 
