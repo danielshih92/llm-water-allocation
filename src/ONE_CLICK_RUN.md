@@ -23,6 +23,9 @@ Single experiment (run.py)
 2) Uniform mode (override in CLI):
    python3 src/run.py --scenario low --meta-rounds 10 --backend-mode uniform --backend gemini --backend-model gemini-3.5-flash
 
+3) Uniform mode with Claude:
+   python3 src/run.py --scenario low --meta-rounds 10 --backend-mode uniform --backend claude --backend-model claude-sonnet-5
+
 Batch run (permutations)
 1) Run a slice of permutations:
    python3 src/run_all_permutations.py --slice-start 1 --slice-end 120
@@ -35,7 +38,7 @@ Batch run (permutations)
 
    python3 src/run_all_permutations.py --slice-start 1 --slice-end 120 --no-plots --batch-name batch_029_no_opp_info_med_20days --meta-rounds 3 --episode-days 20 --opponent-info-mode no_opponent_info --seed 42 --scenario medium
 
-   python3 src/run_all_permutations.py --slice-start 1 --slice-end 10 --no-plots --batch-name batch_027_full_code_access_gemini-2-5_seed42 --meta-rounds 3 --episode-days 20 --opponent-info-mode full_code_access --seed 42 --scenario medium
+   python3 src/run_all_permutations.py --slice-start 6 --slice-end 10 --no-plots --batch-name batch_030_full_code_access_claude_seed42 --meta-rounds 3 --episode-days 20 --opponent-info-mode full_code_access --seed 42 --scenario medium
 
 Config-only settings
 - All backend/model settings are defined in [Alympics/src/config.py](Alympics/src/config.py).
@@ -48,7 +51,7 @@ Key flags (run.py)
 - --episode-days: number of simulation days per meta-round
 - --seed: base random seed (optional)
 - --backend-mode: uniform | per-agent
-- --backend: mock | openai | gemini | ollama | deepseek (uniform only)
+- --backend: mock | openai | gemini | claude | ollama | deepseek (uniform only)
 - --backend-model, --backend-temperature, --backend-base-url (uniform only)
 - --output-dir: log
 - --experiment-id: custom name
@@ -69,7 +72,7 @@ What scripts output
 - Batch runs: log/batch_<timestamp>/exp_###/ (each exp contains the same outputs)
 
 Notes
-- If you use OpenAI or DeepSeek, set OPENAI_API_KEY or DEEPSEEK_API_KEY in your environment.
+- If you use OpenAI, DeepSeek, Gemini, or Claude, set OPENAI_API_KEY, DEEPSEEK_API_KEY, GEMINI_API_KEY, or ANTHROPIC_API_KEY in your environment.
 - OPPONENT_INFO_MODE only affects the LLM prompt context between meta-rounds.
 - When using --batch-name, exp numbering follows slice indices (e.g., slice 20-40 -> exp_020 to exp_040).
 
@@ -109,13 +112,13 @@ python temp/compare_batch.py \
 --- (meta round compare)
 python3 temp/meta_round_trend.py \
   --batch batch_023_full_code_access_gpt-nano_seed42 \
-  --present-name "GPT-5.4 nano" \
+  --present-name "GPT 5.4 nano" \
   --batch batch_022_full_code_access_deepseek-flash_seed42 \
-  --present-name "DeepSeek-V4-flash" \
+  --present-name "DeepSeek V4 flash" \
   --batch batch_025_full_code_access_gpt-5-4_seed42 \
-  --present-name "GPT-5.4" \
+  --present-name "GPT 5.4" \
   --batch batch_026_full_code_access_gemini-3-5_seed42 \
-  --present-name "Gemini-3.5" \
-  --batch batch_027_full_code_access_gemini-2-5_seed42 \
-  --present-name "Gemini-2.5" \
-  --output-prefix five_model_test
+  --present-name "Gemini 3.5" \
+  --batch batch_030_full_code_access_claude_seed42 \
+  --present-name "Claude Sonnet 5" \
+  --output-prefix five_model_test_v2

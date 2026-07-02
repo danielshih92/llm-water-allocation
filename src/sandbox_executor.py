@@ -30,6 +30,7 @@ ALLOWED_BUILTINS = {
     "round": round,
     "float": float,
     "int": int,
+    "str": str,
     "len": len,
     "sum": sum,
     "any": any,
@@ -72,14 +73,12 @@ def _execute_strategy_no_timeout(
         "__builtins__": ALLOWED_BUILTINS,
         "math": math,
     }
-    safe_locals: Dict[str, Any] = {}
-
     try:
-        exec(strategy_code, safe_globals, safe_locals)
+        exec(strategy_code, safe_globals, safe_globals)
     except Exception as exc:
         return 0.0, f"compile_error: {exc}"
 
-    get_bid = safe_locals.get("get_bid") or safe_globals.get("get_bid")
+    get_bid = safe_globals.get("get_bid")
     if not callable(get_bid):
         return 0.0, "missing_get_bid"
 

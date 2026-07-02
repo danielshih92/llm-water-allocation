@@ -202,6 +202,59 @@ class DeepSeekBackend(LLMBackend):
         return response.choices[0].message.content
 
 
+@dataclass
+class ClaudeBackend(LLMBackend):
+    model: Optional[str] = None
+    temperature: Optional[float] = None
+    api_key: Optional[str] = None
+
+    def __post_init__(self) -> None:
+        load_dotenv()
+        try:
+            from anthropic import Anthropic
+        except ImportError as exc:
+            raise RuntimeError(
+                "Claude backend requires anthropic. Install with: pip install anthropic"
+            ) from exc
+
+        resolved_api_key = self.api_key or os.getenv("ANTHROPIC_API_KEY")
+        if not resolved_api_key:
+            raise ValueError("ANTHROPIC_API_KEY is required for Claude backend")
+
+        self.client = Anthropic(api_key=resolved_api_key)
+
+        if self.model:
+            self.model = self.model.strip()
+        else:
+            self.model = config.CLAUDE_MODEL
+
+    def generate(self, prompt: str) -> str:
+        payload = {
+            "model": self.model,
+            "system": (
+                "You are a Python strategy generator. "
+                "Output valid JSON only. "
+                "The JSON must contain exactly two keys: reasoning and code. "
+                "The code must define def get_bid(day_context, my_status, opponents_status). "
+                "Do not use markdown. Do not use code fences."
+            ),
+            "messages": [
+                {
+                    "role": "user",
+                    "content": prompt,
+                },
+            ],
+            "max_tokens": 3500,
+        }
+
+        response = self.client.messages.create(**payload)
+        return "".join(
+            block.text
+            for block in response.content
+            if getattr(block, "type", None) == "text"
+        )
+
+
 def create_backend(
     name: str,
     model: Optional[str] = None,
@@ -218,6 +271,8 @@ def create_backend(
         return OllamaBackend(model=model, temperature=temperature)
     if name == "deepseek": 
         return DeepSeekBackend(model=model, temperature=temperature)
+    if name == "claude":
+        return ClaudeBackend(model=model, temperature=temperature)
     raise ValueError(f"Unknown backend: {name}")
 
 

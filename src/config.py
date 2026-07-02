@@ -16,32 +16,35 @@ OPENAI_API_VERSION = ""
 GEMINI_API_KEY = ""
 GEMINI_MODEL = "gemini-3.5-flash"
 
+# Claude config. Put ANTHROPIC_API_KEY in .env when using this backend.
+CLAUDE_MODEL = "claude-sonnet-5"
+
 # DeepSeek JSON output mode
 DEEPSEEK_JSON_MODE = True
 
 # Batch permutation inputs (run_all_permutations.py)
 AGENTS = ["Alex", "Bob", "Cindy", "David", "Eric"]
+# BATCH_MODELS = [
+#     {"backend": "openai", "model": "gpt-5.4"},
+#     {"backend": "deepseek", "model": "deepseek-v4-flash"},
+#     {"backend": "openai", "model": "gpt-5.4-nano"},
+#     {"backend": "gemini", "model": "gemini-3.5-flash"},
+#     {"backend": "claude", "model": "claude-sonnet-5"},
+# ]
+# BATCH_MODELS = [
+#     {"backend": "deepseek", "model": "deepseek-v4-flash"},
+#     {"backend": "deepseek", "model": "deepseek-v4-flash"},
+#     {"backend": "deepseek", "model": "deepseek-v4-flash"},
+#     {"backend": "deepseek", "model": "deepseek-v4-flash"},
+#     {"backend": "deepseek", "model": "deepseek-v4-flash"},
+# ]
 BATCH_MODELS = [
-    {"backend": "openai", "model": "gpt-5.4"},
-    {"backend": "deepseek", "model": "deepseek-v4-flash"},
-    {"backend": "openai", "model": "gpt-5.4-nano"},
-    {"backend": "gemini", "model": "gemini-3.5-flash"},
-    {"backend": "gemini", "model": "gemini-2.5-flash"},
+    {"backend": "claude", "model": "claude-sonnet-5"},
+    {"backend": "claude", "model": "claude-sonnet-5"},
+    {"backend": "claude", "model": "claude-sonnet-5"},
+    {"backend": "claude", "model": "claude-sonnet-5"},
+    {"backend": "claude", "model": "claude-sonnet-5"},
 ]
-# BATCH_MODELS = [
-#     {"backend": "deepseek", "model": "deepseek-v4-flash"},
-#     {"backend": "deepseek", "model": "deepseek-v4-flash"},
-#     {"backend": "deepseek", "model": "deepseek-v4-flash"},
-#     {"backend": "deepseek", "model": "deepseek-v4-flash"},
-#     {"backend": "deepseek", "model": "deepseek-v4-flash"},
-# ]
-# BATCH_MODELS = [
-#     {"backend": "gemini", "model": "gemini-2.5-flash"},
-#     {"backend": "gemini", "model": "gemini-2.5-flash"},
-#     {"backend": "gemini", "model": "gemini-2.5-flash"},
-#     {"backend": "gemini", "model": "gemini-2.5-flash"},
-#     {"backend": "gemini", "model": "gemini-2.5-flash"},
-# ]
 
 
 
@@ -49,8 +52,8 @@ BATCH_MODELS = [
 BACKEND_MODE = "uniform"
 
 # Mode 1: Uniform backend settings (all agents share the same backend/model).
-UNIFORM_BACKEND = "openai"  # openai | gemini | mock
-UNIFORM_MODEL = None         # e.g., "gpt-4.1-nano" or "gemini-1.5-pro"
+UNIFORM_BACKEND = "openai"  # openai | gemini | claude | deepseek | ollama | mock
+UNIFORM_MODEL = None         # e.g., "gpt-4.1-nano", "gemini-1.5-pro", or "claude-sonnet-5"
 UNIFORM_TEMPERATURE = None
 UNIFORM_BASE_URL = ""        # OpenAI only; leave blank for default
 
@@ -83,14 +86,15 @@ Mode 1 (uniform): all agents use the same backend/model
 1) python src/run.py --scenario low --meta-rounds 1 --backend-mode uniform --backend mock --seed 42
 2) python src/run.py --scenario low --meta-rounds 1 --backend-mode uniform --backend openai --backend-model gpt-4.1-nano
 3) python src/run.py --scenario low --meta-rounds 1 --backend-mode uniform --backend gemini --backend-model gemini-1.5-pro
+4) python src/run.py --scenario low --meta-rounds 1 --backend-mode uniform --backend claude --backend-model claude-sonnet-5
 
 Mode 2 (per-agent): per-agent backend/model defined in config
-4) python src/run.py --scenario low --meta-rounds 1 --backend-mode per-agent 
+5) python src/run.py --scenario low --meta-rounds 1 --backend-mode per-agent 
 
 Post-processing
-5) python src/export_inference.py --log log/meta_round_20260425_0831_exp96.json --experiment-id exp-96
-6) python src/export_inference.py --log-dir log --inference-root inference
-7) python src/visualize_log.py --log log/meta_round_20260425_0831_exp96.json --output-dir log/plots
+6) python src/export_inference.py --log log/meta_round_20260425_0831_exp96.json --experiment-id exp-96
+7) python src/export_inference.py --log-dir log --inference-root inference
+8) python src/visualize_log.py --log log/meta_round_20260425_0831_exp96.json --output-dir log/plots
 '''
 # python src/run.py --scenario low --meta-rounds 2 --backend openai --seed 42
 # python src/visualize_log.py --log log/meta_round_20260424_0630_exp97.json --output-dir /tmp/wac_plots

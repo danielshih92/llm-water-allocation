@@ -382,6 +382,23 @@ def _print_valid_agent_totals(summaries: Dict[str, Dict[int, Dict[str, object]]]
         print(f"- {label}: total {total_valid}/{total_agents} valid agents ({', '.join(parts)})")
 
 
+def _series_style(index: int) -> Dict[str, object]:
+    markers = ["o", "s", "^", "D", "P", "X", "v", "*"]
+    return {
+        "marker": markers[index % len(markers)],
+        "linestyle": "-",
+    }
+
+
+def _offset_x_values(round_ids: List[int], index: int, series_count: int) -> List[float]:
+    if series_count <= 1:
+        return [float(round_id) for round_id in round_ids]
+
+    offset_step = 0.005
+    offset = (index - ((series_count - 1) / 2.0)) * offset_step
+    return [float(round_id) + offset for round_id in round_ids]
+
+
 def _write_trend_plot(
     summaries: Dict[str, Dict[int, Dict[str, object]]],
     path: str,
@@ -410,7 +427,9 @@ def _write_trend_plot(
 
     fig, axes = plt.subplots(1, 2, figsize=(10.5, 4.2))
 
-    for label in labels:
+    for index, label in enumerate(labels):
+        style = _series_style(index)
+        x_values = _offset_x_values(round_ids, index, len(labels))
         survival_values = [
             summaries[label].get(round_id, {}).get("avg_survival")
             for round_id in round_ids
@@ -419,8 +438,22 @@ def _write_trend_plot(
             summaries[label].get(round_id, {}).get("mortality_rate")
             for round_id in round_ids
         ]
-        axes[0].plot(round_ids, survival_values, marker="o", linewidth=2, label=label)
-        axes[1].plot(round_ids, mortality_values, marker="o", linewidth=2, label=label)
+        axes[0].plot(
+            x_values,
+            survival_values,
+            marker=style["marker"],
+            linestyle=style["linestyle"],
+            linewidth=2,
+            label=label,
+        )
+        axes[1].plot(
+            x_values,
+            mortality_values,
+            marker=style["marker"],
+            linestyle=style["linestyle"],
+            linewidth=2,
+            label=label,
+        )
 
     if "Average" in summaries:
         average_survival = [
@@ -431,8 +464,24 @@ def _write_trend_plot(
             summaries["Average"].get(round_id, {}).get("mortality_rate")
             for round_id in round_ids
         ]
-        axes[0].plot(round_ids, average_survival, marker="o", linewidth=3.5, color="black", label="Average")
-        axes[1].plot(round_ids, average_mortality, marker="o", linewidth=3.5, color="black", label="Average")
+        axes[0].plot(
+            round_ids,
+            average_survival,
+            marker="o",
+            linewidth=3.5,
+            linestyle="--",
+            color="black",
+            label="Average",
+        )
+        axes[1].plot(
+            round_ids,
+            average_mortality,
+            marker="o",
+            linewidth=3.5,
+            linestyle="--",
+            color="black",
+            label="Average",
+        )
 
     axes[0].set_title("Average Survival")
     axes[0].set_xlabel("Meta Round")
@@ -483,19 +532,36 @@ def _write_complexity_plot(
 
     fig, ax = plt.subplots(figsize=(7.2, 4.4))
 
-    for label in labels:
+    for index, label in enumerate(labels):
+        style = _series_style(index)
+        x_values = _offset_x_values(round_ids, index, len(labels))
         complexity_values = [
             summaries[label].get(round_id, {}).get("avg_complexity")
             for round_id in round_ids
         ]
-        ax.plot(round_ids, complexity_values, marker="o", linewidth=2, label=label)
+        ax.plot(
+            x_values,
+            complexity_values,
+            marker=style["marker"],
+            linestyle=style["linestyle"],
+            linewidth=2,
+            label=label,
+        )
 
     if "Average" in summaries:
         average_complexity = [
             summaries["Average"].get(round_id, {}).get("avg_complexity")
             for round_id in round_ids
         ]
-        ax.plot(round_ids, average_complexity, marker="o", linewidth=3.5, color="black", label="Average")
+        ax.plot(
+            round_ids,
+            average_complexity,
+            marker="o",
+            linewidth=3.5,
+            linestyle="--",
+            color="black",
+            label="Average",
+        )
 
     ax.set_title("Code Complexity")
     ax.set_xlabel("Meta Round")

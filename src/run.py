@@ -1412,6 +1412,7 @@ def main() -> None:
             "mock",
             "openai",
             "gemini",
+            "claude",
             "ollama",
             "deepseek",
         ],
