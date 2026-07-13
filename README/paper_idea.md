@@ -1,0 +1,1 @@
+論文的核心概念在於我需要在paper中證明我所提出的benchmark是真的可以有條理的測出LLM在複雜環境中作為decision maker的能力，那我們定義將會定義一個好的decsion maker要包含以下三種能力，分別是:long term planning,  risk sensitive decision making, opponent modeling

@@ -1,0 +1,568 @@
+\documentclass[letterpaper]{article} % DO NOT CHANGE THIS
+\usepackage[submission]{aaai2027}  % DO NOT CHANGE THIS
+% The serif, sans-serif, and monospaced fonts are loaded automatically by
+% aaai2027.sty (newtxtext, helvet, courier). DO NOT add \usepackage{times},
+% \usepackage{helvet}, \usepackage{courier}, or any other font package.
+\usepackage[hyphens]{url}  % DO NOT CHANGE THIS
+\usepackage{graphicx} % DO NOT CHANGE THIS
+\urlstyle{rm} % DO NOT CHANGE THIS
+\def\UrlFont{\rm}  % DO NOT CHANGE THIS
+\usepackage{natbib}  % DO NOT CHANGE THIS AND DO NOT ADD ANY OPTIONS TO IT
+\usepackage{caption} % DO NOT CHANGE THIS AND DO NOT ADD ANY OPTIONS TO IT
+\frenchspacing  % DO NOT CHANGE THIS
+
+% Recommended to typeset algorithms.
+\usepackage{algorithm}
+\usepackage{algorithmic}
+
+% Recommended to typeset listings.
+\usepackage{newfloat}
+\usepackage{listings}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\DeclareCaptionStyle{ruled}{labelfont=normalfont,labelsep=colon,strut=off} % DO NOT CHANGE THIS
+\lstset{%
+    basicstyle={\footnotesize\ttfamily},
+    numbers=left,numberstyle=\footnotesize,xleftmargin=2em,
+    aboveskip=0pt,belowskip=0pt,
+    showstringspaces=false,tabsize=2,breaklines=true}
+\floatstyle{ruled}
+\newfloat{listing}{tb}{lst}{}
+\floatname{listing}{Listing}
+
+% Recommended for better-looking tables.
+\usepackage{booktabs}
+
+\pdfinfo{
+/TemplateVersion (2027.1)
+}
+
+\setcounter{secnumdepth}{0} % May be changed to 1 or 2 if section numbers are desired.
+
+% Title must be in mixed case.
+\title{Code-Mediated Multi-Agent Game Evaluation for Analyzing Strategic Behavior of LLM Agents}
+
+\author{Anonymous Submission}
+\affiliations{}
+
+\begin{document}
+
+\maketitle
+
+% Large language models are increasingly moving from assistant-style interaction toward roles that may require consequential, repeated decision making.
+
+\begin{abstract}
+Large language models (LLMs) are increasingly considered for autonomous roles that require consequential and repeated decision making. However, existing benchmarks primarily evaluate task completion or strategic reasoning in controlled games, leaving unclear whether LLMs can formulate reliable policies under scarcity, competition, uncertainty, and delayed consequences. We introduce WACBench, a code-mediated benchmark in which LLM agents generate executable bidding policies for a repeated five-agent resource competition environment and revise them across meta-rounds. To isolate the value of opponent-policy information, we compare two matched feedback conditions: both reveal only each agent's survival duration from the previous meta-round, while one additionally reveals the opponents' submitted strategy code. This design evaluates long-horizon planning, risk-sensitive resource management, opponent-aware adaptation, and the translation of strategic reasoning into persistent policies. Across five LLM backends, access to opponent code provides modest aggregate benefits but highly heterogeneous model-level effects. Homogeneous-backend experiments further reveal rapid early adaptation followed by saturation. These findings highlight a gap between acquiring additional strategic information and converting it into consistently improved decisions.
+\end{abstract}
+\noindent\textbf{Code} --- \url{https://github.com/your-anonymous-repo/code-mediated-resource-allocation}
+
+
+% Uncomment the following to link to code, datasets, or an extended version.
+% Keep this block between the abstract and the main body, and avoid de-anonymizing links.
+% \begin{links}
+%     \link{Code}{https://anonymous.4open.science/your-repository}
+%     \link{Datasets}{https://anonymous.4open.science/your-dataset}
+%     \link{Extended version}{https://anonymous.4open.science/your-extended-version}
+% \end{links}
+
+\section{Introduction}
+
+Large language models (LLMs) are increasingly evolving from passive assistants into agents capable of planning, interacting with environments, and taking actions on behalf of users. As these systems are considered for applications involving resource allocation, bidding, procurement, financial planning, and organizational decision making, evaluating their ability to complete isolated tasks is no longer sufficient. A consequential decision maker must formulate a coherent policy, account for delayed consequences, adapt to limited feedback, and remain effective when outcomes depend on the actions of other decision makers.
+
+Existing agent benchmarks have substantially advanced the evaluation of LLM-based systems. AgentBench and GAIA evaluate broad agentic capabilities such as multi-step reasoning, tool use, and open-ended task completion, while SOTOPIA and MultiAgentBench study social interaction, coordination, and competition among language agents~\cite{liu2023agentbench,mialon2023gaia,zhou2024sotopia,zhu2025multiagentbench}. These benchmarks provide important evidence of general agent competence. However, successful task completion does not necessarily demonstrate that a model can construct and maintain a long-term decision policy under competitive pressure and resource constraints.
+
+Game-theoretic environments offer a complementary approach because they provide explicit objectives, controllable uncertainty, strategic dependence among participants, and objectively measurable outcomes. Prior studies have evaluated whether LLMs can form preferences, infer beliefs, and select rational actions in classical games~\cite{fan2024rational}; examined strategic reasoning across diverse game taxonomies~\cite{duan2024gtbench,huang2025gamabench}; and studied planning and budget management in auction environments~\cite{chen2023aucarena}. Alympics further introduced the Water Allocation Challenge (WAC), a repeated resource-allocation game that combines sealed-bid auctions, asymmetric player constraints, stochastic scarcity, and survival dynamics~\cite{mao2025alympics}.
+
+These studies establish game-theoretic environments as valuable probes of LLM decision making. Nevertheless, most existing evaluations either use canonical games to isolate specific reasoning abilities or ask models to generate actions directly during interaction. Such designs do not fully test whether a model can synthesize a persistent decision policy, execute it consistently over an extended horizon, and improve the policy from sparse cross-round feedback. This distinction becomes increasingly important as LLMs move from recommending actions to constructing mechanisms that act repeatedly without continuous human intervention.
+
+Executable code provides a natural representation for such policies. Rather than prompting an LLM for a new bid on every simulation day, we ask the model to generate a Python policy that maps the current environment state to an action. The same policy is then executed throughout an entire episode. This separates policy formulation from repeated execution and makes the resulting strategy reproducible, inspectable, and auditable. Recent open-source-game research has also demonstrated the value of program-based strategies for analyzing cooperation, exploitation, and code-conditioned behavior~\cite{sistla2025opensourcegames}. Our work addresses a different but complementary question: whether executable strategy generation can be used to evaluate LLMs as long-horizon decision makers in a multi-player environment with stochastic scarcity, asymmetric constraints, budget depletion, and survival risk.
+
+We therefore introduce \textbf{WACBench}, a code-mediated benchmark built upon the Water Allocation Challenge. Five agents compete for a limited daily water supply while managing heterogeneous salaries, water requirements, health states, and budgets. In each meta-round, every LLM agent generates an executable bidding policy that governs its decisions over a complete episode. After the episode, the model may revise its policy for the next meta-round. The benchmark consequently evaluates not only the quality of individual actions, but also whether an LLM can construct a state-dependent strategy and improve it through repeated interaction.
+
+A central component of WACBench is a controlled comparison of opponent-policy information. Under \textbf{Outcome Feedback}, agents receive only the survival duration of every agent from the previous meta-round. They do not receive previous bids, allocation histories, daily trajectories, or other intermediate observations. Under \textbf{Outcome-and-Policy Feedback}, agents receive the same survival outcomes together with the opponents' submitted strategy code from the previous meta-round. This matched design isolates the marginal value of policy transparency: whether direct access to how an opponent makes decisions provides useful information beyond knowing only how long that opponent survived.
+
+WACBench evaluates models using simulator-grounded outcomes as its primary evidence. We use role-balanced survival performance as the principal benchmark score and mortality as an indicator of catastrophic failure. Cross-meta-round changes measure whether models improve from feedback, while behavioral statistics, generated code, and judge-assisted annotations are used to diagnose the mechanisms behind success and failure. Importantly, policy complexity and LLM-judge scores are treated as explanatory measurements rather than substitutes for objective game outcomes.
+
+Our experiments reveal three main findings. First, access to opponent strategy code provides a modest aggregate improvement in survival, but its effect varies substantially across model backends. Second, policy transparency tends to produce more elaborate strategies, yet additional complexity does not consistently translate into better outcomes. Third, when all agents share the same model backend, most models exhibit clear improvement between the first two meta-rounds, followed by saturation or instability. These results suggest that observing additional strategic information and effectively operationalizing that information are distinct capabilities.
+
+Our contributions are summarized as follows:
+
+\begin{itemize}
+    \item We introduce WACBench, a code-mediated benchmark for evaluating LLMs through persistent executable policies in a repeated, asymmetric, and resource-constrained multi-agent environment.
+    
+    \item We formulate opponent-policy transparency as a controlled experimental variable by comparing outcome-only feedback with matched outcome-and-policy feedback.
+    
+    \item We propose an outcome-grounded evaluation protocol that separates decision effectiveness, reliability, and adaptation from diagnostic properties such as bidding behavior, policy complexity, and judge-identified failure modes.
+    
+    \item We provide a multi-model empirical study showing that additional policy information produces heterogeneous benefits and that increased strategy elaboration does not necessarily yield more reliable decisions.
+\end{itemize}
+\section{Related Work}
+
+bla bla bla
+\section{The Repeated Water Allocation Game}
+The Water Allocation Challenge (WAC), originally introduced
+as a pilot environment in Alympics~\cite{mao2025alympics},
+is a repeated resource-allocation game in which multiple agents compete for a limited daily water supply while managing health, budget, and long-term survival. We adopt WAC as the strategic environment underlying WACBench. Although WAC is a stylized simulation rather than a direct model of a particular real-world domain, it jointly captures several properties of real-world multi-agent decision making: scarce resources, asymmetric participants, uncertainty over future supply, and the need to balance short-term survival against long-term planning.
+
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=\linewidth]{Game.png}
+    \caption{Daily interaction loop in the Water Allocation Challenge. Agents observe the announced water supply, submit simultaneous bids, receive allocation results, and update their health and budget states.}
+    \label{fig:wac_game}
+\end{figure}
+
+\subsection{Game Overview}
+
+Each episode consists of a fixed number of simulation days. At the beginning of an episode, each agent is assigned a profile containing its daily salary, water requirement, and initial health state. Agents also maintain a budget used for bidding. On each day, a stochastic water supply is announced, and all living agents submit bids simultaneously. The game then allocates water to agents according to their bids and updates each agent's health and budget.
+
+Formally, let $i \in \{1,\ldots,N\}$ denote an agent and $t$ denote the day. Each agent has a water requirement $w_i$, budget $B_{i,t}$, health points $H_{i,t}$, and a no-water counter $c_{i,t}$. The daily water supply $S_t$ is sampled from a scenario-dependent range. Agents submit bids $b_{i,t}$ without observing the current-day bids of other agents.
+
+\subsection{Daily Bidding, Allocation, and State Transitions}
+
+At the start of each day, each living agent receives its
+salary. Let
+\begin{equation}
+    \widetilde{B}_{i,t}=B_{i,t}+s_i
+\end{equation}
+denote the budget available for that day's auction.
+The environment ranks agents by descending bid, with ties
+resolved in favor of the agent with the lower water
+requirement. Let $z_{i,t}\in\{0,1\}$ indicate whether agent
+$i$ receives water on day $t$.
+
+A winning agent pays its bid, while a non-winning agent pays
+nothing:
+\begin{equation}
+    B_{i,t+1}
+    =
+    \widetilde{B}_{i,t}-z_{i,t}b_{i,t}.
+\end{equation}
+
+The consecutive no-water count is updated as
+\begin{equation}
+    c_{i,t+1}
+    =
+    \begin{cases}
+        0, & z_{i,t}=1,\\
+        c_{i,t}+1, & z_{i,t}=0.
+    \end{cases}
+\end{equation}
+
+Health then evolves according to
+\begin{equation}
+    H_{i,t+1}
+    =
+    \begin{cases}
+        \min(H_{\max},H_{i,t}+2), & z_{i,t}=1,\\
+        H_{i,t}-c_{i,t+1}, & z_{i,t}=0.
+    \end{cases}
+\end{equation}
+An agent is eliminated when its health reaches zero or below.
+
+\subsection{Strategic Challenges}
+
+WAC is strategically challenging for several reasons. First, the game is long-horizon: an agent can survive early days by spending aggressively, but this may leave insufficient budget later in the episode. Second, risk is state-dependent: low health or a high no-water counter may justify aggressive bidding, whereas the same bid may be wasteful when the agent is healthy. Third, the environment is competitive: whether a bid succeeds depends not only on supply but also on other agents' strategies. Finally, agents may be asymmetric in salary and water requirement, so a strategy that is effective for one role may fail for another.
+
+These properties make WAC a useful testbed for evaluating whether language-model agents can produce executable policies that balance survival, budget discipline, opponent modeling, and long-term planning under uncertainty.
+
+\section{WACBench}
+
+We introduce WACBench, a code-mediated benchmark built on top of WAC for evaluating strategic LLM agents. Unlike settings where an LLM directly emits a natural-language action at every step, WACBench requires each agent to generate an executable bidding policy. This design evaluates whether an LLM can translate strategic reasoning into a persistent policy that can be executed repeatedly across a full episode.
+
+\begin{figure*}[t]
+    \centering
+    \includegraphics[width=\textwidth]{framework_v3.pdf}
+    \caption{Overview of WACBench. The main pipeline connects LLM agents, the game environment, code and trace memory, and an evidence-grounded LLM judge. The bottom panel summarizes the meta-round loop in which agents read previous-round information, generate reasoning and strategy code, execute an episode, store traces and outcomes, and feed selected memory into the next meta-round.}
+    \label{fig:wacbench_framework}
+\end{figure*}
+
+\subsection{Benchmark Overview}
+
+As shown in Figure~\ref{fig:wacbench_framework}, WACBench consists of four main components: LLM agents, a game environment, a code and trace memory store, and an evidence-grounded LLM judge. The experiment controller initializes agents, assigns model backends, runs meta-rounds, and stores all intermediate artifacts. The game environment executes submitted policies, runs daily bidding and allocation, and records execution traces. The memory store preserves generated code, reasoning logs, daily traces, and final outcomes. The LLM judge is used after execution to produce structured diagnostic annotations.
+
+The benchmark primarily evaluates strategic decision quality through simulator-grounded outcomes and cross-meta-round adaptation. Reliability is assessed through code validation and runtime checks, while strategic competence is measured through survival outcomes, budget use, adaptation across meta-rounds, and diagnostic judge annotations.
+
+\subsection{Code-Mediated Agent Policies}
+
+In each meta-round, an LLM agent receives a profile, the current game setup, and condition-dependent information about other agents. The agent produces two artifacts: a concise natural-language strategy rationale and executable Python policy code. The submitted code must define a policy of the following form:
+
+\begin{verbatim}
+def get_bid(day_context, my_status, 
+opponents_status):
+    ...
+\end{verbatim}
+
+The environment calls this function on every simulation day to obtain the agent's bid. The input \texttt{day\_context} contains the current day and water supply; \texttt{my\_status} contains the agent's health, budget, and no-water counter; and \texttt{opponents\_status} contains available information about other agents, such as recent bids and state summaries.
+
+Code mediation has two advantages for evaluation. First, it creates persistent policies: the same generated policy is executed across all days of an episode, rather than asking the LLM to make isolated daily decisions. Second, it makes behavior auditable: the reasoning, executable code, and resulting trajectory can be compared directly. This helps expose cases where a model's stated reasoning does not match the implemented policy or where the implemented policy behaves differently from the stated strategy.
+
+\subsection{Meta-Round Adaptation and Feedback Conditions}
+A meta-round is the complete policy-revision cycle. At the
+beginning of meta-round $k$, each agent generates one policy
+$\pi_i^{(k)}$; the simulator then executes one $T$-day episode
+using that policy; finally, the resulting artifacts are stored
+and selected information is used to construct feedback for
+meta-round $k+1$. We use $k\in\{1,\ldots,K\}$ for meta-rounds
+and reserve $t\in\{1,\ldots,T\}$ for days within an episode.
+
+Each meta-round $k$ consists of policy generation followed by
+one complete game episode. The generated policy remains fixed
+during the episode and may be revised only before the next
+meta-round.
+
+We compare two matched feedback conditions. Under
+\textbf{Outcome Feedback (OF)}, each agent receives the vector
+of survival durations from the previous meta-round,
+\begin{equation}
+    F_{\mathrm{OF}}^{(k)}
+    =
+    \{D_1^{(k-1)},\ldots,D_N^{(k-1)}\}.
+\end{equation}
+No previous bids, allocation records, daily trajectories, or
+intermediate state histories are revealed.
+
+Under \textbf{Outcome-and-Policy Feedback (OPF)}, the agent
+receives the same outcome vector together with the strategy
+code submitted by every opponent in the previous meta-round:
+\begin{equation}
+    F_{i,\mathrm{OPF}}^{(k)}
+    =
+    F_{\mathrm{OF}}^{(k)}
+    \cup
+    \{\pi_j^{(k-1)}:j\neq i\}.
+\end{equation}
+
+Because the two conditions share the same outcome information,
+their comparison isolates the marginal value of direct access
+to opponents' policy representations.
+
+\subsection{Memory, Trace Storage, and Policy Evaluation}
+
+After each episode, WACBench stores the generated strategy code, reasoning logs, daily execution traces, and final outcomes. These records serve three purposes. First, they provide memory for later meta-rounds when the information condition allows cross-round access. Second, they support deterministic evaluation metrics such as survival days, mortality, final budget, total bid, and resource-adjusted utility. Third, they form the evidence base for judge-based diagnostic analysis.
+
+This separation between execution and evaluation is important. The judge does not affect the game or agent behavior; it is used only after execution to interpret the stored traces. As a result, outcome metrics remain deterministic and reproducible, while the judge provides additional qualitative and structured explanations.
+
+\subsection{Evidence-Grounded LLM Judge}
+
+To analyze why agents succeed or fail, WACBench includes an evidence-grounded LLM judge. The judge receives an evidence packet containing code and reasoning summaries, trace statistics, outcome evidence, and a compact window around the final or death state. It then produces a structured report with two types of annotations.
+
+First, the judge performs failure mode annotation. It assigns multi-label diagnoses such as underbidding, over-conservation, overbidding, poor opponent modeling, weak temporal planning, and excessive complexity. Each label is accompanied by a severity score, confidence score, evidence days, and a short rationale.
+
+Second, the judge scores strategy quality using a rubric over five dimensions: survival risk management, budget efficiency, opponent and supply adaptation, temporal planning, and reasoning-code-trace consistency. These scores are intended as an interpretability layer rather than primary performance metrics. The primary quantitative evaluation remains based on deterministic outcomes, while the judge helps explain the strategic mechanisms behind those outcomes.
+
+\section{Evaluation Protocol}
+
+We organize the evaluation into two complementary layers. The
+first layer measures realized decision quality using simulator
+outcomes: WACScore summarizes role-balanced survival performance,
+while mortality records the frequency of catastrophic failure. The
+second layer diagnoses three capabilities that a reliable decision
+maker should exhibit: long-term planning, risk-sensitive decision
+making, and opponent modeling. This separation prevents a model from
+being judged solely by its final outcome and allows us to identify the
+behavioral mechanisms associated with success or failure.
+
+For every metric, we report results separately under Outcome Feedback
+(OF) and Outcome-and-Policy Feedback (OPF). We additionally report the
+unweighted mean of the two conditions,
+\begin{equation}
+    \operatorname{Avg}(m)
+    =
+    \frac{m_{\mathrm{OF}}+m_{\mathrm{OPF}}}{2},
+\end{equation}
+as a feedback-agnostic summary of each model. This average is computed
+only within the same metric; quantities with different units are not
+combined into a single overall score. Differences between OPF and OF
+are analyzed separately when discussing the effect of policy
+transparency.
+
+\subsection{Outcome Metrics}
+
+\paragraph{WACScore.}
+WACScore is the primary benchmark outcome and measures role-balanced
+survival performance across the heterogeneous agent profiles. Higher
+values indicate more effective decision making over the complete
+episode.
+
+\paragraph{Mortality.}
+Mortality is the percentage of evaluated episodes in which an agent's
+health reaches zero. Unlike average survival, it directly captures
+catastrophic policy failure; lower values are therefore better.
+
+\subsection{Long-Term Planning}
+
+We evaluate long-term planning through paired counterfactual rollouts
+of previously generated policies, without making additional LLM calls.
+Each policy is first executed in a fixed baseline episode. At Days 4,
+9, and 14, provided that the focal agent remains alive, we save the
+complete pre-decision state, including its health, budget, no-water
+count, opponent states, and recent traces. At each checkpoint, we
+compare the policy's original bid with bids equal to 0\%, 10\%, 25\%,
+50\%, and 100\% of its available budget. Only the checkpoint action is
+replaced; from the following day onward, the original policy resumes.
+Every candidate action is evaluated on the same three future supply
+sequences, sampled from the lower half $[15,20]$ of the declared medium
+scenario range, while the four opponents follow fixed deterministic
+urgency-aware policies.
+
+Let $R(s,a,\omega)$ denote the remaining days survived after taking
+action $a$ in checkpoint state $s$ under future rollout $\omega$, and
+let $a_\pi$ be the policy's original action. Counterfactual Survival
+Regret (CSR) is
+\begin{equation}
+    \mathrm{CSR}
+    =
+    \mathbb{E}_{s}\!\left[
+        \max_{a\in\mathcal{A}}
+        \mathbb{E}_{\omega}[R(s,a,\omega)]
+        -
+        \mathbb{E}_{\omega}[R(s,a_\pi,\omega)]
+    \right].
+\end{equation}
+CSR is measured in expected survival days and is lower when the policy's
+chosen bid avoids preventable long-horizon survival loss. The reference
+is the best action in the tested candidate set $\mathcal{A}$, not a
+globally optimal continuous action.
+
+To distinguish actions that yield the same survival duration but leave
+different terminal resources, we define a rollout value
+\begin{equation}
+    V(s,a,\omega)
+    =
+    R(s,a,\omega)
+    +
+    \frac{1}{h_s+1}
+    \left(
+        \frac{1}{2}\frac{H_{\mathrm{final}}}{H_{\max}}
+        +
+        \frac{1}{2}\frac{B_{\mathrm{final}}}{B_{\max,s}}
+    \right),
+\end{equation}
+where $h_s$ is the remaining horizon. The terminal term is strictly
+smaller than one day, ensuring that an additional survival day always
+dominates terminal health or budget. With
+$\bar V(s,a)=\mathbb{E}_{\omega}[V(s,a,\omega)]$, Counterfactual Action
+Quality (CFAQ) is
+\begin{equation}
+    \mathrm{CFAQ}
+    =
+    \mathbb{E}_{s}\!\left[
+        \frac{\bar V(s,a_\pi)-\min_{a\in\mathcal{A}}\bar V(s,a)}
+             {\max_{a\in\mathcal{A}}\bar V(s,a)-\min_{a\in\mathcal{A}}\bar V(s,a)}
+    \right].
+\end{equation}
+CFAQ is computed only for informative states in which candidate actions
+produce different rollout values. Both long-term-planning metrics are
+conditional on reaching the checkpoint; checkpoint coverage is
+reported separately to expose possible survivor-selection effects.
+
+\subsection{Risk-Sensitive Decision Making}
+
+We evaluate risk sensitivity through offline counterfactual probing of
+the previously generated strategy code, without making additional LLM
+calls. Within each pair, we hold the decision day, budget, water supply,
+agent profile, and opponent context fixed and vary only the focal
+agent's health $H$ and consecutive no-water count $c$. We use
+$(H=7,c=1)$ as the safe reference and compare it with mild $(6,2)$,
+moderate $(3,2)$, and severe $(2,3)$ joint-risk states. These states
+correspond to progressively shorter distances to death if the agent
+continues to lose access to water. The probes are repeated in early
+resource-rich, middle normal, and late resource-scarce contexts.
+
+We use a strict response criterion so that an unchanged, constant-bid
+policy does not receive credit for risk sensitivity. Joint Risk
+Monotonicity (RM), Health Sensitivity (HS), and Drought Sensitivity
+(DS) are defined as
+\begin{align}
+    \mathrm{RM}
+    &=
+    \mathbb{E}\!\left[
+        \mathbb{I}(b_{\mathrm{joint\text{-}risk}}>b_{\mathrm{safe}})
+    \right],\\
+    \mathrm{HS}
+    &=
+    \mathbb{E}\!\left[
+        \mathbb{I}(b_{\mathrm{low\text{-}HP}}>b_{\mathrm{safe}})
+    \right],\\
+    \mathrm{DS}
+    &=
+    \mathbb{E}\!\left[
+        \mathbb{I}(b_{\mathrm{high\text{-}c}}>b_{\mathrm{safe}})
+    \right].
+\end{align}
+RM varies health and drought risk jointly, HS varies only health while
+holding $c$ fixed, and DS varies only $c$ while holding health fixed.
+The overall score gives equal weight to the three components:
+\begin{equation}
+    \mathrm{RiskSensitivity}
+    =
+    \frac{\mathrm{RM}+\mathrm{HS}+\mathrm{DS}}{3}.
+\end{equation}
+
+Risk Sensitivity measures response frequency. To measure response
+magnitude, we additionally define Normalized Bid Adjustment (NBA) as
+\begin{equation}
+    \mathrm{NBA}
+    =
+    \mathbb{E}\!\left[
+        \frac{b_{\mathrm{risk}}-b_{\mathrm{safe}}}{B}
+    \right],
+\end{equation}
+where $B$ is the available budget in the paired synthetic state.
+Normalization makes adjustments comparable across contexts with
+different budgets. The non-decreasing rate, tie rate, violation rate,
+and unnormalized bid difference are retained as appendix diagnostics
+rather than primary ranking metrics.
+
+\subsection{Opponent Modeling}
+
+Opponent modeling measures whether a policy conditions its decisions
+on strategically relevant opponent behavior and whether access to
+opponent policy code improves that adaptation. The final primary metric
+and its operational definition are left unspecified here until the
+corresponding evaluation is finalized; entries associated with this
+metric are therefore marked as ``--'' in the results table.
+
+\section{Results}
+
+\subsection{Overall Decision Performance}
+
+Table~\ref{tab:outcome-performance} reports the two simulator-grounded
+outcome metrics. Gemini 3.5 Flash achieves the highest WACScore under
+both feedback conditions and maintains a low mortality rate. Claude
+Sonnet 5 and GPT-5.4 form a second performance tier, whereas DeepSeek
+V4 Flash and GPT-5.4 Nano have substantially weaker feedback-averaged
+outcomes. The largest condition effect occurs for GPT-5.4 Nano:
+providing opponent policy information increases its WACScore from
+50.95 to 65.47 and reduces mortality from 66.42\% to 48.39\%.
+
+\begin{table}[t]
+    \centering
+    \small
+    \setlength{\tabcolsep}{5pt}
+    \caption{Simulator-grounded decision performance under Outcome
+    Feedback (OF) and Outcome-and-Policy Feedback (OPF). Avg. is the
+    unweighted mean across the two feedback conditions. Higher
+    WACScore and lower mortality are better.}
+    \label{tab:outcome-performance}
+    \begin{tabular}{lrrr rrr}
+        \toprule
+        & \multicolumn{3}{c}{WACScore $\uparrow$}
+        & \multicolumn{3}{c}{Mortality (\%) $\downarrow$} \\
+        \cmidrule(lr){2-4}\cmidrule(lr){5-7}
+        Model & OF & OPF & Avg. & OF & OPF & Avg. \\
+        \midrule
+        Gemini 3.5 Flash   & \textbf{86.47} & \textbf{87.03} & \textbf{86.75} & 25.75 & \textbf{25.51} & \textbf{25.63} \\
+        Claude Sonnet 5    & 86.17 & 83.88 & 85.03 & \textbf{25.00} & 28.98 & 26.99 \\
+        GPT-5.4            & 84.27 & 81.82 & 83.05 & 27.58 & 30.65 & 29.12 \\
+        DeepSeek V4 Flash  & 69.04 & 67.79 & 68.42 & 45.83 & 46.53 & 46.18 \\
+        GPT-5.4 Nano       & 50.95 & 65.47 & 58.21 & 66.42 & 48.39 & 57.41 \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\subsection{Capability-Level Diagnostics}
+
+Table~\ref{tab:capability-diagnostics} complements final outcomes with
+capability-level measurements. The table uses one row per feedback
+condition and an additional average row for compact comparison. We do
+not average across capability columns because they capture distinct
+constructs and use different scales.
+
+\begin{table*}[t]
+    \centering
+    \small
+    \setlength{\tabcolsep}{5pt}
+    \caption{Capability-level diagnostics grouped by the decision-making
+    capability they probe. CSR denotes Counterfactual Survival Regret in
+    expected survival days (lower is better), CFAQ denotes Counterfactual
+    Action Quality, RS denotes the strictly defined Risk Sensitivity
+    rate, and NBA denotes Normalized Bid Adjustment. CFAQ, RS, and NBA
+    are reported as percentages. Values marked ``--'' await finalization
+    of the opponent-modeling evaluation.}
+    \label{tab:capability-diagnostics}
+    \begin{tabular}{llrrrrr}
+        \toprule
+        & & \multicolumn{2}{c}{Long-Term Planning}
+        & \multicolumn{2}{c}{Risk-Sensitive Decision Making}
+        & \multicolumn{1}{c}{Opponent Modeling} \\
+        \cmidrule(lr){3-4}\cmidrule(lr){5-6}\cmidrule(lr){7-7}
+        Model & Feedback & CSR $\downarrow$ & CFAQ (\%) $\uparrow$
+        & RS (\%) $\uparrow$ & NBA (\%) $\uparrow$ & Metric $\uparrow$ \\
+        \midrule
+        Gemini 3.5 Flash
+            & OF  & 0.091 & 65.6 & 73.1 & \textbf{29.0} & -- \\
+            & OPF & 0.080 & 70.6 & 79.2 & \textbf{28.1} & -- \\
+            & Avg. & 0.086 & 68.1 & 76.1 & \textbf{28.6} & -- \\
+        \addlinespace
+        Claude Sonnet 5
+            & OF  & \textbf{0.037} & 72.8 & 74.5 & 16.3 & -- \\
+            & OPF & \textbf{0.030} & 74.3 & 78.2 & 18.5 & -- \\
+            & Avg. & \textbf{0.033} & 73.6 & 76.4 & 17.4 & -- \\
+        \addlinespace
+        GPT-5.4
+            & OF  & 0.054 & \textbf{73.5} & \textbf{81.6} & 22.4 & -- \\
+            & OPF & 0.096 & \textbf{76.5} & \textbf{88.7} & 23.1 & -- \\
+            & Avg. & 0.075 & \textbf{75.0} & \textbf{85.1} & 22.7 & -- \\
+        \addlinespace
+        DeepSeek V4 Flash
+            & OF  & 0.439 & 66.0 & 72.4 & 13.7 & -- \\
+            & OPF & 0.320 & 71.5 & 78.1 & 15.1 & -- \\
+            & Avg. & 0.379 & 68.8 & 75.3 & 14.4 & -- \\
+        \addlinespace
+        GPT-5.4 Nano
+            & OF  & 0.608 & 69.9 & 72.9 & 7.7 & -- \\
+            & OPF & 0.394 & 69.4 & 79.3 & 11.1 & -- \\
+            & Avg. & 0.501 & 69.7 & 76.1 & 9.4 & -- \\
+        \bottomrule
+    \end{tabular}
+\end{table*}
+
+The diagnostic results expose distinctions that are not visible from
+outcomes alone. GPT-5.4 has the highest feedback-averaged Risk
+Sensitivity (85.1\%), indicating that it most consistently increases
+its bid when health or drought risk rises. Gemini has a lower response
+frequency but the largest feedback-averaged Normalized Bid Adjustment
+(28.6\%), compared with 22.7\% for GPT-5.4, 17.4\% for Claude Sonnet 5,
+14.4\% for DeepSeek V4 Flash, and 9.4\% for GPT-5.4 Nano. This result
+distinguishes response frequency from response magnitude: Gemini reacts
+less consistently than GPT-5.4, but commits a substantially larger
+fraction of its available budget when it does adjust to risk. This
+stronger adjustment magnitude coincides with Gemini's superior WACScore
+and mortality, although the association should not be interpreted as
+causal. GPT-5.4 Nano again shows a pronounced benefit from policy
+feedback, with Risk Sensitivity increasing from 72.9\% under OF to
+79.3\% under OPF and NBA increasing from 7.7\% to 11.1\%.
+
+Across all five models, OPF increases the strict Risk Sensitivity score
+relative to OF. This pattern suggests that policy transparency mainly
+encourages active behavioral adjustment: models more frequently raise
+their bids under elevated risk when opponent policies are available.
+The counterfactual rollout evaluation separates survival consequences
+from action quality. Claude has the lowest feedback-averaged CSR
+(0.033 days), followed by GPT-5.4 (0.075) and Gemini (0.086), whereas
+DeepSeek (0.379) and GPT-5.4 Nano (0.501) incur substantially larger
+preventable survival losses. GPT-5.4 nevertheless obtains the highest
+feedback-averaged CFAQ (75.0\%), indicating that its selected actions
+occupy the strongest position within the tested long-horizon value
+range once terminal health and budget are used to resolve equal-survival
+outcomes. OPF reduces CSR for DeepSeek from 0.439 to 0.320 days and for
+GPT-5.4 Nano from 0.608 to 0.394 days, but increases GPT-5.4's CSR from
+0.054 to 0.096 days despite improving its CFAQ. Thus, better normalized
+resource-aware action quality does not always imply lower survival
+regret. Because these metrics are conditional on policies reaching the
+evaluation checkpoints, they complement rather than replace WACScore
+and mortality; checkpoint-coverage results are reported separately.
+
+The opponent-modeling metric remains to be inserted before the final
+analysis. Once available, we will use its OF--OPF difference to test
+whether policy transparency improves opponent-conditioned adaptation.
+
+\section{Conclusion}
+% TODO: Summarize the proposed framework, main findings, and implications for evaluating LLM agents as strategic decision-makers.
+
+% Uncomment and replace with your bibliography file when ready.
+\bibliography{aaai2027}
+
+\end{document}

@@ -34,9 +34,9 @@ Batch run (permutations)
    python3 src/run_all_permutations.py --slice-start 1 --slice-end 120 --opponent-info-mode full_code_access
 
 3) Run multiple slices into the same batch folder:
-   python3 src/run_all_permutations.py --slice-start 1 --slice-end 3 --no-plots --batch-name batch_031_full_code_access_c_med_20days --meta-rounds 3 --episode-days 20 --opponent-info-mode full_code_access --seed 42 --scenario medium
+   python3 src/run_all_permutations.py --slice-start 34 --slice-end 34 --no-plots --batch-name batch_031_full_code_access_c_med_20days --meta-rounds 3 --episode-days 20 --opponent-info-mode full_code_access --seed 42 --scenario medium
 
-   python3 src/run_all_permutations.py --slice-start 1 --slice-end 3 --no-plots --batch-name batch_032_no_opp_info_c_med_20days --meta-rounds 3 --episode-days 20 --opponent-info-mode no_opponent_info --seed 42 --scenario medium
+   python3 src/run_all_permutations.py --slice-start 6 --slice-end 120 --no-plots --batch-name batch_032_no_opp_info_c_med_20days --meta-rounds 3 --episode-days 20 --opponent-info-mode no_opponent_info --seed 42 --scenario medium
 
    python3 src/run_all_permutations.py --slice-start 6 --slice-end 10 --no-plots --batch-name batch_030_full_code_access_claude_seed42 --meta-rounds 3 --episode-days 20 --opponent-info-mode full_code_access --seed 42 --scenario medium
 
@@ -90,18 +90,19 @@ tmux display-message -p '#S'
 source venv/bin/activate
 
 ---(Main table)
-python temp/batch_table_plot.py --log-dir log --batch batch_028_full_code_access_med_20days --meta-first-round false
-python temp/batch_table_plot.py --log-dir log --batch batch_029_no_opp_info_med_20days --meta-first-round false
+python temp/batch_table_plot.py --log-dir log --batch batch_031_full_code_access_c_med_20days --meta-first-round false
+python temp/batch_table_plot.py --log-dir log --batch batch_032_no_opp_info_c_med_20days --meta-first-round false
 
-python temp/exp_plot.py --log-dir log --batch batch_017_full_code_access_med_20days --exp exp_001
+python temp/exp_plot.py --log-dir log --batch batch_031_full_code_access_c_med_20days --exp exp_001
 
 
 ---
 batch_009之後的實驗所使用的code是有被大力refactor過的
 batch_012有被refactor第二次
 batch_014refactor第三次
-current used batch *019 020* 022 023 025 026 027
-
+current used batch *019 020* 022 023 025 026 027 *028 029*
+*019 020*:different seed
+*028 029*: same seed
 --- (same model compare)
 python temp/compare_batch.py \
   --log-dir log \
@@ -122,3 +123,19 @@ python3 temp/meta_round_trend.py \
   --batch batch_030_full_code_access_claude_seed42 \
   --present-name "Claude Sonnet 5" \
   --output-prefix five_model_test_v2
+
+
+--- (long-term-planning)
+python src/long-term-planning/evaluate_horizon_awareness.py --output-folder batch_031
+
+python src/long-term-planning/evaluate_horizon_awareness.py \
+  --batch log/batch_032_no_opp_info_c_med_20days \
+  --output-folder batch_032
+
+--- (used to build main table, but will delete in the future)
+python temp/main_combine.py --seeds 42
+
+---(risk sensitive decision making)
+python3 src/risk-sensitive-decision-making/evaluate_risk_sensitivity.py \
+  --batch log/batch_032_no_opp_info_c_med_20days \
+  --batch log/batch_031_full_code_access_c_med_20days

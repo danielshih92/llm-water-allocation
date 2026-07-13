@@ -5,7 +5,7 @@ import json
 import os
 import re
 import sys
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -35,6 +35,16 @@ def _safe_float(value, default=None):
         return float(value)
     except Exception:
         return default
+
+
+def _is_dead(final_hp: object) -> bool:
+    """Return whether a valid final HP value represents death.
+
+    Do not use ``value or default`` here: zero is a valid final HP and must be
+    counted as death.
+    """
+    value = _safe_float(final_hp, None)
+    return value is not None and value <= 0
 
 
 def _ensure_dir(path: str) -> None:
@@ -182,6 +192,9 @@ def _collect_agent_round_records(batch_dir: str, include_meta_first_round: bool 
                         "survival_days": _safe_float(metrics.get("survival_days"), None) if metrics else None,
                         "final_hp": _safe_float(metrics.get("final_hp"), None) if metrics else None,
                         "average_bid": _safe_float(metrics.get("average_bid"), None) if metrics else None,
+                        "bid_variance": _safe_float(metrics.get("bid_variance"), None) if metrics else None,
+                        "bid_supply_sensitivity": _safe_float(metrics.get("bid_supply_sensitivity"), None) if metrics else None,
+                        "recovery_score": _safe_float(metrics.get("recovery_score"), None) if metrics else None,
                         "opponent_awareness_score": _safe_float(metrics.get("opponent_awareness_score"), None) if metrics else None,
                         "strategy_complexity": _safe_float(metrics.get("strategy_complexity"), None) if metrics else None,
                         "branch_count": _safe_float(metrics.get("branch_count"), None) if metrics else None,
@@ -203,7 +216,7 @@ def _aggregate_model_stats_from_batch(batch_dir: str, include_meta_first_round: 
         model_name = str(row.get("model", "Unknown Model"))
         attempted_rounds = 1
         valid_rounds = 1 if bool(row.get("performance_valid", False)) else 0
-        death_count = 1 if (valid_rounds == 1 and (_safe_float(row.get("final_hp"), 1.0) or 1.0) <= 0) else 0
+        death_count = 1 if valid_rounds == 1 and _is_dead(row.get("final_hp")) else 0
 
         item = grouped.setdefault(
             model_name,
@@ -390,7 +403,7 @@ def _build_role_model_rows_from_batch(batch_dir: str, agent_id: str, include_met
         round_count = 1 if bool(row.get("performance_valid", False)) else 0
         if round_count <= 0:
             continue
-        death_count = 1 if (_safe_float(row.get("final_hp"), 1.0) or 1.0) <= 0 else 0
+        death_count = 1 if _is_dead(row.get("final_hp")) else 0
 
         entry = grouped.setdefault(
             model_name,
@@ -443,7 +456,9 @@ def _build_model_rows(perf_by_model: Dict[str, Dict[str, object]]) -> List[Dict[
                 "Survival Days": _safe_float(stats.get("grand_avg_survival_days"), 0.0) or 0.0,
                 "Mortality Rate (%)": mortality_str,
                 "Daily Bid": _safe_float(stats.get("grand_avg_daily_bid"), 0.0) or 0.0,
-                "Opponent Awareness": _safe_float(stats.get("grand_avg_opponent_awareness_score"), 0.0) or 0.0,
+                "Bid Variance": _safe_float(stats.get("grand_avg_bid_variance"), None),
+                "Bid-Supply Sensitivity": _safe_float(stats.get("grand_avg_bid_supply_sensitivity"), None),
+                "Recovery Score": _safe_float(stats.get("grand_avg_recovery_score"), None),
                 "Code Complexity": _safe_float(stats.get("grand_avg_strategy_complexity"), 0.0) or 0.0,
                 "_mortality_numeric": _parse_percent(mortality_str),
             }
@@ -451,7 +466,11 @@ def _build_model_rows(perf_by_model: Dict[str, Dict[str, object]]) -> List[Dict[
     return rows
 
 
-def _build_model_rows_from_batch(batch_dir: str, include_meta_first_round: bool = True) -> List[Dict[str, object]]:
+def _build_model_rows_from_batch(
+    batch_dir: str,
+    include_meta_first_round: bool = True,
+    perf_by_model: Optional[Dict[str, Dict[str, object]]] = None,
+) -> List[Dict[str, object]]:
     grouped: Dict[str, Dict[str, object]] = {}
 
     round_records = _collect_agent_round_records(
@@ -465,7 +484,7 @@ def _build_model_rows_from_batch(batch_dir: str, include_meta_first_round: bool 
         round_count = 1 if bool(row.get("performance_valid", False)) else 0
         if round_count <= 0:
             continue
-        death_count = 1 if (_safe_float(row.get("final_hp"), 1.0) or 1.0) <= 0 else 0
+        death_count = 1 if _is_dead(row.get("final_hp")) else 0
 
         entry = grouped.setdefault(
             model_name,
@@ -475,7 +494,9 @@ def _build_model_rows_from_batch(batch_dir: str, include_meta_first_round: bool 
                 "weighted_sums": {
                     "Survival Days": 0.0,
                     "Daily Bid": 0.0,
-                    "Opponent Awareness": 0.0,
+                    "Bid Variance": 0.0,
+                    "Bid-Supply Sensitivity": 0.0,
+                    "Recovery Score": 0.0,
                     "Code Complexity": 0.0,
                 },
             },
@@ -485,7 +506,9 @@ def _build_model_rows_from_batch(batch_dir: str, include_meta_first_round: bool 
         entry["rounds"] += round_count
         entry["weighted_sums"]["Survival Days"] += (_safe_float(row.get("survival_days"), 0.0) or 0.0) * round_count
         entry["weighted_sums"]["Daily Bid"] += (_safe_float(row.get("average_bid"), 0.0) or 0.0) * round_count
-        entry["weighted_sums"]["Opponent Awareness"] += (_safe_float(row.get("opponent_awareness_score"), 0.0) or 0.0) * round_count
+        entry["weighted_sums"]["Bid Variance"] += (_safe_float(row.get("bid_variance"), 0.0) or 0.0) * round_count
+        entry["weighted_sums"]["Bid-Supply Sensitivity"] += (_safe_float(row.get("bid_supply_sensitivity"), 0.0) or 0.0) * round_count
+        entry["weighted_sums"]["Recovery Score"] += (_safe_float(row.get("recovery_score"), 0.0) or 0.0) * round_count
         entry["weighted_sums"]["Code Complexity"] += (_safe_float(row.get("strategy_complexity"), 0.0) or 0.0) * round_count
 
     rows: List[Dict[str, object]] = []
@@ -500,7 +523,9 @@ def _build_model_rows_from_batch(batch_dir: str, include_meta_first_round: bool 
                 "Survival Days": entry["weighted_sums"]["Survival Days"] / rounds,
                 "Mortality Rate (%)": f"{(entry['deaths'] / rounds) * 100:.1f}%",
                 "Daily Bid": entry["weighted_sums"]["Daily Bid"] / rounds,
-                "Opponent Awareness": entry["weighted_sums"]["Opponent Awareness"] / rounds,
+                "Bid Variance": entry["weighted_sums"]["Bid Variance"] / rounds,
+                "Bid-Supply Sensitivity": entry["weighted_sums"]["Bid-Supply Sensitivity"] / rounds,
+                "Recovery Score": entry["weighted_sums"]["Recovery Score"] / rounds,
                 "Code Complexity": entry["weighted_sums"]["Code Complexity"] / rounds,
                 "_mortality_numeric": (entry["deaths"] / rounds) * 100.0,
             }
@@ -524,7 +549,7 @@ def _build_role_rows_from_batch(batch_dir: str, include_meta_first_round: bool =
         if round_count <= 0:
             continue
 
-        death_count = 1 if (_safe_float(row.get("final_hp"), 1.0) or 1.0) <= 0 else 0
+        death_count = 1 if _is_dead(row.get("final_hp")) else 0
         entry = grouped.setdefault(
             role,
             {
@@ -603,7 +628,9 @@ def _format_model_summary_table(df: pd.DataFrame) -> pd.DataFrame:
     table = df.copy()
     table["Survival Days"] = table["Survival Days"].map(lambda v: _num_or_na(v, 2))
     table["Daily Bid"] = table["Daily Bid"].map(lambda v: _num_or_na(v, 2))
-    table["Opponent Awareness"] = table["Opponent Awareness"].map(lambda v: _num_or_na(v, 2))
+    table["Bid Variance"] = table["Bid Variance"].map(lambda v: _num_or_na(v, 2))
+    table["Bid-Supply Sensitivity"] = table["Bid-Supply Sensitivity"].map(lambda v: _num_or_na(v, 2))
+    table["Recovery Score"] = table["Recovery Score"].map(lambda v: _num_or_na(v, 2))
     table["Code Complexity"] = table["Code Complexity"].map(lambda v: _num_or_na(v, 2))
     return table
 
@@ -750,6 +777,208 @@ def _bubble_chart(df: pd.DataFrame, path: str) -> None:
     ax.set_ylabel("Survival Days")
     plt.tight_layout()
     plt.savefig(path, dpi=300)
+    plt.close(fig)
+
+
+def _collect_report_meta_round_metric_rows(
+    perf_by_model: Dict[str, Dict[str, object]],
+    metric_key: str,
+    value_scale: float = 1.0,
+) -> pd.DataFrame:
+    rows: List[Dict[str, object]] = []
+    pattern = re.compile(rf"^meta_round_(\d+)_{re.escape(metric_key)}$")
+
+    for model_name, stats in perf_by_model.items():
+        for key, value in stats.items():
+            match = pattern.match(key)
+            if not match:
+                continue
+
+            numeric_value = (
+                _parse_percent(str(value))
+                if metric_key == "mortality_rate"
+                else _safe_float(value, None)
+            )
+            if numeric_value is None:
+                continue
+
+            rows.append(
+                {
+                    "Model": model_name,
+                    "Meta Round": int(match.group(1)),
+                    "Value": numeric_value * value_scale,
+                }
+            )
+
+    if not rows:
+        return pd.DataFrame(columns=["Model", "Meta Round", "Value"])
+
+    return pd.DataFrame(rows).sort_values(["Model", "Meta Round"])
+
+
+def _series_style(index: int) -> Dict[str, object]:
+    markers = ["o", "s", "^", "D", "P", "X", "v", "*"]
+    return {
+        "marker": markers[index % len(markers)],
+        "linestyle": "-",
+    }
+
+
+def _offset_x_values(round_ids: List[int], index: int, series_count: int) -> List[float]:
+    if series_count <= 1:
+        return [float(round_id) for round_id in round_ids]
+
+    offset_step = 0.005
+    offset = (index - ((series_count - 1) / 2.0)) * offset_step
+    return [float(round_id) + offset for round_id in round_ids]
+
+
+def _add_average_meta_round_rows(df: pd.DataFrame) -> pd.DataFrame:
+    if df.empty:
+        return df
+
+    average_rows = []
+    for round_id, round_df in df.groupby("Meta Round"):
+        values = [_safe_float(value, None) for value in round_df["Value"].tolist()]
+        values = [value for value in values if value is not None]
+        if not values:
+            continue
+        average_rows.append(
+            {
+                "Model": "Average",
+                "Meta Round": int(round_id),
+                "Value": sum(values) / len(values),
+            }
+        )
+
+    if not average_rows:
+        return df
+
+    return pd.concat([df, pd.DataFrame(average_rows)], ignore_index=True)
+
+
+def _plot_meta_round_metric_trend(
+    ax,
+    df: pd.DataFrame,
+    title: str,
+    ylabel: str,
+) -> None:
+    if df.empty:
+        ax.set_title(title)
+        ax.text(0.5, 0.5, "No data", ha="center", va="center", transform=ax.transAxes)
+        return
+
+    model_labels = sorted(label for label in df["Model"].unique() if label != "Average")
+    round_ids = sorted(df["Meta Round"].unique())
+
+    for index, model_name in enumerate(model_labels):
+        model_df = df[df["Model"] == model_name].sort_values("Meta Round")
+        style = _series_style(index)
+        x_values = _offset_x_values(
+            [int(value) for value in model_df["Meta Round"].tolist()],
+            index,
+            len(model_labels),
+        )
+        ax.plot(
+            x_values,
+            model_df["Value"],
+            marker=style["marker"],
+            linestyle=style["linestyle"],
+            linewidth=2,
+            label=model_name,
+        )
+
+    if "Average" in set(df["Model"].unique()):
+        model_df = df[df["Model"] == "Average"].sort_values("Meta Round")
+        ax.plot(
+            model_df["Meta Round"],
+            model_df["Value"],
+            marker="o",
+            linestyle="--",
+            linewidth=3.5,
+            color="black",
+            label="Average",
+        )
+
+    ax.set_title(title)
+    ax.set_xlabel("Meta Round")
+    ax.set_ylabel(ylabel)
+    ax.set_xticks(round_ids)
+    ax.grid(True, alpha=0.25)
+
+
+def _save_meta_round_metric_plots(
+    perf_by_model: Dict[str, Dict[str, object]],
+    output_dir: str,
+) -> None:
+    metric_specs = [
+        (
+            "opp_code_aware_score",
+            "Opp Code Aware Score by Meta Round",
+            "Opp Code Aware Score",
+            "meta_round_opp_code_aware_score_trend",
+            1.0,
+        ),
+        (
+            "avg_survival_days",
+            "Average Survival Days by Meta Round",
+            "Average Survival Days",
+            "meta_round_avg_survival_days_trend",
+            1.0,
+        ),
+        (
+            "mortality_rate",
+            "Mortality Rate by Meta Round",
+            "Mortality Rate (%)",
+            "meta_round_mortality_rate_trend",
+            1.0,
+        ),
+        (
+            "opp_code_use_rate",
+            "Opp Code Use Rate by Meta Round",
+            "Opp Code Use Rate (%)",
+            "meta_round_opp_code_use_rate_trend",
+            100.0,
+        ),
+    ]
+
+    overview_items = []
+    for metric_key, title, ylabel, file_stem, value_scale in metric_specs:
+        metric_df = _collect_report_meta_round_metric_rows(
+            perf_by_model,
+            metric_key,
+            value_scale=value_scale,
+        )
+        if metric_df.empty:
+            continue
+        metric_df = _add_average_meta_round_rows(metric_df)
+
+        fig, ax = plt.subplots(figsize=(8, 5))
+        _plot_meta_round_metric_trend(ax, metric_df, title, ylabel)
+        ax.legend(loc="best", fontsize=8)
+        plt.tight_layout()
+        plt.savefig(os.path.join(output_dir, f"{file_stem}.png"), dpi=300)
+        plt.close(fig)
+
+        overview_items.append((metric_df, title, ylabel))
+
+    if not overview_items:
+        return
+
+    fig, axes = plt.subplots(2, 2, figsize=(14, 9))
+    flat_axes = axes.flatten()
+    for ax, (metric_df, title, ylabel) in zip(flat_axes, overview_items):
+        _plot_meta_round_metric_trend(ax, metric_df, title, ylabel)
+
+    for ax in flat_axes[len(overview_items):]:
+        ax.axis("off")
+
+    handles, labels = flat_axes[0].get_legend_handles_labels()
+    if handles:
+        fig.legend(handles, labels, loc="lower center", ncol=min(3, len(labels)), fontsize=9)
+    fig.suptitle("Meta-Round Metric Trends by Model", fontsize=14)
+    fig.tight_layout(rect=(0, 0.08, 1, 0.96))
+    plt.savefig(os.path.join(output_dir, "meta_round_metric_trends.png"), dpi=300)
     plt.close(fig)
 
 
@@ -1158,12 +1387,14 @@ def main() -> None:
         descending=True,
     )
 
+    perf_by_model = report.get("performance_by_model", {})
+
     rows = _build_model_rows_from_batch(
         batch_dir,
         include_meta_first_round=include_meta_first_round,
+        perf_by_model=perf_by_model,
     )
     if not rows:
-        perf_by_model = report.get("performance_by_model", {})
         rows = _build_model_rows(perf_by_model)
     if not rows:
         raise SystemExit("No model-level metrics found in global_batch_report.json")
@@ -1176,7 +1407,9 @@ def main() -> None:
         "Survival Days",
         "Mortality Rate (%)",
         "Daily Bid",
-        "Opponent Awareness",
+        "Bid Variance",
+        "Bid-Supply Sensitivity",
+        "Recovery Score",
         "Code Complexity",
     ]]
     table_df = _append_average_row(table_df, "Model")
@@ -1185,6 +1418,7 @@ def main() -> None:
 
     _save_markdown_table(formatted_table, os.path.join(output_dir, "model_summary_table.md"))
     _save_table_png(formatted_table, os.path.join(output_dir, "model_summary_table.png"), title="Model Summary Table")
+    _save_meta_round_metric_plots(perf_by_model, output_dir)
 
     strategy_pattern_rows = _build_strategy_pattern_rows(batch_dir)
     _save_simple_table(
