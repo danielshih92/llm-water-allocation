@@ -253,62 +253,63 @@ Second, the judge scores strategy quality using a rubric over five dimensions: s
 
 \section{Evaluation Protocol}
 
-We evaluate realized decision quality using WACScore and mortality,
-and diagnose three underlying capabilities: long-term planning,
-risk-sensitive decision making, and opponent-aware adaptation. Results
-are reported under Outcome Feedback (OF), Outcome-and-Policy Feedback
-(OPF), and their unweighted mean,
+We organize the evaluation into two complementary layers. The
+first layer measures realized decision quality using simulator
+outcomes: WACScore summarizes role-balanced survival performance,
+while mortality records the frequency of catastrophic failure. The
+second layer diagnoses three capabilities that a reliable decision
+maker should exhibit: long-term planning, risk-sensitive decision
+making, and opponent-aware adaptation. This separation prevents a
+model from being judged solely by its final outcome and allows us to
+identify the behavioral mechanisms associated with success or failure.
+
+For every metric, we report results separately under Outcome Feedback
+(OF) and Outcome-and-Policy Feedback (OPF). We additionally report the
+unweighted mean of the two conditions,
 \begin{equation}
-    \operatorname{Avg}(q)
+    \operatorname{Avg}(m)
     =
-    \frac{q_{\mathrm{OF}}+q_{\mathrm{OPF}}}{2},
+    \frac{m_{\mathrm{OF}}+m_{\mathrm{OPF}}}{2},
 \end{equation}
-which provides a feedback-agnostic summary for metric $q$.
+as a feedback-agnostic summary of each model. This average is computed
+only within the same metric; quantities with different units are not
+combined into a single overall score. Differences between OPF and OF
+are analyzed separately when discussing the effect of policy
+transparency.
 
 \subsection{Outcome Metrics}
 
 \paragraph{WACScore.}
-Let $T$ be the episode horizon, $\mathcal{R}$ the set of agent roles,
-$\mathcal{E}_{m,r}$ the evaluation episodes in which model $m$ occupies
-role $r$, and $D_{m,r,e}\in[0,T]$ its survival duration in episode $e$.
-We define
-\begin{equation}
-    \operatorname{WACScore}(m)
-    =
-    \frac{100}{|\mathcal{R}|T}
-    \sum_{r\in\mathcal{R}}
-    \frac{1}{|\mathcal{E}_{m,r}|}
-    \sum_{e\in\mathcal{E}_{m,r}}D_{m,r,e}.
-\end{equation}
-WACScore is therefore 100 times the role-balanced mean fraction of the
-episode survived. A score of 100 means that the model survives the full
-horizon in every role, while 50 means that it survives half of the
-horizon on average. Giving each role equal weight prevents frequently
-sampled or intrinsically easier roles from dominating the leaderboard.
+WACScore is the primary benchmark outcome and measures role-balanced
+survival performance across the heterogeneous agent profiles. Higher
+values indicate more effective decision making over the complete
+episode.
 
 \paragraph{Mortality.}
-Let $Y_{m,r,e}=1$ if the model dies during episode $e$ and $0$ otherwise.
-The role-balanced mortality rate is
-\begin{equation}
-    \operatorname{Mortality}(m)
-    =
-    \frac{100}{|\mathcal{R}|}
-    \sum_{r\in\mathcal{R}}
-    \frac{1}{|\mathcal{E}_{m,r}|}
-    \sum_{e\in\mathcal{E}_{m,r}}Y_{m,r,e}.
-\end{equation}
-It measures the frequency of catastrophic policy failure rather than
-how early a failure occurs. Thus, WACScore captures survival effectiveness,
-whereas mortality captures reliability; higher WACScore and lower
-mortality are better.
+Mortality is the percentage of evaluated episodes in which an agent's
+health reaches zero. Unlike average survival, it directly captures
+catastrophic policy failure; lower values are therefore better.
 
 \subsection{Long-Term Planning}
 
-We use paired counterfactual rollouts at fixed checkpoints, comparing
-the policy bid $a_\pi$ with a discrete set $\mathcal{A}$ of budget-scaled
-bids under shared future supply sequences. Counterfactual Survival
-Regret (CSR) measures the expected survival days lost relative to the
-best tested action:
+We evaluate long-term planning through paired counterfactual rollouts
+of previously generated policies, without making additional LLM calls.
+Each policy is first executed in a fixed baseline episode. At Days 4,
+9, and 14, provided that the focal agent remains alive, we save the
+complete pre-decision state, including its health, budget, no-water
+count, opponent states, and recent traces. At each checkpoint, we
+compare the policy's original bid with bids equal to 0\%, 10\%, 25\%,
+50\%, and 100\% of its available budget. Only the checkpoint action is
+replaced; from the following day onward, the original policy resumes.
+Every candidate action is evaluated on the same three future supply
+sequences, sampled from the lower half $[15,20]$ of the declared medium
+scenario range, while the four opponents follow fixed deterministic
+urgency-aware policies.
+
+Let $R(s,a,\omega)$ denote the remaining days survived after taking
+action $a$ in checkpoint state $s$ under future rollout $\omega$, and
+let $a_\pi$ be the policy's original action. Counterfactual Survival
+Regret (CSR) is
 \begin{equation}
     \mathrm{CSR}
     =
@@ -317,14 +318,15 @@ best tested action:
         \mathbb{E}_{\omega}[R(s,a,\omega)]
         -
         \mathbb{E}_{\omega}[R(s,a_\pi,\omega)]
-    \right],
+    \right].
 \end{equation}
-where $R(s,a,\omega)$ is remaining survival from state $s$ after action
-$a$ under rollout $\omega$. Lower CSR is better; its reference is the
-best tested action rather than the global continuous optimum.
+CSR is measured in expected survival days and is lower when the policy's
+chosen bid avoids preventable long-horizon survival loss. The reference
+is the best action in the tested candidate set $\mathcal{A}$, not a
+globally optimal continuous action.
 
-To distinguish equal-survival actions, we use terminal health and budget
-as a bounded tie-breaker:
+To distinguish actions that yield the same survival duration but leave
+different terminal resources, we define a rollout value
 \begin{equation}
     V(s,a,\omega)
     =
@@ -337,10 +339,11 @@ as a bounded tie-breaker:
         \frac{1}{2}\frac{B_{\mathrm{final}}}{B_{\max,s}}
     \right),
 \end{equation}
-where $h_s$ is the remaining horizon. The terminal term is smaller than
-one day, so survival remains dominant. With
+where $h_s$ is the remaining horizon. The terminal term is strictly
+smaller than one day, ensuring that an additional survival day always
+dominates terminal health or budget. With
 $\bar V(s,a)=\mathbb{E}_{\omega}[V(s,a,\omega)]$, Counterfactual Action
-Quality (CFAQ) normalizes the chosen action within the tested value range:
+Quality (CFAQ) is
 \begin{equation}
     \mathrm{CFAQ}
     =
@@ -349,15 +352,28 @@ Quality (CFAQ) normalizes the chosen action within the tested value range:
              {\max_{a\in\mathcal{A}}\bar V(s,a)-\min_{a\in\mathcal{A}}\bar V(s,a)}
     \right].
 \end{equation}
-CFAQ is computed only when tested actions differ in value; higher is
-better. Both metrics are conditional on reaching a checkpoint.
+CFAQ is computed only for informative states in which candidate actions
+produce different rollout values. Both long-term-planning metrics are
+conditional on reaching the checkpoint; checkpoint coverage is
+reported separately to expose possible survivor-selection effects.
 
 \subsection{Risk-Sensitive Decision Making}
 
-We probe generated policies offline by holding the decision context
-fixed while increasing health risk, drought risk, or both. Joint Risk
-Monotonicity (RM), Health Sensitivity (HS), and Drought Sensitivity (DS)
-measure how often the riskier state produces a strictly higher bid:
+We evaluate risk sensitivity through offline counterfactual probing of
+the previously generated strategy code, without making additional LLM
+calls. Within each pair, we hold the decision day, budget, water supply,
+agent profile, and opponent context fixed and vary only the focal
+agent's health $H$ and consecutive no-water count $c$. We use
+$(H=7,c=1)$ as the safe reference and compare it with mild $(6,2)$,
+moderate $(3,2)$, and severe $(2,3)$ joint-risk states. These states
+correspond to progressively shorter distances to death if the agent
+continues to lose access to water. The probes are repeated in early
+resource-rich, middle normal, and late resource-scarce contexts.
+
+We use a strict response criterion so that an unchanged, constant-bid
+policy does not receive credit for risk sensitivity. Joint Risk
+Monotonicity (RM), Health Sensitivity (HS), and Drought Sensitivity
+(DS) are defined as
 \begin{align}
     \mathrm{RM}
     &=
@@ -375,32 +391,52 @@ measure how often the riskier state produces a strictly higher bid:
         \mathbb{I}(b_{\mathrm{high\text{-}c}}>b_{\mathrm{safe}})
     \right].
 \end{align}
-The overall Risk Sensitivity score weights the three responses equally:
+RM varies health and drought risk jointly, HS varies only health while
+holding $c$ fixed, and DS varies only $c$ while holding health fixed.
+The overall score gives equal weight to the three components:
 \begin{equation}
     \mathrm{RiskSensitivity}
     =
     \frac{\mathrm{RM}+\mathrm{HS}+\mathrm{DS}}{3}.
 \end{equation}
 
-Normalized Bid Adjustment (NBA) measures the magnitude of that response
-relative to available budget $B$:
+Risk Sensitivity measures response frequency. To measure response
+magnitude, we additionally define Normalized Bid Adjustment (NBA) as
 \begin{equation}
     \mathrm{NBA}
     =
     \mathbb{E}\!\left[
         \frac{b_{\mathrm{risk}}-b_{\mathrm{safe}}}{B}
-    \right].
+    \right],
 \end{equation}
-Thus, Risk Sensitivity captures response frequency, whereas NBA captures
-response magnitude.
+where $B$ is the available budget in the paired synthetic state.
+Normalization makes adjustments comparable across contexts with
+different budgets. The non-decreasing rate, tie rate, violation rate,
+and unnormalized bid difference are retained as appendix diagnostics
+rather than primary ranking metrics.
 
 \subsection{Opponent-Aware Adaptation}
 
-Opponent-aware adaptation is assessed behaviorally at two time scales.
-Within an episode, paired probes vary only recent opponent bids between
-low- and high-pressure contexts. Opponent Response Rate (ORR) measures
-how often this changes the focal bid by more than 1\% of available
-budget $B$:
+We define opponent-aware adaptation behaviorally, without claiming to
+recover an agent's latent beliefs about its opponents. A capable policy
+should both condition its actions on strategically relevant opponent
+behavior and translate policy revision into improved outcomes in a
+controlled competitive environment. We operationalize these two
+requirements at complementary time scales.
+
+Within an episode, we measure whether previously generated strategy
+code responds to observed bidding pressure using paired offline probes,
+without additional LLM calls. The probe is applied to every valid
+MR1, MR2, and MR3 policy. Each pair fixes the focal agent's day,
+health, drought count, budget, and supply, as well as every opponent's
+identity, health, budget, alive status, salary, and water requirement.
+Only the opponents' two most recent bids and consistent last-bid fields
+are changed. Low-pressure bids are set to 15\% and 20\% of daily salary,
+whereas high-pressure bids are set to 70\% and 80\%. We repeat the probe
+in early resource-rich, middle normal, and late resource-scarce states.
+Let $b_{\mathrm{low}}$ and $b_{\mathrm{high}}$ denote the focal bids in
+the paired contexts and $B$ its available budget. The Opponent Response
+Rate (ORR) is
 \begin{equation}
     \mathrm{ORR}
     =
@@ -410,12 +446,19 @@ budget $B$:
         \right)
     \right].
 \end{equation}
-ORR is direction-agnostic: it measures responsiveness, not whether the
-response is strategically beneficial.
+The 1\% threshold excludes numerically negligible changes. Because
+increasing a bid to compete and reducing it to conserve resources can
+both be deliberate responses, ORR measures responsiveness rather than
+assuming a universally correct direction.
 
-Across meta-rounds, Frozen-Opponent Survival Gain (FOSG) measures whether
-replacing only the focal MR1 policy with its MR2 revision improves
-survival against unchanged MR1 opponents under common seeds:
+Across meta-rounds, we evaluate whether policy revision improves
+survival while holding the competitive environment fixed. For focal
+agent $i$, we replay the all-MR1 lineup
+$(\pi_i^{(1)},\pi_{-i}^{(1)})$ and compare it with
+$(\pi_i^{(2)},\pi_{-i}^{(1)})$, in which only the focal policy is
+replaced by its MR2 revision. The two lineups share the same profiles,
+opponents, and supply seed; we use five common seeds
+$\{10,42,98,197,666\}$. Frozen-Opponent Survival Gain (FOSG) is
 \begin{equation}
     \mathrm{FOSG}
     =
@@ -424,9 +467,16 @@ survival against unchanged MR1 opponents under common seeds:
         -D\!\left(\pi_i^{(1)},\pi_{-i}^{(1)};s\right)
     \right],
 \end{equation}
-where $D$ is survival in days. ORR captures behavioral responsiveness,
-whereas FOSG tests whether revision improves outcomes; neither alone
-establishes an internal model of the opponents.
+where $D$ is survival in days, $e$ indexes experiments, and $s$
+indexes common supply seeds. ORR therefore asks whether the policy
+responds to opponents, whereas FOSG asks whether revision produces an
+outcome improvement against unchanged opponents. Neither metric alone
+establishes internal opponent modeling: ORR does not determine whether
+a response is optimal, and FOSG may include general outcome-driven
+correction. Together they provide complementary behavioral and
+outcome-grounded evidence of opponent-aware adaptation. Model-level
+results first average within each agent role and then give the five
+roles equal weight.
 
 \section{Results}
 
@@ -469,15 +519,24 @@ providing opponent policy information increases its WACScore from
 \subsection{Capability-Level Diagnostics}
 
 Table~\ref{tab:capability-diagnostics} complements final outcomes with
-diagnostics of planning, risk sensitivity, and opponent adaptation.
+capability-level measurements. The table uses one row per feedback
+condition and an additional average row for compact comparison. We do
+not average across capability columns because they capture distinct
+constructs and use different scales.
 
 \begin{table*}[t]
     \centering
     \small
     \setlength{\tabcolsep}{3.5pt}
-    \caption{Capability-level diagnostics under OF and OPF. CFAQ, RS,
-    NBA, and ORR are percentages; CSR and FOSG are measured in survival
-    days. FOSG uses valid paired MR1-to-MR2 replays.}
+    \caption{Capability-level diagnostics grouped by the decision-making
+    capability they probe. CSR denotes Counterfactual Survival Regret in
+    expected survival days (lower is better), CFAQ denotes Counterfactual
+    Action Quality, RS denotes the strictly defined Risk Sensitivity
+    rate, NBA denotes Normalized Bid Adjustment, ORR denotes Opponent
+    Response Rate, and FOSG denotes Frozen-Opponent Survival Gain.
+    CFAQ, RS, NBA, and ORR are reported as percentages; CSR and FOSG
+    are measured in survival days. FOSG is computed over valid paired
+    replays of the MR1-to-MR2 transition.}
     \label{tab:capability-diagnostics}
     \begin{tabular}{llrrrrrr}
         \toprule
@@ -517,35 +576,67 @@ diagnostics of planning, risk sensitivity, and opponent adaptation.
     \end{tabular}
 \end{table*}
 
-For long-term planning, Claude achieves the lowest average CSR, while
-GPT-5.4 achieves the highest CFAQ. DeepSeek and GPT-5.4 Nano show
-substantially higher survival regret, although OPF reduces CSR for both.
-The divergence between CSR and CFAQ indicates that resource-efficient
-tie-breaking among equal-survival actions does not always minimize
-survival loss.
+The diagnostic results expose distinctions that are not visible from
+outcomes alone. GPT-5.4 has the highest feedback-averaged Risk
+Sensitivity (85.1\%), indicating that it most consistently increases
+its bid when health or drought risk rises. Gemini has a lower response
+frequency but the largest feedback-averaged Normalized Bid Adjustment
+(28.6\%), compared with 22.7\% for GPT-5.4, 17.4\% for Claude Sonnet 5,
+14.4\% for DeepSeek V4 Flash, and 9.4\% for GPT-5.4 Nano. This result
+distinguishes response frequency from response magnitude: Gemini reacts
+less consistently than GPT-5.4, but commits a substantially larger
+fraction of its available budget when it does adjust to risk. This
+stronger adjustment magnitude coincides with Gemini's superior WACScore
+and mortality, although the association should not be interpreted as
+causal. GPT-5.4 Nano again shows a pronounced benefit from policy
+feedback, with Risk Sensitivity increasing from 72.9\% under OF to
+79.3\% under OPF and NBA increasing from 7.7\% to 11.1\%.
 
-Risk responses become more frequent under OPF for every model. GPT-5.4
-has the highest average Risk Sensitivity, whereas Gemini makes the
-largest normalized bid adjustments. Thus, response frequency and
-magnitude capture distinct policy characteristics; their association
-with final performance should not be interpreted causally.
+Across all five models, OPF increases the strict Risk Sensitivity score
+relative to OF. This pattern suggests that policy transparency mainly
+encourages active behavioral adjustment: models more frequently raise
+their bids under elevated risk when opponent policies are available.
+The counterfactual rollout evaluation separates survival consequences
+from action quality. Claude has the lowest feedback-averaged CSR
+(0.033 days), followed by GPT-5.4 (0.075) and Gemini (0.086), whereas
+DeepSeek (0.379) and GPT-5.4 Nano (0.501) incur substantially larger
+preventable survival losses. GPT-5.4 nevertheless obtains the highest
+feedback-averaged CFAQ (75.0\%), indicating that its selected actions
+occupy the strongest position within the tested long-horizon value
+range once terminal health and budget are used to resolve equal-survival
+outcomes. OPF reduces CSR for DeepSeek from 0.439 to 0.320 days and for
+GPT-5.4 Nano from 0.608 to 0.394 days, but increases GPT-5.4's CSR from
+0.054 to 0.096 days despite improving its CFAQ. Thus, better normalized
+resource-aware action quality does not always imply lower survival
+regret. Because these metrics are conditional on policies reaching the
+evaluation checkpoints, they complement rather than replace WACScore
+and mortality; checkpoint-coverage results are reported separately.
 
-Opponent responsiveness also differs from effective adaptation.
-GPT-5.4 Nano has the highest average ORR but a slightly negative FOSG,
-whereas Claude has a lower ORR and the largest survival gain after
-revision. OPF effects are heterogeneous across models and metrics.
-Consequently, policy transparency appears to alter behavior, but does
-not uniformly improve policy revision; WACScore and mortality remain
-the primary measures of decision quality.
+The opponent-aware diagnostics separate responsiveness from effective
+revision. GPT-5.4 Nano has the highest feedback-averaged ORR (81.2\%),
+followed by GPT-5.4 (77.7\%) and Gemini (74.3\%), whereas DeepSeek
+responds in only 34.3\% of paired pressure probes. Nano's frequent
+responses do not translate into effective revision: its
+feedback-averaged FOSG is $-0.076$ days, compared with $0.923$ for
+Claude, $0.762$ for GPT-5.4, and $0.365$ for Gemini. This contrast
+demonstrates why responsiveness is necessary but not sufficient for
+competent strategic adaptation. DeepSeek has both the lowest ORR and a
+relatively small feedback-averaged FOSG ($0.329$ days), although its OPF
+revision gain is substantially larger than its OF gain.
 
-% OF vs. OPF
-% 建議未來用 delta figure 或 heatmap
-
-\subsection{Adaptation in Homogeneous-Agent Populations}
-% 你提供的 MR1--MR3 survival/mortality figure
-
-\subsection{Judge-Based Failure Analysis}
-% LLM judge results
+The temporal pattern further supports the feedback interpretation.
+Before prior-round policies are available in MR1, aggregate ORR is
+nearly identical under OF and OPF (62.0\% versus 62.5\%). Across MR2
+and MR3, it rises from 65.5\% under OF to 72.0\% under OPF. The effect
+is nevertheless model-dependent: OPF increases ORR for DeepSeek,
+GPT-5.4, and Gemini, but decreases it for Claude and Nano. FOSG is also
+heterogeneous across feedback conditions rather than uniformly higher
+under OPF. We therefore do not interpret the OPF--OF difference as a
+standalone ability score. Instead, ORR diagnoses whether opponent
+observations affect executable decisions, while FOSG supplies a
+performance-grounded measure of policy revision against unchanged
+opponents; WACScore and mortality remain the primary measures of final
+decision quality.
 
 \section{Conclusion}
 % TODO: Summarize the proposed framework, main findings, and implications for evaluating LLM agents as strategic decision-makers.

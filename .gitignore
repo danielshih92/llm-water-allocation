@@ -34,6 +34,7 @@ bld/
 [Ll]ogs/
 /log/
 /compare_result/
+/judge_result/
 
 # Visual Studio 2015/2017 cache/options directory
 .vs/

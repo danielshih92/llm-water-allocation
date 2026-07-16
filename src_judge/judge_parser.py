@@ -23,8 +23,15 @@ SCORE_ALIASES = {
     "reasoning_code_trace_consistency_score": "reasoning_policy_consistency",
 }
 
+REQUIRED_SCORE_KEYS = SCORE_KEYS[:-1]
+REQUIRED_OUTPUT_KEYS = {
+    "primary_failure_mode",
+    "failure_labels",
+    "short_diagnosis",
+}
 
-def _default_output() -> Dict[str, Any]:
+
+def _default_output(reason: str = "Judge response could not be parsed.") -> Dict[str, Any]:
     return {
         "strategy_quality_score": 1,
         "survival_risk_management_score": 1,
@@ -37,9 +44,9 @@ def _default_output() -> Dict[str, Any]:
         "failure_labels": ["format_failure"],
         "failure_annotations": [],
         "strengths": [],
-        "weaknesses": ["Judge response could not be parsed."],
+        "weaknesses": [reason],
         "evidence_summary": "",
-        "short_diagnosis": "Judge response parsing failed.",
+        "short_diagnosis": reason,
         "judge_confidence": 1,
     }
 
@@ -159,6 +166,19 @@ def parse_judge_response(response: str) -> Dict[str, Any]:
             return default
     except Exception:
         return default
+
+    missing_score_keys = [
+        key
+        for key in REQUIRED_SCORE_KEYS
+        if key not in parsed
+        and not (key in SCORE_ALIASES and SCORE_ALIASES[key] in parsed)
+    ]
+    missing_output_keys = sorted(REQUIRED_OUTPUT_KEYS.difference(parsed))
+    if missing_score_keys or missing_output_keys:
+        missing = missing_score_keys + missing_output_keys
+        return _default_output(
+            "Judge response is missing required fields: " + ", ".join(missing)
+        )
 
     normalized = dict(default)
 

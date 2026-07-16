@@ -12,6 +12,15 @@ if SRC_DIR not in sys.path:
 from agent_interface import create_backend  # noqa: E402
 
 
+JUDGE_SYSTEM_PROMPT = (
+    "You are an evidence-grounded evaluator of code-mediated LLM agents. "
+    "Follow the scoring rubric and required output schema in the user prompt. "
+    "Return exactly one valid JSON object containing the requested judge fields. "
+    "Do not generate Python strategy code. "
+    "Do not use markdown, code fences, or commentary outside the JSON object."
+)
+
+
 @dataclass
 class JudgeBackend:
     backend_name: str
@@ -23,6 +32,7 @@ class JudgeBackend:
             self.backend_name,
             model=self.model,
             temperature=self.temperature,
+            system_prompt=JUDGE_SYSTEM_PROMPT,
         )
 
     def generate(self, prompt: str) -> str:

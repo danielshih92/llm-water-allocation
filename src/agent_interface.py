@@ -22,6 +22,7 @@ class OpenAIBackend(LLMBackend):
     model: Optional[str] = None
     temperature: Optional[float] = None
     base_url: Optional[str] = None
+    system_prompt: Optional[str] = None
 
     def __post_init__(self) -> None:
         load_dotenv()
@@ -43,7 +44,7 @@ class OpenAIBackend(LLMBackend):
             "messages": [
                 {
                     "role": "system",
-                    "content": (
+                    "content": self.system_prompt or (
                         "You are a Python strategy generator. "
                         "Output valid JSON only. "
                         "The JSON must contain exactly two keys: reasoning and code. "
@@ -150,6 +151,7 @@ class DeepSeekBackend(LLMBackend):
     model: Optional[str] = None
     temperature: Optional[float] = None
     base_url: str = "https://api.deepseek.com"
+    system_prompt: Optional[str] = None
 
     def __post_init__(self) -> None:
         load_dotenv()
@@ -169,7 +171,7 @@ class DeepSeekBackend(LLMBackend):
             "messages": [
                 {
                     "role": "system",
-                    "content": (
+                    "content": self.system_prompt or (
                         "You are a Python strategy generator. "
                         "Output valid JSON only. "
                         "The JSON must contain exactly two keys: reasoning and code. "
@@ -207,6 +209,7 @@ class ClaudeBackend(LLMBackend):
     model: Optional[str] = None
     temperature: Optional[float] = None
     api_key: Optional[str] = None
+    system_prompt: Optional[str] = None
 
     def __post_init__(self) -> None:
         load_dotenv()
@@ -231,7 +234,7 @@ class ClaudeBackend(LLMBackend):
     def generate(self, prompt: str) -> str:
         payload = {
             "model": self.model,
-            "system": (
+            "system": self.system_prompt or (
                 "You are a Python strategy generator. "
                 "Output valid JSON only. "
                 "The JSON must contain exactly two keys: reasoning and code. "
@@ -260,19 +263,33 @@ def create_backend(
     model: Optional[str] = None,
     temperature: Optional[float] = None,
     base_url: Optional[str] = None,
+    system_prompt: Optional[str] = None,
 ) -> LLMBackend:
     if name == "mock":
         return MockBackend()
     if name == "openai":
-        return OpenAIBackend(model=model, temperature=temperature, base_url=base_url)
+        return OpenAIBackend(
+            model=model,
+            temperature=temperature,
+            base_url=base_url,
+            system_prompt=system_prompt,
+        )
     if name == "gemini":
         return GeminiBackend(model=model, temperature=temperature)
     if name == "ollama":
         return OllamaBackend(model=model, temperature=temperature)
     if name == "deepseek": 
-        return DeepSeekBackend(model=model, temperature=temperature)
+        return DeepSeekBackend(
+            model=model,
+            temperature=temperature,
+            system_prompt=system_prompt,
+        )
     if name == "claude":
-        return ClaudeBackend(model=model, temperature=temperature)
+        return ClaudeBackend(
+            model=model,
+            temperature=temperature,
+            system_prompt=system_prompt,
+        )
     raise ValueError(f"Unknown backend: {name}")
 
 

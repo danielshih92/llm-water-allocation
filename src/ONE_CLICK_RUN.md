@@ -36,7 +36,7 @@ Batch run (permutations)
 3) Run multiple slices into the same batch folder:
    python3 src/run_all_permutations.py --slice-start 34 --slice-end 34 --no-plots --batch-name batch_031_full_code_access_c_med_20days --meta-rounds 3 --episode-days 20 --opponent-info-mode full_code_access --seed 42 --scenario medium
 
-   python3 src/run_all_permutations.py --slice-start 6 --slice-end 120 --no-plots --batch-name batch_032_no_opp_info_c_med_20days --meta-rounds 3 --episode-days 20 --opponent-info-mode no_opponent_info --seed 42 --scenario medium
+   python3 src/run_all_permutations.py --slice-start 1 --slice-end 10 --no-plots --batch-name batch_033_no_opp_info_deepseek-flash_seed42 --meta-rounds 3 --episode-days 20 --opponent-info-mode no_opponent_info --seed 42 --scenario medium
 
    python3 src/run_all_permutations.py --slice-start 6 --slice-end 10 --no-plots --batch-name batch_030_full_code_access_claude_seed42 --meta-rounds 3 --episode-days 20 --opponent-info-mode full_code_access --seed 42 --scenario medium
 
@@ -124,6 +124,10 @@ python3 temp/meta_round_trend.py \
   --present-name "Claude Sonnet 5" \
   --output-prefix five_model_test_v2
 
+python3 temp/meta_round_trend.py \
+  --batch batch_033_no_opp_info_deepseek-flash_seed42 \
+  --present-name "DeepSeek V4 flash" \
+  --output-prefix temp_deepseek
 
 --- (long-term-planning)
 python src/long-term-planning/evaluate_horizon_awareness.py --output-folder batch_031
@@ -133,9 +137,22 @@ python src/long-term-planning/evaluate_horizon_awareness.py \
   --output-folder batch_032
 
 --- (used to build main table, but will delete in the future)
-python temp/main_combine.py --seeds 42
+python temp/main_combine.py 
 
 ---(risk sensitive decision making)
 python3 src/risk-sensitive-decision-making/evaluate_risk_sensitivity.py \
   --batch log/batch_032_no_opp_info_c_med_20days \
   --batch log/batch_031_full_code_access_c_med_20days
+
+---(opponent modeling)
+python3 src/opponent-modeling/evaluate_frozen_opponents.py \
+  --workers 4 \
+  --seeds 10 42 98 197 666 \
+  --timeout-seconds 120
+
+---(llm judge)
+python3 src_judge/llm_judge.py \
+  --exp-start 1 --exp-end 2 \
+  --output-dir judge_result/exp_001_002 \
+  --judge-backend openai \
+  --judge-model gpt-5.4
