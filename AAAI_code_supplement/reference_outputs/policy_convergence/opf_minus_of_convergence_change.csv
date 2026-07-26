@@ -1,0 +1,7 @@
+contrast,transition,metric,estimate,ci95_low,ci95_high,interpretation,bootstrap_samples
+OPF-minus-OF change,MR2-MR1,Behavioral distance,-0.030737,-0.045025,-0.01614,lower means more similar,5000
+OPF-minus-OF change,MR2-MR1,Structural similarity,0.079904,0.071409,0.088346,higher means more similar,5000
+OPF-minus-OF change,MR3-MR2,Behavioral distance,-0.01592,-0.027838,-0.003993,lower means more similar,5000
+OPF-minus-OF change,MR3-MR2,Structural similarity,0.012857,0.003123,0.022837,higher means more similar,5000
+OPF-minus-OF change,MR3-MR1,Behavioral distance,-0.046657,-0.061322,-0.032504,lower means more similar,5000
+OPF-minus-OF change,MR3-MR1,Structural similarity,0.09276,0.082622,0.102897,higher means more similar,5000

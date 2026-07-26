@@ -1,0 +1,58 @@
+{
+  "overall": {
+    "paired_item_count": 1444,
+    "primary_agreement_count": 890,
+    "primary_agreement_rate": 0.616343,
+    "cohen_kappa": 0.436108,
+    "attribution_status_agreement_count": 1173,
+    "attribution_status_agreement_rate": 0.812327,
+    "attribution_status_cohen_kappa": 0.609597
+  },
+  "by_model": {
+    "claude-sonnet-5": {
+      "paired_item_count": 222,
+      "primary_agreement_count": 150,
+      "primary_agreement_rate": 0.675676,
+      "cohen_kappa": 0.524922,
+      "attribution_status_agreement_count": 174,
+      "attribution_status_agreement_rate": 0.783784,
+      "attribution_status_cohen_kappa": 0.627985
+    },
+    "deepseek-v4-flash": {
+      "paired_item_count": 353,
+      "primary_agreement_count": 264,
+      "primary_agreement_rate": 0.747875,
+      "cohen_kappa": 0.481645,
+      "attribution_status_agreement_count": 315,
+      "attribution_status_agreement_rate": 0.892351,
+      "attribution_status_cohen_kappa": 0.677509
+    },
+    "gemini-3.5-flash": {
+      "paired_item_count": 186,
+      "primary_agreement_count": 118,
+      "primary_agreement_rate": 0.634409,
+      "cohen_kappa": 0.506958,
+      "attribution_status_agreement_count": 123,
+      "attribution_status_agreement_rate": 0.66129,
+      "attribution_status_cohen_kappa": 0.45667
+    },
+    "gpt-5.4": {
+      "paired_item_count": 227,
+      "primary_agreement_count": 143,
+      "primary_agreement_rate": 0.629956,
+      "cohen_kappa": 0.509757,
+      "attribution_status_agreement_count": 162,
+      "attribution_status_agreement_rate": 0.713656,
+      "attribution_status_cohen_kappa": 0.536706
+    },
+    "gpt-5.4-nano": {
+      "paired_item_count": 456,
+      "primary_agreement_count": 215,
+      "primary_agreement_rate": 0.471491,
+      "cohen_kappa": 0.158311,
+      "attribution_status_agreement_count": 399,
+      "attribution_status_agreement_rate": 0.875,
+      "attribution_status_cohen_kappa": 0.469291
+    }
+  }
+}

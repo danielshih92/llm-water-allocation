@@ -1,0 +1,11 @@
+summary_level,condition,model,agent_id,strategy_instance_id,checkpoint_day,counterfactual_action_quality,optimal_action_rate,near_optimal_action_rate,mean_survival_regret,mean_long_horizon_value_regret,mean_policy_expected_remaining_survival,informative_state_rate,informative_state_count,valid_state_count,total_state_count,error_state_count,error_rate
+model,OF,claude-sonnet-5,ALL,ALL,ALL,0.728217,0.286686,0.994169,0.036605,0.037996,11.94898,0.954545,1029,1078,1078,0,0.0
+model,OF,deepseek-v4-flash,ALL,ALL,ALL,0.660352,0.307853,0.922513,0.438743,0.440257,10.964876,0.98657,955,968,968,0,0.0
+model,OF,gemini-3.5-flash,ALL,ALL,ALL,0.656369,0.347449,0.976901,0.091434,0.094044,11.873031,0.962929,1039,1079,1079,0,0.0
+model,OF,gpt-5.4,ALL,ALL,ALL,0.735128,0.383673,0.992857,0.054422,0.055743,11.923101,0.911628,980,1075,1075,0,0.0
+model,OF,gpt-5.4-nano,ALL,ALL,ALL,0.698807,0.364924,0.861656,0.608206,0.611113,10.388406,0.997826,918,920,920,0,0.0
+model,OPF,claude-sonnet-5,ALL,ALL,ALL,0.74302,0.296618,0.988406,0.02963,0.031264,11.909599,0.964585,1035,1073,1073,0,0.0
+model,OPF,deepseek-v4-flash,ALL,ALL,ALL,0.715148,0.304304,0.941942,0.319987,0.321954,11.253623,0.987154,999,1012,1012,0,0.0
+model,OPF,gemini-3.5-flash,ALL,ALL,ALL,0.706317,0.351887,0.981132,0.079874,0.082183,11.837813,0.982391,1060,1079,1079,0,0.0
+model,OPF,gpt-5.4,ALL,ALL,ALL,0.764857,0.376699,0.982524,0.095793,0.097345,11.881019,0.959925,1030,1073,1073,0,0.0
+model,OPF,gpt-5.4-nano,ALL,ALL,ALL,0.694272,0.305611,0.935872,0.394456,0.396629,11.196156,0.992048,998,1006,1006,0,0.0

@@ -1,0 +1,450 @@
+{
+  "annotator_id": "TSAI",
+  "annotation_version": "wac-human-failure-validation-v1",
+  "annotations": [
+    {
+      "case_id": "case_001",
+      "attribution_status": "dominant_policy_failure",
+      "failure_modes": [
+        "winners_curse_overpayment"
+      ],
+      "confidence": 4,
+      "notes": "早期以 max_opp*1.25 / budget*0.7 等機制大幅溢價贏標(累積premium≈553)，遠超過death day threshold gap(27)，構成清楚的winner's curse bridge。"
+    },
+    {
+      "case_id": "case_002",
+      "attribution_status": "dominant_policy_failure",
+      "failure_modes": [
+        "winners_curse_overpayment"
+      ],
+      "confidence": 4,
+      "notes": "多個固定比例地板(budget*0.88等)造成連續溢價，累積premium(533)遠大於death day gap(44)。"
+    },
+    {
+      "case_id": "case_003",
+      "attribution_status": "mixed_policy_and_context",
+      "failure_modes": [
+        "winners_curse_overpayment"
+      ],
+      "confidence": 3,
+      "notes": "唯一bridge的premium(29.6)僅略高於gap(27.2)，證據偏弱；同時角色為resource-disadvantaged(低薪高需求)，兩者共同構成死亡。"
+    },
+    {
+      "case_id": "case_004",
+      "attribution_status": "dominant_policy_failure",
+      "failure_modes": [
+        "winners_curse_overpayment"
+      ],
+      "confidence": 4,
+      "notes": "bridge premium(57)明顯大於death day gap(19.4)，且有清楚的加價機制(0.6*max_bid混合)。"
+    },
+    {
+      "case_id": "case_005",
+      "attribution_status": "dominant_policy_failure",
+      "failure_modes": [
+        "fatal_undercommitment"
+      ],
+      "confidence": 4,
+      "notes": "危急狀態(hp=3,no_water=3)下urgency僅達0.68，未達触发0.7門檻，導致bid僅為budget的28%，budget(381.5)遠超threshold(257.9)，屬明確且致命的單次affordable miss。"
+    },
+    {
+      "case_id": "case_006",
+      "attribution_status": "dominant_policy_failure",
+      "failure_modes": [
+        "competitive_threshold_miscalibration",
+        "winners_curse_overpayment"
+      ],
+      "confidence": 3,
+      "notes": "hp<=3分支以max_opp_bid+5為基準，緩衝過小，death day threshold意外高出約20，同時day6有一次winner's curse bridge。"
+    },
+    {
+      "case_id": "case_007",
+      "attribution_status": "dominant_policy_failure",
+      "failure_modes": [
+        "fatal_undercommitment",
+        "competitive_threshold_miscalibration"
+      ],
+      "confidence": 3,
+      "notes": "以opponent均值(而非max)為基準且固定fraction cap(0.75)，兩次critical affordable miss，其一即死亡日。"
+    },
+    {
+      "case_id": "case_008",
+      "attribution_status": "dominant_policy_failure",
+      "failure_modes": [
+        "fatal_undercommitment"
+      ],
+      "confidence": 4,
+      "notes": "day3 critical affordable miss (68 vs threshold144，budget240充足)直接導致day4死亡，reserve/danger分級機制反應不足。"
+    },
+    {
+      "case_id": "case_009",
+      "attribution_status": "no_clear_policy_failure",
+      "failure_modes": [],
+      "confidence": 3,
+      "notes": "無critical affordable miss、無winner's curse bridge；雖為resource-disadvantaged角色，但找不到明確可歸因的code defect。"
+    },
+    {
+      "case_id": "case_010",
+      "attribution_status": "mixed_policy_and_context",
+      "failure_modes": [
+        "winners_curse_overpayment"
+      ],
+      "confidence": 3,
+      "notes": "唯一bridge(day6, gap16.2 vs premium79.9)支持overpay，但該日並非死亡日(死亡在day9)，因果連結較弱；角色亦為resource-disadvantaged。"
+    },
+    {
+      "case_id": "case_011",
+      "attribution_status": "no_clear_policy_failure",
+      "failure_modes": [],
+      "confidence": 3,
+      "notes": "無CAM、無bridge；策略邏輯尚屬合理保守，資源劣勢角色(高需求低薪)為主要脈絡。"
+    },
+    {
+      "case_id": "case_012",
+      "attribution_status": "dominant_policy_failure",
+      "failure_modes": [
+        "fatal_undercommitment"
+      ],
+      "confidence": 4,
+      "notes": "cap_fraction=0.85固定上限使bid(272)恰好卡在threshold(275.8)之下，budget(320)明顯足夠，屬單次但致命且證據明確的miss。"
+    },
+    {
+      "case_id": "case_013",
+      "attribution_status": "dominant_policy_failure",
+      "failure_modes": [
+        "fatal_undercommitment",
+        "competitive_threshold_miscalibration"
+      ],
+      "confidence": 4,
+      "notes": "以opponent中位數為基準且budget fraction floor過低(0.15-0.25)，兩次critical affordable miss，day3→day4連續致命。"
+    },
+    {
+      "case_id": "case_014",
+      "attribution_status": "dominant_policy_failure",
+      "failure_modes": [
+        "fatal_undercommitment"
+      ],
+      "confidence": 5,
+      "notes": "極度保守的conserve_weight/base_frac機制，day3僅用budget的8%投標(36.6 vs 可用450)，即使關鍵狀態下仍嚴重低額投標，連續且致命。"
+    },
+    {
+      "case_id": "case_015",
+      "attribution_status": "mixed_policy_and_context",
+      "failure_modes": [
+        "fatal_undercommitment"
+      ],
+      "confidence": 3,
+      "notes": "唯一miss margin極小(245.4 vs 248.4，僅差約1%)，雖屬affordable且lethal，但edge case性質強，reserve機制僅為次要貢獻因子。"
+    },
+    {
+      "case_id": "case_016",
+      "attribution_status": "no_clear_policy_failure",
+      "failure_modes": [],
+      "confidence": 3,
+      "notes": "危急分支已投入budget的95%(275.975)，仍以極小差距(4.3)落敗，屬已接近最大化承諾下的競爭壓力，非明顯policy defect。"
+    },
+    {
+      "case_id": "case_017",
+      "attribution_status": "dominant_policy_failure",
+      "failure_modes": [
+        "fatal_undercommitment"
+      ],
+      "confidence": 4,
+      "notes": "urgency公式對no_water_days加權過輕(僅+0.2/day)，即使hp尚可但no_water_days=3屬危急狀態，仍嚴重低估，day5→day6連續miss並致死。"
+    },
+    {
+      "case_id": "case_018",
+      "attribution_status": "dominant_policy_failure",
+      "failure_modes": [
+        "fatal_undercommitment"
+      ],
+      "confidence": 5,
+      "notes": "bid公式與budget規模完全脫鉤(base=30+urgency項)，budget高達715時仍只出價106.5 vs threshold343，嚴重且連續的低額投標。"
+    },
+    {
+      "case_id": "case_019",
+      "attribution_status": "dominant_policy_failure",
+      "failure_modes": [
+        "fatal_undercommitment"
+      ],
+      "confidence": 4,
+      "notes": "固定0.85 budget cap在死亡日剛好卡在threshold之下(281.2 vs 303.4)，兩次critical miss。"
+    },
+    {
+      "case_id": "case_020",
+      "attribution_status": "dominant_policy_failure",
+      "failure_modes": [
+        "fatal_undercommitment"
+      ],
+      "confidence": 5,
+      "notes": "bid公式未隨budget規模調整(base 60-120區間)，budget高達523-663時仍嚴重出價不足(51.8/67.5 vs threshold313.9/181.3)。"
+    },
+    {
+      "case_id": "case_021",
+      "attribution_status": "dominant_policy_failure",
+      "failure_modes": [
+        "fatal_undercommitment"
+      ],
+      "confidence": 5,
+      "notes": "day3僅用budget的15%投標(62.8 vs 420)，day4僅14%(78.4 vs 560)，嚴重且連續低額投標並直接致死。"
+    },
+    {
+      "case_id": "case_022",
+      "attribution_status": "dominant_policy_failure",
+      "failure_modes": [
+        "fatal_undercommitment"
+      ],
+      "confidence": 4,
+      "notes": "两次critical affordable miss(day3→day4致死)，budget利用率均低於50%，雖角色資源略為劣勢，但code機制為主因。"
+    },
+    {
+      "case_id": "case_023",
+      "attribution_status": "mixed_policy_and_context",
+      "failure_modes": [
+        "winners_curse_overpayment",
+        "fatal_undercommitment"
+      ],
+      "confidence": 3,
+      "notes": "單次非致命的day3 affordable miss，加上death day前的一次winner's curse bridge(premium86.5 vs gap27.2)；resource-disadvantaged角色也構成脈絡。"
+    },
+    {
+      "case_id": "case_024",
+      "attribution_status": "dominant_policy_failure",
+      "failure_modes": [
+        "winners_curse_overpayment"
+      ],
+      "confidence": 4,
+      "notes": "death day gap僅1.0，而先前累積premium達29.8，屬清楚且乾淨的winner's curse案例(無任何CAM)。"
+    },
+    {
+      "case_id": "case_025",
+      "attribution_status": "dominant_policy_failure",
+      "failure_modes": [
+        "fatal_undercommitment"
+      ],
+      "confidence": 4,
+      "notes": "day3、day4連續critical affordable miss(budget利用率均約55-58%)，day3直接導致day4死亡。"
+    },
+    {
+      "case_id": "case_026",
+      "attribution_status": "dominant_policy_failure",
+      "failure_modes": [
+        "fatal_undercommitment"
+      ],
+      "confidence": 5,
+      "notes": "day3僅用budget的8%投標(38 vs 450)，嚴重低額投標且直接導致day4死亡，屬最明確的undercommitment案例之一。"
+    },
+    {
+      "case_id": "case_027",
+      "attribution_status": "dominant_policy_failure",
+      "failure_modes": [
+        "fatal_undercommitment"
+      ],
+      "confidence": 4,
+      "notes": "day4嚴重低額投標(113.7 vs threshold192，budget341用33%)，day8(死亡日)投標雖較積極(78%)仍不足。"
+    },
+    {
+      "case_id": "case_028",
+      "attribution_status": "dominant_policy_failure",
+      "failure_modes": [
+        "fatal_undercommitment"
+      ],
+      "confidence": 4,
+      "notes": "day4、day5連續critical affordable miss(budget利用率均約42%)，day4直接導致day5死亡。"
+    },
+    {
+      "case_id": "case_029",
+      "attribution_status": "no_clear_policy_failure",
+      "failure_modes": [],
+      "confidence": 3,
+      "notes": "唯一miss發生在死亡前3天(非lethal直接關聯)，且該次已投入75%budget，屬相對積極的承諾，未達明確policy defect門檻。"
+    },
+    {
+      "case_id": "case_030",
+      "attribution_status": "dominant_policy_failure",
+      "failure_modes": [
+        "fatal_undercommitment",
+        "winners_curse_overpayment"
+      ],
+      "confidence": 4,
+      "notes": "死亡日miss嚴重低額投標(146 vs threshold345.6，僅用36%budget)，另有day5的winner's curse bridge(premium66.1 vs gap30.9)。"
+    },
+    {
+      "case_id": "case_031",
+      "attribution_status": "no_clear_policy_failure",
+      "failure_modes": [],
+      "confidence": 3,
+      "notes": "唯一miss margin較小(136.5 vs 147.2)且非死亡當日/次日直接關聯，資源劣勢角色為主要脈絡。"
+    },
+    {
+      "case_id": "case_032",
+      "attribution_status": "dominant_policy_failure",
+      "failure_modes": [
+        "fatal_undercommitment"
+      ],
+      "confidence": 4,
+      "notes": "day3嚴重低額投標(126 vs threshold210，budget用47%)，直接導致day4死亡。"
+    },
+    {
+      "case_id": "case_033",
+      "attribution_status": "dominant_policy_failure",
+      "failure_modes": [
+        "fatal_undercommitment"
+      ],
+      "confidence": 4,
+      "notes": "day5、day6連續critical affordable miss(budget利用率約37-47%)，day5導致day6死亡。"
+    },
+    {
+      "case_id": "case_034",
+      "attribution_status": "dominant_policy_failure",
+      "failure_modes": [
+        "fatal_undercommitment"
+      ],
+      "confidence": 4,
+      "notes": "day3嚴重低額投標(98.3 vs threshold191，budget用23%)，直接導致day4死亡。"
+    },
+    {
+      "case_id": "case_035",
+      "attribution_status": "dominant_policy_failure",
+      "failure_modes": [
+        "fatal_undercommitment"
+      ],
+      "confidence": 5,
+      "notes": "極端低額投標(day3用12%budget，day4僅用11%budget)，程式碼以固定小額(如40)封頂而完全未考慮實際budget規模。"
+    },
+    {
+      "case_id": "case_036",
+      "attribution_status": "dominant_policy_failure",
+      "failure_modes": [
+        "winners_curse_overpayment",
+        "fatal_undercommitment"
+      ],
+      "confidence": 4,
+      "notes": "day6、day7(死亡日)均出現winner's curse bridge(累積premium171 vs gap51.9-66.2)，另有day3的單次affordable miss。"
+    },
+    {
+      "case_id": "case_037",
+      "attribution_status": "no_clear_policy_failure",
+      "failure_modes": [],
+      "confidence": 3,
+      "notes": "唯一miss margin不大(147 vs 162)且非死亡當日直接關聯，無bridge支持，資源劣勢角色為主要脈絡。"
+    },
+    {
+      "case_id": "case_038",
+      "attribution_status": "dominant_policy_failure",
+      "failure_modes": [
+        "winners_curse_overpayment"
+      ],
+      "confidence": 4,
+      "notes": "無任何CAM，但死亡日gap僅39.6而累積premium高達283.3，屬清楚的winner's curse案例。"
+    },
+    {
+      "case_id": "case_039",
+      "attribution_status": "no_clear_policy_failure",
+      "failure_modes": [],
+      "confidence": 3,
+      "notes": "無CAM、無bridge，找不到明確policy defect，資源劣勢角色(高需求低薪)為主要脈絡。"
+    },
+    {
+      "case_id": "case_040",
+      "attribution_status": "mixed_policy_and_context",
+      "failure_modes": [
+        "fatal_undercommitment",
+        "winners_curse_overpayment"
+      ],
+      "confidence": 3,
+      "notes": "死亡日miss(gap15)承諾已達64%budget，同時day8 bridge premium(49.1)與gap(46.5)相近，證據偏弱，resource-disadvantaged角色亦為脈絡。"
+    },
+    {
+      "case_id": "case_041",
+      "attribution_status": "dominant_policy_failure",
+      "failure_modes": [
+        "winners_curse_overpayment"
+      ],
+      "confidence": 4,
+      "notes": "無CAM，死亡日gap123.9遠小於累積premium432.2，屬清楚的winner's curse案例。"
+    },
+    {
+      "case_id": "case_042",
+      "attribution_status": "dominant_policy_failure",
+      "failure_modes": [
+        "winners_curse_overpayment",
+        "fatal_undercommitment"
+      ],
+      "confidence": 4,
+      "notes": "死亡日單次窄幅miss(196.9 vs 203.0)，同時累積premium(247.4)遠大於前一critical gap(62.0)，overpay為主要機制。"
+    },
+    {
+      "case_id": "case_043",
+      "attribution_status": "mixed_policy_and_context",
+      "failure_modes": [
+        "fatal_undercommitment"
+      ],
+      "confidence": 3,
+      "notes": "死亡日miss已投入80%budget(212.8 vs threshold255)，承諾比例不低，資源劣勢角色亦為重要脈絡，policy貢獻有限但仍可辨識。"
+    },
+    {
+      "case_id": "case_044",
+      "attribution_status": "dominant_policy_failure",
+      "failure_modes": [
+        "fatal_undercommitment"
+      ],
+      "confidence": 4,
+      "notes": "day4、day8(死亡日)連續嚴重低額投標(budget利用率33-40%)。"
+    },
+    {
+      "case_id": "case_045",
+      "attribution_status": "dominant_policy_failure",
+      "failure_modes": [
+        "fatal_undercommitment"
+      ],
+      "confidence": 5,
+      "notes": "budget高達651-792時僅出價84-190(利用率13-24%)，嚴重脫鉤於實際財力，day5直接導致day6死亡。"
+    },
+    {
+      "case_id": "case_046",
+      "attribution_status": "dominant_policy_failure",
+      "failure_modes": [
+        "fatal_undercommitment"
+      ],
+      "confidence": 5,
+      "notes": "day3、day4嚴重低額投標(利用率僅29-30%)，直接導致連續死亡，即使角色資源劣勢也不能解釋如此大的budget閒置。"
+    },
+    {
+      "case_id": "case_047",
+      "attribution_status": "dominant_policy_failure",
+      "failure_modes": [
+        "winners_curse_overpayment"
+      ],
+      "confidence": 5,
+      "notes": "無CAM，死亡日gap僅9.3而累積premium高達202.4，屬極清楚的winner's curse案例。"
+    },
+    {
+      "case_id": "case_048",
+      "attribution_status": "dominant_policy_failure",
+      "failure_modes": [
+        "winners_curse_overpayment"
+      ],
+      "confidence": 5,
+      "notes": "8次bridge，死亡日gap僅1.0而累積premium高達495.7，屬全案例中最明確的winner's curse情境。"
+    },
+    {
+      "case_id": "case_049",
+      "attribution_status": "dominant_policy_failure",
+      "failure_modes": [
+        "fatal_undercommitment"
+      ],
+      "confidence": 4,
+      "notes": "day3 miss margin雖窄(105 vs 112.5)但urgency已達公式最大值1.0，實際卻只投入50%budget，顯示commitment上限機制不足，直接導致day4死亡。"
+    },
+    {
+      "case_id": "case_050",
+      "attribution_status": "dominant_policy_failure",
+      "failure_modes": [
+        "fatal_undercommitment"
+      ],
+      "confidence": 4,
+      "notes": "day5、day6(死亡日)連續critical affordable miss，budget利用率均約55%，day5導致day6死亡。"
+    }
+  ]
+}

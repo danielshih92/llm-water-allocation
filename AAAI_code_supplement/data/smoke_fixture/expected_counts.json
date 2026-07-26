@@ -1,0 +1,10 @@
+{
+  "conditions": 2,
+  "agents_per_experiment": 5,
+  "smoke_meta_rounds": 2,
+  "smoke_episode_days": 5,
+  "paper_replay_records": 18000,
+  "paper_reference_replacements": 18000,
+  "paper_frozen_opponent_pairs": 6000
+}
+

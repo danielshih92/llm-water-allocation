@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "agents": ["Alex", "Bob", "Cindy", "David", "Eric"],
+  "models": [
+    {"backend": "openai", "model": "gpt-5.4", "temperature": 0.1},
+    {"backend": "deepseek", "model": "deepseek-v4-flash", "temperature": 0.1},
+    {"backend": "openai", "model": "gpt-5.4-nano", "temperature": 0.1},
+    {"backend": "gemini", "model": "gemini-3.5-flash", "temperature": 0.1},
+    {"backend": "claude", "model": "claude-sonnet-5", "temperature": 0.1}
+  ],
+  "experiment": {
+    "scenario": "medium",
+    "episode_days": 20,
+    "meta_rounds": 3,
+    "seed": 42,
+    "evaluation_mode": "repair_assisted",
+    "max_json_repair_attempts": 1,
+    "max_code_repair_attempts": 1
+  },
+  "conditions": {
+    "OF": "no_opponent_info",
+    "OPF": "full_code_access"
+  },
+  "analysis": {
+    "replay_seeds": [10, 42, 98, 197, 666],
+    "bootstrap_seed": 42,
+    "adaptation_seed": 42,
+    "objective_interval_seed": 42,
+    "policy_convergence_seed": 42,
+    "reference_policy_seed": 42,
+    "frozen_opponent_seed": 42,
+    "counterfactual_seed": 42,
+    "risk_response_seed": 42
+  }
+}
+

@@ -21,7 +21,12 @@ def main() -> None:
         help="Defaults to the corresponding batch names",
     )
     parser.add_argument("--judge-backend", type=str, default="openai")
-    parser.add_argument("--judge-model", type=str, default=None)
+    parser.add_argument(
+        "--judge-model",
+        type=str,
+        default=None,
+        help="Required for non-mock backends to keep runs reproducible",
+    )
     parser.add_argument("--judge-temperature", type=float, default=0.0)
     parser.add_argument("--output-dir", type=str, default=DEFAULT_OUTPUT_DIR)
     parser.add_argument("--exp-start", type=int, default=None, help="Inclusive experiment number")
@@ -46,6 +51,10 @@ def main() -> None:
         args.condition_labels = list(args.batches)
     if len(args.batches) != len(args.condition_labels):
         raise SystemExit("--condition-labels length must equal --batches length")
+    if args.judge_backend != "mock" and not args.judge_model:
+        raise SystemExit(
+            "--judge-model is required for non-mock judge backends"
+        )
     if args.exp_start is not None and args.exp_start <= 0:
         raise SystemExit("--exp-start must be a positive integer")
     if args.exp_end is not None and args.exp_end <= 0:

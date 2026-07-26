@@ -1,0 +1,1480 @@
+{
+  "warning": "DO NOT SHARE WITH ANNOTATORS.",
+  "cases": [
+    {
+      "case_id": "case_001",
+      "source_item_id": "batch_032_no_opp_info_c_med_20days::exp_013::meta_2::Bob",
+      "batch_name": "batch_032_no_opp_info_c_med_20days",
+      "condition": "OF",
+      "experiment_id": "exp_013",
+      "meta_round_id": 2,
+      "agent_id": "Bob",
+      "model_name": "gemini-3.5-flash",
+      "prompt_sha256": "c52635153e62e6fcb874ea2d24946de0ca917578ed5aed772cb9935ca59d39c7",
+      "judge_1": {
+        "attribution_status": "mixed_policy_and_context",
+        "primary_failure_mode": "winners_curse_overpayment",
+        "contributing_failure_modes": [
+          "competitive_threshold_miscalibration"
+        ],
+        "any_failure_modes": [
+          "winners_curse_overpayment",
+          "competitive_threshold_miscalibration"
+        ]
+      },
+      "judge_2": {
+        "attribution_status": "dominant_policy_failure",
+        "primary_failure_mode": "winners_curse_overpayment",
+        "contributing_failure_modes": [
+          "emergency_response_failure"
+        ],
+        "any_failure_modes": [
+          "winners_curse_overpayment",
+          "emergency_response_failure"
+        ]
+      }
+    },
+    {
+      "case_id": "case_002",
+      "source_item_id": "batch_031_full_code_access_c_med_20days::exp_093::meta_3::Bob",
+      "batch_name": "batch_031_full_code_access_c_med_20days",
+      "condition": "OPF",
+      "experiment_id": "exp_093",
+      "meta_round_id": 3,
+      "agent_id": "Bob",
+      "model_name": "claude-sonnet-5",
+      "prompt_sha256": "99b4eff9a146f28fa54efb3c3208752cb5ffbd8a34e157af253ce732740b3ede",
+      "judge_1": {
+        "attribution_status": "mixed_policy_and_context",
+        "primary_failure_mode": "winners_curse_overpayment",
+        "contributing_failure_modes": [
+          "fatal_undercommitment"
+        ],
+        "any_failure_modes": [
+          "winners_curse_overpayment",
+          "fatal_undercommitment"
+        ]
+      },
+      "judge_2": {
+        "attribution_status": "mixed_policy_and_context",
+        "primary_failure_mode": "winners_curse_overpayment",
+        "contributing_failure_modes": [],
+        "any_failure_modes": [
+          "winners_curse_overpayment"
+        ]
+      }
+    },
+    {
+      "case_id": "case_003",
+      "source_item_id": "batch_031_full_code_access_c_med_20days::exp_075::meta_2::Alex",
+      "batch_name": "batch_031_full_code_access_c_med_20days",
+      "condition": "OPF",
+      "experiment_id": "exp_075",
+      "meta_round_id": 2,
+      "agent_id": "Alex",
+      "model_name": "gemini-3.5-flash",
+      "prompt_sha256": "168574071cc6cc6f86d54627bdfc6ac9d3762c7410d833c50d530203cf23292b",
+      "judge_1": {
+        "attribution_status": "mixed_policy_and_context",
+        "primary_failure_mode": "winners_curse_overpayment",
+        "contributing_failure_modes": [],
+        "any_failure_modes": [
+          "winners_curse_overpayment"
+        ]
+      },
+      "judge_2": {
+        "attribution_status": "mixed_policy_and_context",
+        "primary_failure_mode": "winners_curse_overpayment",
+        "contributing_failure_modes": [],
+        "any_failure_modes": [
+          "winners_curse_overpayment"
+        ]
+      }
+    },
+    {
+      "case_id": "case_004",
+      "source_item_id": "batch_032_no_opp_info_c_med_20days::exp_010::meta_1::Bob",
+      "batch_name": "batch_032_no_opp_info_c_med_20days",
+      "condition": "OF",
+      "experiment_id": "exp_010",
+      "meta_round_id": 1,
+      "agent_id": "Bob",
+      "model_name": "gpt-5.4-nano",
+      "prompt_sha256": "178fedfc594030de11ee8fe36de12e436ea25ef777d1b20a6bf3f269c76dfe29",
+      "judge_1": {
+        "attribution_status": "mixed_policy_and_context",
+        "primary_failure_mode": "fatal_undercommitment",
+        "contributing_failure_modes": [
+          "winners_curse_overpayment"
+        ],
+        "any_failure_modes": [
+          "fatal_undercommitment",
+          "winners_curse_overpayment"
+        ]
+      },
+      "judge_2": {
+        "attribution_status": "mixed_policy_and_context",
+        "primary_failure_mode": "competitive_threshold_miscalibration",
+        "contributing_failure_modes": [
+          "winners_curse_overpayment"
+        ],
+        "any_failure_modes": [
+          "competitive_threshold_miscalibration",
+          "winners_curse_overpayment"
+        ]
+      }
+    },
+    {
+      "case_id": "case_005",
+      "source_item_id": "batch_031_full_code_access_c_med_20days::exp_024::meta_1::Alex",
+      "batch_name": "batch_031_full_code_access_c_med_20days",
+      "condition": "OPF",
+      "experiment_id": "exp_024",
+      "meta_round_id": 1,
+      "agent_id": "Alex",
+      "model_name": "gpt-5.4",
+      "prompt_sha256": "6fbfd5f8d8127363986c9759b82932822712b49301d8ce7346bb700be716de33",
+      "judge_1": {
+        "attribution_status": "dominant_policy_failure",
+        "primary_failure_mode": "fatal_undercommitment",
+        "contributing_failure_modes": [],
+        "any_failure_modes": [
+          "fatal_undercommitment"
+        ]
+      },
+      "judge_2": {
+        "attribution_status": "mixed_policy_and_context",
+        "primary_failure_mode": "fatal_undercommitment",
+        "contributing_failure_modes": [],
+        "any_failure_modes": [
+          "fatal_undercommitment"
+        ]
+      }
+    },
+    {
+      "case_id": "case_006",
+      "source_item_id": "batch_031_full_code_access_c_med_20days::exp_091::meta_2::Alex",
+      "batch_name": "batch_031_full_code_access_c_med_20days",
+      "condition": "OPF",
+      "experiment_id": "exp_091",
+      "meta_round_id": 2,
+      "agent_id": "Alex",
+      "model_name": "gemini-3.5-flash",
+      "prompt_sha256": "6ab0eab77462f162b587a9d195b4d2d0279689491b024cbf2dfcf0448922d718",
+      "judge_1": {
+        "attribution_status": "dominant_policy_failure",
+        "primary_failure_mode": "fatal_undercommitment",
+        "contributing_failure_modes": [
+          "competitive_threshold_miscalibration"
+        ],
+        "any_failure_modes": [
+          "fatal_undercommitment",
+          "competitive_threshold_miscalibration"
+        ]
+      },
+      "judge_2": {
+        "attribution_status": "dominant_policy_failure",
+        "primary_failure_mode": "fatal_undercommitment",
+        "contributing_failure_modes": [
+          "winners_curse_overpayment"
+        ],
+        "any_failure_modes": [
+          "fatal_undercommitment",
+          "winners_curse_overpayment"
+        ]
+      }
+    },
+    {
+      "case_id": "case_007",
+      "source_item_id": "batch_032_no_opp_info_c_med_20days::exp_024::meta_2::Bob",
+      "batch_name": "batch_032_no_opp_info_c_med_20days",
+      "condition": "OF",
+      "experiment_id": "exp_024",
+      "meta_round_id": 2,
+      "agent_id": "Bob",
+      "model_name": "claude-sonnet-5",
+      "prompt_sha256": "274356363205bbf37d7f971422203125aa092206077f5345e816dc3c2df921e0",
+      "judge_1": {
+        "attribution_status": "dominant_policy_failure",
+        "primary_failure_mode": "fatal_undercommitment",
+        "contributing_failure_modes": [
+          "competitive_threshold_miscalibration"
+        ],
+        "any_failure_modes": [
+          "fatal_undercommitment",
+          "competitive_threshold_miscalibration"
+        ]
+      },
+      "judge_2": {
+        "attribution_status": "mixed_policy_and_context",
+        "primary_failure_mode": "fatal_undercommitment",
+        "contributing_failure_modes": [
+          "competitive_threshold_miscalibration"
+        ],
+        "any_failure_modes": [
+          "fatal_undercommitment",
+          "competitive_threshold_miscalibration"
+        ]
+      }
+    },
+    {
+      "case_id": "case_008",
+      "source_item_id": "batch_032_no_opp_info_c_med_20days::exp_059::meta_2::David",
+      "batch_name": "batch_032_no_opp_info_c_med_20days",
+      "condition": "OF",
+      "experiment_id": "exp_059",
+      "meta_round_id": 2,
+      "agent_id": "David",
+      "model_name": "gpt-5.4",
+      "prompt_sha256": "faa77e12c7ec48db32369ff25d1aed18584f278b42c84789f43772698bc912f5",
+      "judge_1": {
+        "attribution_status": "dominant_policy_failure",
+        "primary_failure_mode": "competitive_threshold_miscalibration",
+        "contributing_failure_modes": [
+          "fatal_undercommitment"
+        ],
+        "any_failure_modes": [
+          "competitive_threshold_miscalibration",
+          "fatal_undercommitment"
+        ]
+      },
+      "judge_2": {
+        "attribution_status": "dominant_policy_failure",
+        "primary_failure_mode": "competitive_threshold_miscalibration",
+        "contributing_failure_modes": [],
+        "any_failure_modes": [
+          "competitive_threshold_miscalibration"
+        ]
+      }
+    },
+    {
+      "case_id": "case_009",
+      "source_item_id": "batch_032_no_opp_info_c_med_20days::exp_111::meta_3::Alex",
+      "batch_name": "batch_032_no_opp_info_c_med_20days",
+      "condition": "OF",
+      "experiment_id": "exp_111",
+      "meta_round_id": 3,
+      "agent_id": "Alex",
+      "model_name": "claude-sonnet-5",
+      "prompt_sha256": "0cb9009d8d765551a7db557417ef958e5ce9d27bba4c10f049f1157ab3a0cb2d",
+      "judge_1": {
+        "attribution_status": "no_clear_policy_failure",
+        "primary_failure_mode": null,
+        "contributing_failure_modes": [],
+        "any_failure_modes": []
+      },
+      "judge_2": {
+        "attribution_status": "no_clear_policy_failure",
+        "primary_failure_mode": null,
+        "contributing_failure_modes": [],
+        "any_failure_modes": []
+      }
+    },
+    {
+      "case_id": "case_010",
+      "source_item_id": "batch_032_no_opp_info_c_med_20days::exp_079::meta_2::Alex",
+      "batch_name": "batch_032_no_opp_info_c_med_20days",
+      "condition": "OF",
+      "experiment_id": "exp_079",
+      "meta_round_id": 2,
+      "agent_id": "Alex",
+      "model_name": "gemini-3.5-flash",
+      "prompt_sha256": "4fcaeb1c54d1905709ad781b58c9af12fed525a7dd15c9b737eb56db40736a41",
+      "judge_1": {
+        "attribution_status": "mixed_policy_and_context",
+        "primary_failure_mode": "winners_curse_overpayment",
+        "contributing_failure_modes": [],
+        "any_failure_modes": [
+          "winners_curse_overpayment"
+        ]
+      },
+      "judge_2": {
+        "attribution_status": "mixed_policy_and_context",
+        "primary_failure_mode": "winners_curse_overpayment",
+        "contributing_failure_modes": [
+          "competitive_threshold_miscalibration"
+        ],
+        "any_failure_modes": [
+          "winners_curse_overpayment",
+          "competitive_threshold_miscalibration"
+        ]
+      }
+    },
+    {
+      "case_id": "case_011",
+      "source_item_id": "batch_032_no_opp_info_c_med_20days::exp_072::meta_1::Alex",
+      "batch_name": "batch_032_no_opp_info_c_med_20days",
+      "condition": "OF",
+      "experiment_id": "exp_072",
+      "meta_round_id": 1,
+      "agent_id": "Alex",
+      "model_name": "gpt-5.4-nano",
+      "prompt_sha256": "5160837dc24ae407d7a41762700c8df7fcfaa77304548438c7b1d6a95adca193",
+      "judge_1": {
+        "attribution_status": "no_clear_policy_failure",
+        "primary_failure_mode": null,
+        "contributing_failure_modes": [],
+        "any_failure_modes": []
+      },
+      "judge_2": {
+        "attribution_status": "no_clear_policy_failure",
+        "primary_failure_mode": null,
+        "contributing_failure_modes": [],
+        "any_failure_modes": []
+      }
+    },
+    {
+      "case_id": "case_012",
+      "source_item_id": "batch_032_no_opp_info_c_med_20days::exp_004::meta_3::David",
+      "batch_name": "batch_032_no_opp_info_c_med_20days",
+      "condition": "OF",
+      "experiment_id": "exp_004",
+      "meta_round_id": 3,
+      "agent_id": "David",
+      "model_name": "claude-sonnet-5",
+      "prompt_sha256": "c77bd7d04f86f4e0e02fd2355c9d9dd9a0342b1e6f853f451fa4c0ef48ee4a5f",
+      "judge_1": {
+        "attribution_status": "dominant_policy_failure",
+        "primary_failure_mode": "fatal_undercommitment",
+        "contributing_failure_modes": [
+          "competitive_threshold_miscalibration"
+        ],
+        "any_failure_modes": [
+          "fatal_undercommitment",
+          "competitive_threshold_miscalibration"
+        ]
+      },
+      "judge_2": {
+        "attribution_status": "dominant_policy_failure",
+        "primary_failure_mode": "fatal_undercommitment",
+        "contributing_failure_modes": [],
+        "any_failure_modes": [
+          "fatal_undercommitment"
+        ]
+      }
+    },
+    {
+      "case_id": "case_013",
+      "source_item_id": "batch_031_full_code_access_c_med_20days::exp_038::meta_2::Alex",
+      "batch_name": "batch_031_full_code_access_c_med_20days",
+      "condition": "OPF",
+      "experiment_id": "exp_038",
+      "meta_round_id": 2,
+      "agent_id": "Alex",
+      "model_name": "deepseek-v4-flash",
+      "prompt_sha256": "c53b571f4d3b424b01c80cab4165a12f7846026f8367294e83b195e12bd16c98",
+      "judge_1": {
+        "attribution_status": "mixed_policy_and_context",
+        "primary_failure_mode": "fatal_undercommitment",
+        "contributing_failure_modes": [
+          "competitive_threshold_miscalibration"
+        ],
+        "any_failure_modes": [
+          "fatal_undercommitment",
+          "competitive_threshold_miscalibration"
+        ]
+      },
+      "judge_2": {
+        "attribution_status": "dominant_policy_failure",
+        "primary_failure_mode": "competitive_threshold_miscalibration",
+        "contributing_failure_modes": [],
+        "any_failure_modes": [
+          "competitive_threshold_miscalibration"
+        ]
+      }
+    },
+    {
+      "case_id": "case_014",
+      "source_item_id": "batch_032_no_opp_info_c_med_20days::exp_015::meta_2::Cindy",
+      "batch_name": "batch_032_no_opp_info_c_med_20days",
+      "condition": "OF",
+      "experiment_id": "exp_015",
+      "meta_round_id": 2,
+      "agent_id": "Cindy",
+      "model_name": "gpt-5.4-nano",
+      "prompt_sha256": "8878cd5fcad7d3a8a0f0e48c1e3ed103bf8af01ab9cb1643fa3a5b071e61f62d",
+      "judge_1": {
+        "attribution_status": "dominant_policy_failure",
+        "primary_failure_mode": "fatal_undercommitment",
+        "contributing_failure_modes": [
+          "competitive_threshold_miscalibration"
+        ],
+        "any_failure_modes": [
+          "fatal_undercommitment",
+          "competitive_threshold_miscalibration"
+        ]
+      },
+      "judge_2": {
+        "attribution_status": "dominant_policy_failure",
+        "primary_failure_mode": "competitive_threshold_miscalibration",
+        "contributing_failure_modes": [],
+        "any_failure_modes": [
+          "competitive_threshold_miscalibration"
+        ]
+      }
+    },
+    {
+      "case_id": "case_015",
+      "source_item_id": "batch_031_full_code_access_c_med_20days::exp_057::meta_2::Alex",
+      "batch_name": "batch_031_full_code_access_c_med_20days",
+      "condition": "OPF",
+      "experiment_id": "exp_057",
+      "meta_round_id": 2,
+      "agent_id": "Alex",
+      "model_name": "gpt-5.4-nano",
+      "prompt_sha256": "ec1e3bfa91a63ff36ea4e7c2a3bafb21c59955ec6a0fcb573c25a757376ed490",
+      "judge_1": {
+        "attribution_status": "mixed_policy_and_context",
+        "primary_failure_mode": "fatal_undercommitment",
+        "contributing_failure_modes": [
+          "competitive_threshold_miscalibration"
+        ],
+        "any_failure_modes": [
+          "fatal_undercommitment",
+          "competitive_threshold_miscalibration"
+        ]
+      },
+      "judge_2": {
+        "attribution_status": "mixed_policy_and_context",
+        "primary_failure_mode": "competitive_threshold_miscalibration",
+        "contributing_failure_modes": [],
+        "any_failure_modes": [
+          "competitive_threshold_miscalibration"
+        ]
+      }
+    },
+    {
+      "case_id": "case_016",
+      "source_item_id": "batch_031_full_code_access_c_med_20days::exp_095::meta_2::Alex",
+      "batch_name": "batch_031_full_code_access_c_med_20days",
+      "condition": "OPF",
+      "experiment_id": "exp_095",
+      "meta_round_id": 2,
+      "agent_id": "Alex",
+      "model_name": "gemini-3.5-flash",
+      "prompt_sha256": "ff0e9e3dc7509ff6f25db1cca3f2b8a9ea7ef3c2756477a6a443faf900387abd",
+      "judge_1": {
+        "attribution_status": "dominant_policy_failure",
+        "primary_failure_mode": "fatal_undercommitment",
+        "contributing_failure_modes": [],
+        "any_failure_modes": [
+          "fatal_undercommitment"
+        ]
+      },
+      "judge_2": {
+        "attribution_status": "dominant_policy_failure",
+        "primary_failure_mode": "fatal_undercommitment",
+        "contributing_failure_modes": [],
+        "any_failure_modes": [
+          "fatal_undercommitment"
+        ]
+      }
+    },
+    {
+      "case_id": "case_017",
+      "source_item_id": "batch_032_no_opp_info_c_med_20days::exp_056::meta_3::David",
+      "batch_name": "batch_032_no_opp_info_c_med_20days",
+      "condition": "OF",
+      "experiment_id": "exp_056",
+      "meta_round_id": 3,
+      "agent_id": "David",
+      "model_name": "claude-sonnet-5",
+      "prompt_sha256": "884e7a7c55d1fcf2cb2c023f9b44b65283e48b89df09eea370f10aec11774b95",
+      "judge_1": {
+        "attribution_status": "dominant_policy_failure",
+        "primary_failure_mode": "fatal_undercommitment",
+        "contributing_failure_modes": [
+          "competitive_threshold_miscalibration"
+        ],
+        "any_failure_modes": [
+          "fatal_undercommitment",
+          "competitive_threshold_miscalibration"
+        ]
+      },
+      "judge_2": {
+        "attribution_status": "dominant_policy_failure",
+        "primary_failure_mode": "competitive_threshold_miscalibration",
+        "contributing_failure_modes": [],
+        "any_failure_modes": [
+          "competitive_threshold_miscalibration"
+        ]
+      }
+    },
+    {
+      "case_id": "case_018",
+      "source_item_id": "batch_032_no_opp_info_c_med_20days::exp_010::meta_1::Eric",
+      "batch_name": "batch_032_no_opp_info_c_med_20days",
+      "condition": "OF",
+      "experiment_id": "exp_010",
+      "meta_round_id": 1,
+      "agent_id": "Eric",
+      "model_name": "deepseek-v4-flash",
+      "prompt_sha256": "5e377f424cf82a29de628a3bfb350377562bb71722ef780cb65b0fcc541a6854",
+      "judge_1": {
+        "attribution_status": "dominant_policy_failure",
+        "primary_failure_mode": "fatal_undercommitment",
+        "contributing_failure_modes": [
+          "competitive_threshold_miscalibration"
+        ],
+        "any_failure_modes": [
+          "fatal_undercommitment",
+          "competitive_threshold_miscalibration"
+        ]
+      },
+      "judge_2": {
+        "attribution_status": "dominant_policy_failure",
+        "primary_failure_mode": "fatal_undercommitment",
+        "contributing_failure_modes": [],
+        "any_failure_modes": [
+          "fatal_undercommitment"
+        ]
+      }
+    },
+    {
+      "case_id": "case_019",
+      "source_item_id": "batch_032_no_opp_info_c_med_20days::exp_024::meta_3::Bob",
+      "batch_name": "batch_032_no_opp_info_c_med_20days",
+      "condition": "OF",
+      "experiment_id": "exp_024",
+      "meta_round_id": 3,
+      "agent_id": "Bob",
+      "model_name": "claude-sonnet-5",
+      "prompt_sha256": "01830e0a46b0e114bb8cb5712ebd0d91dc61483433d91cf28219f1065d580362",
+      "judge_1": {
+        "attribution_status": "dominant_policy_failure",
+        "primary_failure_mode": "fatal_undercommitment",
+        "contributing_failure_modes": [
+          "competitive_threshold_miscalibration"
+        ],
+        "any_failure_modes": [
+          "fatal_undercommitment",
+          "competitive_threshold_miscalibration"
+        ]
+      },
+      "judge_2": {
+        "attribution_status": "dominant_policy_failure",
+        "primary_failure_mode": "fatal_undercommitment",
+        "contributing_failure_modes": [],
+        "any_failure_modes": [
+          "fatal_undercommitment"
+        ]
+      }
+    },
+    {
+      "case_id": "case_020",
+      "source_item_id": "batch_032_no_opp_info_c_med_20days::exp_024::meta_3::Eric",
+      "batch_name": "batch_032_no_opp_info_c_med_20days",
+      "condition": "OF",
+      "experiment_id": "exp_024",
+      "meta_round_id": 3,
+      "agent_id": "Eric",
+      "model_name": "deepseek-v4-flash",
+      "prompt_sha256": "7985af364683283a58a97014328f45a8c52b3ecf4ac7fef3ea960940ba6311e7",
+      "judge_1": {
+        "attribution_status": "dominant_policy_failure",
+        "primary_failure_mode": "fatal_undercommitment",
+        "contributing_failure_modes": [
+          "competitive_threshold_miscalibration"
+        ],
+        "any_failure_modes": [
+          "fatal_undercommitment",
+          "competitive_threshold_miscalibration"
+        ]
+      },
+      "judge_2": {
+        "attribution_status": "dominant_policy_failure",
+        "primary_failure_mode": "competitive_threshold_miscalibration",
+        "contributing_failure_modes": [],
+        "any_failure_modes": [
+          "competitive_threshold_miscalibration"
+        ]
+      }
+    },
+    {
+      "case_id": "case_021",
+      "source_item_id": "batch_031_full_code_access_c_med_20days::exp_092::meta_3::Eric",
+      "batch_name": "batch_031_full_code_access_c_med_20days",
+      "condition": "OPF",
+      "experiment_id": "exp_092",
+      "meta_round_id": 3,
+      "agent_id": "Eric",
+      "model_name": "deepseek-v4-flash",
+      "prompt_sha256": "413a8041b048b474c28f2ea824faa6e0d6df14d2bfd8b371476011f313e4bb11",
+      "judge_1": {
+        "attribution_status": "dominant_policy_failure",
+        "primary_failure_mode": "fatal_undercommitment",
+        "contributing_failure_modes": [
+          "competitive_threshold_miscalibration"
+        ],
+        "any_failure_modes": [
+          "fatal_undercommitment",
+          "competitive_threshold_miscalibration"
+        ]
+      },
+      "judge_2": {
+        "attribution_status": "dominant_policy_failure",
+        "primary_failure_mode": "competitive_threshold_miscalibration",
+        "contributing_failure_modes": [],
+        "any_failure_modes": [
+          "competitive_threshold_miscalibration"
+        ]
+      }
+    },
+    {
+      "case_id": "case_022",
+      "source_item_id": "batch_031_full_code_access_c_med_20days::exp_031::meta_1::Alex",
+      "batch_name": "batch_031_full_code_access_c_med_20days",
+      "condition": "OPF",
+      "experiment_id": "exp_031",
+      "meta_round_id": 1,
+      "agent_id": "Alex",
+      "model_name": "deepseek-v4-flash",
+      "prompt_sha256": "5eabe7a63437f262cdcca137019da88cfa6fac3cd5790865d62f20300cfd4002",
+      "judge_1": {
+        "attribution_status": "dominant_policy_failure",
+        "primary_failure_mode": "fatal_undercommitment",
+        "contributing_failure_modes": [
+          "competitive_threshold_miscalibration"
+        ],
+        "any_failure_modes": [
+          "fatal_undercommitment",
+          "competitive_threshold_miscalibration"
+        ]
+      },
+      "judge_2": {
+        "attribution_status": "dominant_policy_failure",
+        "primary_failure_mode": "emergency_response_failure",
+        "contributing_failure_modes": [],
+        "any_failure_modes": [
+          "emergency_response_failure"
+        ]
+      }
+    },
+    {
+      "case_id": "case_023",
+      "source_item_id": "batch_031_full_code_access_c_med_20days::exp_082::meta_2::Alex",
+      "batch_name": "batch_031_full_code_access_c_med_20days",
+      "condition": "OPF",
+      "experiment_id": "exp_082",
+      "meta_round_id": 2,
+      "agent_id": "Alex",
+      "model_name": "gemini-3.5-flash",
+      "prompt_sha256": "6b13557fb5e2a6dcfe06370ec49a82d710cab14476852299f1f1aa3b4ba2321d",
+      "judge_1": {
+        "attribution_status": "mixed_policy_and_context",
+        "primary_failure_mode": "fatal_undercommitment",
+        "contributing_failure_modes": [],
+        "any_failure_modes": [
+          "fatal_undercommitment"
+        ]
+      },
+      "judge_2": {
+        "attribution_status": "dominant_policy_failure",
+        "primary_failure_mode": "winners_curse_overpayment",
+        "contributing_failure_modes": [],
+        "any_failure_modes": [
+          "winners_curse_overpayment"
+        ]
+      }
+    },
+    {
+      "case_id": "case_024",
+      "source_item_id": "batch_032_no_opp_info_c_med_20days::exp_109::meta_2::Bob",
+      "batch_name": "batch_032_no_opp_info_c_med_20days",
+      "condition": "OF",
+      "experiment_id": "exp_109",
+      "meta_round_id": 2,
+      "agent_id": "Bob",
+      "model_name": "gpt-5.4-nano",
+      "prompt_sha256": "9a004037fb0cfa383658442cd9649f557b99a4a66a6ac7f527e505cda9bcee18",
+      "judge_1": {
+        "attribution_status": "mixed_policy_and_context",
+        "primary_failure_mode": "winners_curse_overpayment",
+        "contributing_failure_modes": [],
+        "any_failure_modes": [
+          "winners_curse_overpayment"
+        ]
+      },
+      "judge_2": {
+        "attribution_status": "dominant_policy_failure",
+        "primary_failure_mode": "winners_curse_overpayment",
+        "contributing_failure_modes": [],
+        "any_failure_modes": [
+          "winners_curse_overpayment"
+        ]
+      }
+    },
+    {
+      "case_id": "case_025",
+      "source_item_id": "batch_031_full_code_access_c_med_20days::exp_026::meta_1::Bob",
+      "batch_name": "batch_031_full_code_access_c_med_20days",
+      "condition": "OPF",
+      "experiment_id": "exp_026",
+      "meta_round_id": 1,
+      "agent_id": "Bob",
+      "model_name": "gpt-5.4",
+      "prompt_sha256": "4a5e0c66449cdff4837f016ce22c60870967385e0be0e9350055b75286184b45",
+      "judge_1": {
+        "attribution_status": "dominant_policy_failure",
+        "primary_failure_mode": "fatal_undercommitment",
+        "contributing_failure_modes": [
+          "competitive_threshold_miscalibration"
+        ],
+        "any_failure_modes": [
+          "fatal_undercommitment",
+          "competitive_threshold_miscalibration"
+        ]
+      },
+      "judge_2": {
+        "attribution_status": "dominant_policy_failure",
+        "primary_failure_mode": "competitive_threshold_miscalibration",
+        "contributing_failure_modes": [],
+        "any_failure_modes": [
+          "competitive_threshold_miscalibration"
+        ]
+      }
+    },
+    {
+      "case_id": "case_026",
+      "source_item_id": "batch_032_no_opp_info_c_med_20days::exp_088::meta_2::Cindy",
+      "batch_name": "batch_032_no_opp_info_c_med_20days",
+      "condition": "OF",
+      "experiment_id": "exp_088",
+      "meta_round_id": 2,
+      "agent_id": "Cindy",
+      "model_name": "deepseek-v4-flash",
+      "prompt_sha256": "7045f77937f66b72092a65dffdf01c147be1923ee5f2726887dc5fae6d58f601",
+      "judge_1": {
+        "attribution_status": "dominant_policy_failure",
+        "primary_failure_mode": "fatal_undercommitment",
+        "contributing_failure_modes": [
+          "competitive_threshold_miscalibration"
+        ],
+        "any_failure_modes": [
+          "fatal_undercommitment",
+          "competitive_threshold_miscalibration"
+        ]
+      },
+      "judge_2": {
+        "attribution_status": "dominant_policy_failure",
+        "primary_failure_mode": "emergency_response_failure",
+        "contributing_failure_modes": [],
+        "any_failure_modes": [
+          "emergency_response_failure"
+        ]
+      }
+    },
+    {
+      "case_id": "case_027",
+      "source_item_id": "batch_031_full_code_access_c_med_20days::exp_070::meta_2::Bob",
+      "batch_name": "batch_031_full_code_access_c_med_20days",
+      "condition": "OPF",
+      "experiment_id": "exp_070",
+      "meta_round_id": 2,
+      "agent_id": "Bob",
+      "model_name": "claude-sonnet-5",
+      "prompt_sha256": "b3ec01f7ef03b5b7515d358408dbd34cc1660d4bf12ec97ef1ff0da1a1b623ca",
+      "judge_1": {
+        "attribution_status": "dominant_policy_failure",
+        "primary_failure_mode": "fatal_undercommitment",
+        "contributing_failure_modes": [
+          "competitive_threshold_miscalibration"
+        ],
+        "any_failure_modes": [
+          "fatal_undercommitment",
+          "competitive_threshold_miscalibration"
+        ]
+      },
+      "judge_2": {
+        "attribution_status": "dominant_policy_failure",
+        "primary_failure_mode": "competitive_threshold_miscalibration",
+        "contributing_failure_modes": [],
+        "any_failure_modes": [
+          "competitive_threshold_miscalibration"
+        ]
+      }
+    },
+    {
+      "case_id": "case_028",
+      "source_item_id": "batch_031_full_code_access_c_med_20days::exp_089::meta_3::David",
+      "batch_name": "batch_031_full_code_access_c_med_20days",
+      "condition": "OPF",
+      "experiment_id": "exp_089",
+      "meta_round_id": 3,
+      "agent_id": "David",
+      "model_name": "gpt-5.4",
+      "prompt_sha256": "daa917d513b8836c43eb219d13bc7c61ac67aeeaa9ab1bc8fb43f3cc90a1ca76",
+      "judge_1": {
+        "attribution_status": "dominant_policy_failure",
+        "primary_failure_mode": "fatal_undercommitment",
+        "contributing_failure_modes": [
+          "competitive_threshold_miscalibration"
+        ],
+        "any_failure_modes": [
+          "fatal_undercommitment",
+          "competitive_threshold_miscalibration"
+        ]
+      },
+      "judge_2": {
+        "attribution_status": "dominant_policy_failure",
+        "primary_failure_mode": "emergency_response_failure",
+        "contributing_failure_modes": [],
+        "any_failure_modes": [
+          "emergency_response_failure"
+        ]
+      }
+    },
+    {
+      "case_id": "case_029",
+      "source_item_id": "batch_032_no_opp_info_c_med_20days::exp_087::meta_1::Alex",
+      "batch_name": "batch_032_no_opp_info_c_med_20days",
+      "condition": "OF",
+      "experiment_id": "exp_087",
+      "meta_round_id": 1,
+      "agent_id": "Alex",
+      "model_name": "gemini-3.5-flash",
+      "prompt_sha256": "bcd3f6654d4c05296c494f1133755edde8504f17046860dc91ed17513de44681",
+      "judge_1": {
+        "attribution_status": "mixed_policy_and_context",
+        "primary_failure_mode": "fatal_undercommitment",
+        "contributing_failure_modes": [
+          "competitive_threshold_miscalibration"
+        ],
+        "any_failure_modes": [
+          "fatal_undercommitment",
+          "competitive_threshold_miscalibration"
+        ]
+      },
+      "judge_2": {
+        "attribution_status": "mixed_policy_and_context",
+        "primary_failure_mode": "fatal_undercommitment",
+        "contributing_failure_modes": [],
+        "any_failure_modes": [
+          "fatal_undercommitment"
+        ]
+      }
+    },
+    {
+      "case_id": "case_030",
+      "source_item_id": "batch_032_no_opp_info_c_med_20days::exp_077::meta_1::David",
+      "batch_name": "batch_032_no_opp_info_c_med_20days",
+      "condition": "OF",
+      "experiment_id": "exp_077",
+      "meta_round_id": 1,
+      "agent_id": "David",
+      "model_name": "deepseek-v4-flash",
+      "prompt_sha256": "0e1bcb2cf77646ffd088ca4e39e0edb5181d99ce55ce9d819d35c576384be99e",
+      "judge_1": {
+        "attribution_status": "dominant_policy_failure",
+        "primary_failure_mode": "fatal_undercommitment",
+        "contributing_failure_modes": [
+          "winners_curse_overpayment"
+        ],
+        "any_failure_modes": [
+          "fatal_undercommitment",
+          "winners_curse_overpayment"
+        ]
+      },
+      "judge_2": {
+        "attribution_status": "dominant_policy_failure",
+        "primary_failure_mode": "fatal_undercommitment",
+        "contributing_failure_modes": [],
+        "any_failure_modes": [
+          "fatal_undercommitment"
+        ]
+      }
+    },
+    {
+      "case_id": "case_031",
+      "source_item_id": "batch_032_no_opp_info_c_med_20days::exp_090::meta_3::Alex",
+      "batch_name": "batch_032_no_opp_info_c_med_20days",
+      "condition": "OF",
+      "experiment_id": "exp_090",
+      "meta_round_id": 3,
+      "agent_id": "Alex",
+      "model_name": "gemini-3.5-flash",
+      "prompt_sha256": "6304117935fb9cec8c7e45d620f01e64d6e14e78eace461120893686359f4959",
+      "judge_1": {
+        "attribution_status": "no_clear_policy_failure",
+        "primary_failure_mode": null,
+        "contributing_failure_modes": [],
+        "any_failure_modes": []
+      },
+      "judge_2": {
+        "attribution_status": "mixed_policy_and_context",
+        "primary_failure_mode": "competitive_threshold_miscalibration",
+        "contributing_failure_modes": [],
+        "any_failure_modes": [
+          "competitive_threshold_miscalibration"
+        ]
+      }
+    },
+    {
+      "case_id": "case_032",
+      "source_item_id": "batch_032_no_opp_info_c_med_20days::exp_078::meta_1::Bob",
+      "batch_name": "batch_032_no_opp_info_c_med_20days",
+      "condition": "OF",
+      "experiment_id": "exp_078",
+      "meta_round_id": 1,
+      "agent_id": "Bob",
+      "model_name": "gpt-5.4",
+      "prompt_sha256": "8aab771a67201c731ea95d3146dd872ac1cb0bb5fa9d247bb1e56fa0701679b2",
+      "judge_1": {
+        "attribution_status": "dominant_policy_failure",
+        "primary_failure_mode": "fatal_undercommitment",
+        "contributing_failure_modes": [
+          "competitive_threshold_miscalibration"
+        ],
+        "any_failure_modes": [
+          "fatal_undercommitment",
+          "competitive_threshold_miscalibration"
+        ]
+      },
+      "judge_2": {
+        "attribution_status": "dominant_policy_failure",
+        "primary_failure_mode": "fatal_undercommitment",
+        "contributing_failure_modes": [
+          "competitive_threshold_miscalibration"
+        ],
+        "any_failure_modes": [
+          "fatal_undercommitment",
+          "competitive_threshold_miscalibration"
+        ]
+      }
+    },
+    {
+      "case_id": "case_033",
+      "source_item_id": "batch_032_no_opp_info_c_med_20days::exp_051::meta_1::David",
+      "batch_name": "batch_032_no_opp_info_c_med_20days",
+      "condition": "OF",
+      "experiment_id": "exp_051",
+      "meta_round_id": 1,
+      "agent_id": "David",
+      "model_name": "deepseek-v4-flash",
+      "prompt_sha256": "6a0f0e7b60e80219552366275344d395718b99e553671e36d2b016defd16b868",
+      "judge_1": {
+        "attribution_status": "dominant_policy_failure",
+        "primary_failure_mode": "fatal_undercommitment",
+        "contributing_failure_modes": [
+          "competitive_threshold_miscalibration"
+        ],
+        "any_failure_modes": [
+          "fatal_undercommitment",
+          "competitive_threshold_miscalibration"
+        ]
+      },
+      "judge_2": {
+        "attribution_status": "dominant_policy_failure",
+        "primary_failure_mode": "fatal_undercommitment",
+        "contributing_failure_modes": [
+          "competitive_threshold_miscalibration"
+        ],
+        "any_failure_modes": [
+          "fatal_undercommitment",
+          "competitive_threshold_miscalibration"
+        ]
+      }
+    },
+    {
+      "case_id": "case_034",
+      "source_item_id": "batch_031_full_code_access_c_med_20days::exp_104::meta_3::Eric",
+      "batch_name": "batch_031_full_code_access_c_med_20days",
+      "condition": "OPF",
+      "experiment_id": "exp_104",
+      "meta_round_id": 3,
+      "agent_id": "Eric",
+      "model_name": "gpt-5.4-nano",
+      "prompt_sha256": "67b11e46af82d977a10afe05d3b679fcb1cca04213468a895e0d6c31ee44febc",
+      "judge_1": {
+        "attribution_status": "dominant_policy_failure",
+        "primary_failure_mode": "fatal_undercommitment",
+        "contributing_failure_modes": [
+          "competitive_threshold_miscalibration"
+        ],
+        "any_failure_modes": [
+          "fatal_undercommitment",
+          "competitive_threshold_miscalibration"
+        ]
+      },
+      "judge_2": {
+        "attribution_status": "dominant_policy_failure",
+        "primary_failure_mode": "allocation_context_misreasoning",
+        "contributing_failure_modes": [],
+        "any_failure_modes": [
+          "allocation_context_misreasoning"
+        ]
+      }
+    },
+    {
+      "case_id": "case_035",
+      "source_item_id": "batch_031_full_code_access_c_med_20days::exp_084::meta_1::Bob",
+      "batch_name": "batch_031_full_code_access_c_med_20days",
+      "condition": "OPF",
+      "experiment_id": "exp_084",
+      "meta_round_id": 1,
+      "agent_id": "Bob",
+      "model_name": "deepseek-v4-flash",
+      "prompt_sha256": "80f3152dc89470336fb754821f402a8472723339b1eadd7df510526d3bc9904d",
+      "judge_1": {
+        "attribution_status": "dominant_policy_failure",
+        "primary_failure_mode": "fatal_undercommitment",
+        "contributing_failure_modes": [
+          "competitive_threshold_miscalibration"
+        ],
+        "any_failure_modes": [
+          "fatal_undercommitment",
+          "competitive_threshold_miscalibration"
+        ]
+      },
+      "judge_2": {
+        "attribution_status": "mixed_policy_and_context",
+        "primary_failure_mode": "competitive_threshold_miscalibration",
+        "contributing_failure_modes": [
+          "fatal_undercommitment"
+        ],
+        "any_failure_modes": [
+          "competitive_threshold_miscalibration",
+          "fatal_undercommitment"
+        ]
+      }
+    },
+    {
+      "case_id": "case_036",
+      "source_item_id": "batch_031_full_code_access_c_med_20days::exp_108::meta_3::Alex",
+      "batch_name": "batch_031_full_code_access_c_med_20days",
+      "condition": "OPF",
+      "experiment_id": "exp_108",
+      "meta_round_id": 3,
+      "agent_id": "Alex",
+      "model_name": "claude-sonnet-5",
+      "prompt_sha256": "4c3bb3961e3072c48ee5a6b2164365d4cd2637a63250219ceceff55cccd66520",
+      "judge_1": {
+        "attribution_status": "mixed_policy_and_context",
+        "primary_failure_mode": "winners_curse_overpayment",
+        "contributing_failure_modes": [
+          "fatal_undercommitment"
+        ],
+        "any_failure_modes": [
+          "winners_curse_overpayment",
+          "fatal_undercommitment"
+        ]
+      },
+      "judge_2": {
+        "attribution_status": "mixed_policy_and_context",
+        "primary_failure_mode": "winners_curse_overpayment",
+        "contributing_failure_modes": [
+          "fatal_undercommitment"
+        ],
+        "any_failure_modes": [
+          "winners_curse_overpayment",
+          "fatal_undercommitment"
+        ]
+      }
+    },
+    {
+      "case_id": "case_037",
+      "source_item_id": "batch_032_no_opp_info_c_med_20days::exp_083::meta_1::Alex",
+      "batch_name": "batch_032_no_opp_info_c_med_20days",
+      "condition": "OF",
+      "experiment_id": "exp_083",
+      "meta_round_id": 1,
+      "agent_id": "Alex",
+      "model_name": "gemini-3.5-flash",
+      "prompt_sha256": "2963b22e88f00f07b8a5ac956c81ad80203e8d85db10043840109de711159a21",
+      "judge_1": {
+        "attribution_status": "mixed_policy_and_context",
+        "primary_failure_mode": "fatal_undercommitment",
+        "contributing_failure_modes": [
+          "competitive_threshold_miscalibration"
+        ],
+        "any_failure_modes": [
+          "fatal_undercommitment",
+          "competitive_threshold_miscalibration"
+        ]
+      },
+      "judge_2": {
+        "attribution_status": "no_clear_policy_failure",
+        "primary_failure_mode": null,
+        "contributing_failure_modes": [],
+        "any_failure_modes": []
+      }
+    },
+    {
+      "case_id": "case_038",
+      "source_item_id": "batch_032_no_opp_info_c_med_20days::exp_016::meta_1::Alex",
+      "batch_name": "batch_032_no_opp_info_c_med_20days",
+      "condition": "OF",
+      "experiment_id": "exp_016",
+      "meta_round_id": 1,
+      "agent_id": "Alex",
+      "model_name": "gpt-5.4",
+      "prompt_sha256": "42915b4cd943f915a15b7c94ef14099cf976a643aa174bd1a1860ccaa3712f13",
+      "judge_1": {
+        "attribution_status": "mixed_policy_and_context",
+        "primary_failure_mode": "winners_curse_overpayment",
+        "contributing_failure_modes": [],
+        "any_failure_modes": [
+          "winners_curse_overpayment"
+        ]
+      },
+      "judge_2": {
+        "attribution_status": "mixed_policy_and_context",
+        "primary_failure_mode": "winners_curse_overpayment",
+        "contributing_failure_modes": [],
+        "any_failure_modes": [
+          "winners_curse_overpayment"
+        ]
+      }
+    },
+    {
+      "case_id": "case_039",
+      "source_item_id": "batch_031_full_code_access_c_med_20days::exp_117::meta_1::Alex",
+      "batch_name": "batch_031_full_code_access_c_med_20days",
+      "condition": "OPF",
+      "experiment_id": "exp_117",
+      "meta_round_id": 1,
+      "agent_id": "Alex",
+      "model_name": "claude-sonnet-5",
+      "prompt_sha256": "a2464554df6da2f611c2e8be135c6ee268128ec4ecd7ab52db3312ded929e164",
+      "judge_1": {
+        "attribution_status": "no_clear_policy_failure",
+        "primary_failure_mode": null,
+        "contributing_failure_modes": [],
+        "any_failure_modes": []
+      },
+      "judge_2": {
+        "attribution_status": "no_clear_policy_failure",
+        "primary_failure_mode": null,
+        "contributing_failure_modes": [],
+        "any_failure_modes": []
+      }
+    },
+    {
+      "case_id": "case_040",
+      "source_item_id": "batch_031_full_code_access_c_med_20days::exp_089::meta_2::Alex",
+      "batch_name": "batch_031_full_code_access_c_med_20days",
+      "condition": "OPF",
+      "experiment_id": "exp_089",
+      "meta_round_id": 2,
+      "agent_id": "Alex",
+      "model_name": "gemini-3.5-flash",
+      "prompt_sha256": "8023da91461d7b46ff5b7e3e53178bfc8964b366effa915c7571614864be21bc",
+      "judge_1": {
+        "attribution_status": "dominant_policy_failure",
+        "primary_failure_mode": "emergency_response_failure",
+        "contributing_failure_modes": [
+          "competitive_threshold_miscalibration"
+        ],
+        "any_failure_modes": [
+          "emergency_response_failure",
+          "competitive_threshold_miscalibration"
+        ]
+      },
+      "judge_2": {
+        "attribution_status": "dominant_policy_failure",
+        "primary_failure_mode": "competitive_threshold_miscalibration",
+        "contributing_failure_modes": [
+          "winners_curse_overpayment"
+        ],
+        "any_failure_modes": [
+          "competitive_threshold_miscalibration",
+          "winners_curse_overpayment"
+        ]
+      }
+    },
+    {
+      "case_id": "case_041",
+      "source_item_id": "batch_031_full_code_access_c_med_20days::exp_022::meta_2::Alex",
+      "batch_name": "batch_031_full_code_access_c_med_20days",
+      "condition": "OPF",
+      "experiment_id": "exp_022",
+      "meta_round_id": 2,
+      "agent_id": "Alex",
+      "model_name": "gpt-5.4",
+      "prompt_sha256": "0a977c62a30739c685a39a65679fdefd7faa0ee2b6031c5966b8263dca9dfe33",
+      "judge_1": {
+        "attribution_status": "mixed_policy_and_context",
+        "primary_failure_mode": "winners_curse_overpayment",
+        "contributing_failure_modes": [],
+        "any_failure_modes": [
+          "winners_curse_overpayment"
+        ]
+      },
+      "judge_2": {
+        "attribution_status": "dominant_policy_failure",
+        "primary_failure_mode": "winners_curse_overpayment",
+        "contributing_failure_modes": [],
+        "any_failure_modes": [
+          "winners_curse_overpayment"
+        ]
+      }
+    },
+    {
+      "case_id": "case_042",
+      "source_item_id": "batch_031_full_code_access_c_med_20days::exp_106::meta_3::Alex",
+      "batch_name": "batch_031_full_code_access_c_med_20days",
+      "condition": "OPF",
+      "experiment_id": "exp_106",
+      "meta_round_id": 3,
+      "agent_id": "Alex",
+      "model_name": "claude-sonnet-5",
+      "prompt_sha256": "e055ffd899d71f343c532d23c9b9217889b36f1934dae5bcaa08d92ee3abc2c9",
+      "judge_1": {
+        "attribution_status": "dominant_policy_failure",
+        "primary_failure_mode": "fatal_undercommitment",
+        "contributing_failure_modes": [
+          "winners_curse_overpayment"
+        ],
+        "any_failure_modes": [
+          "fatal_undercommitment",
+          "winners_curse_overpayment"
+        ]
+      },
+      "judge_2": {
+        "attribution_status": "dominant_policy_failure",
+        "primary_failure_mode": "fatal_undercommitment",
+        "contributing_failure_modes": [
+          "winners_curse_overpayment"
+        ],
+        "any_failure_modes": [
+          "fatal_undercommitment",
+          "winners_curse_overpayment"
+        ]
+      }
+    },
+    {
+      "case_id": "case_043",
+      "source_item_id": "batch_031_full_code_access_c_med_20days::exp_041::meta_1::Alex",
+      "batch_name": "batch_031_full_code_access_c_med_20days",
+      "condition": "OPF",
+      "experiment_id": "exp_041",
+      "meta_round_id": 1,
+      "agent_id": "Alex",
+      "model_name": "deepseek-v4-flash",
+      "prompt_sha256": "0f87c98451dfec805fc90ddd82fbe6d4c41e3920a0611f695f5215dcd26ee952",
+      "judge_1": {
+        "attribution_status": "dominant_policy_failure",
+        "primary_failure_mode": "fatal_undercommitment",
+        "contributing_failure_modes": [
+          "competitive_threshold_miscalibration"
+        ],
+        "any_failure_modes": [
+          "fatal_undercommitment",
+          "competitive_threshold_miscalibration"
+        ]
+      },
+      "judge_2": {
+        "attribution_status": "dominant_policy_failure",
+        "primary_failure_mode": "fatal_undercommitment",
+        "contributing_failure_modes": [],
+        "any_failure_modes": [
+          "fatal_undercommitment"
+        ]
+      }
+    },
+    {
+      "case_id": "case_044",
+      "source_item_id": "batch_031_full_code_access_c_med_20days::exp_102::meta_1::David",
+      "batch_name": "batch_031_full_code_access_c_med_20days",
+      "condition": "OPF",
+      "experiment_id": "exp_102",
+      "meta_round_id": 1,
+      "agent_id": "David",
+      "model_name": "gpt-5.4-nano",
+      "prompt_sha256": "ae50eda8dd83639a4d161bff251884172e5c410f172ec4450e7bbbef276bd606",
+      "judge_1": {
+        "attribution_status": "dominant_policy_failure",
+        "primary_failure_mode": "fatal_undercommitment",
+        "contributing_failure_modes": [
+          "competitive_threshold_miscalibration"
+        ],
+        "any_failure_modes": [
+          "fatal_undercommitment",
+          "competitive_threshold_miscalibration"
+        ]
+      },
+      "judge_2": {
+        "attribution_status": "mixed_policy_and_context",
+        "primary_failure_mode": "competitive_threshold_miscalibration",
+        "contributing_failure_modes": [],
+        "any_failure_modes": [
+          "competitive_threshold_miscalibration"
+        ]
+      }
+    },
+    {
+      "case_id": "case_045",
+      "source_item_id": "batch_031_full_code_access_c_med_20days::exp_084::meta_1::Eric",
+      "batch_name": "batch_031_full_code_access_c_med_20days",
+      "condition": "OPF",
+      "experiment_id": "exp_084",
+      "meta_round_id": 1,
+      "agent_id": "Eric",
+      "model_name": "gpt-5.4",
+      "prompt_sha256": "26be7852887f2cf4a13f84cd2bdef2063bd0388ac0c518a301368667e0355a0e",
+      "judge_1": {
+        "attribution_status": "dominant_policy_failure",
+        "primary_failure_mode": "fatal_undercommitment",
+        "contributing_failure_modes": [
+          "competitive_threshold_miscalibration"
+        ],
+        "any_failure_modes": [
+          "fatal_undercommitment",
+          "competitive_threshold_miscalibration"
+        ]
+      },
+      "judge_2": {
+        "attribution_status": "mixed_policy_and_context",
+        "primary_failure_mode": "competitive_threshold_miscalibration",
+        "contributing_failure_modes": [],
+        "any_failure_modes": [
+          "competitive_threshold_miscalibration"
+        ]
+      }
+    },
+    {
+      "case_id": "case_046",
+      "source_item_id": "batch_032_no_opp_info_c_med_20days::exp_060::meta_1::Alex",
+      "batch_name": "batch_032_no_opp_info_c_med_20days",
+      "condition": "OF",
+      "experiment_id": "exp_060",
+      "meta_round_id": 1,
+      "agent_id": "Alex",
+      "model_name": "gpt-5.4-nano",
+      "prompt_sha256": "30649ae0be50d1fdb14f7ce1c9967044554344cb542ee148166250e597218b9a",
+      "judge_1": {
+        "attribution_status": "dominant_policy_failure",
+        "primary_failure_mode": "fatal_undercommitment",
+        "contributing_failure_modes": [
+          "competitive_threshold_miscalibration"
+        ],
+        "any_failure_modes": [
+          "fatal_undercommitment",
+          "competitive_threshold_miscalibration"
+        ]
+      },
+      "judge_2": {
+        "attribution_status": "dominant_policy_failure",
+        "primary_failure_mode": "competitive_threshold_miscalibration",
+        "contributing_failure_modes": [],
+        "any_failure_modes": [
+          "competitive_threshold_miscalibration"
+        ]
+      }
+    },
+    {
+      "case_id": "case_047",
+      "source_item_id": "batch_032_no_opp_info_c_med_20days::exp_102::meta_2::Bob",
+      "batch_name": "batch_032_no_opp_info_c_med_20days",
+      "condition": "OF",
+      "experiment_id": "exp_102",
+      "meta_round_id": 2,
+      "agent_id": "Bob",
+      "model_name": "gpt-5.4",
+      "prompt_sha256": "39cbd057afb787051149241692e67770491a313a5f0042e29be6b911eac2fcd8",
+      "judge_1": {
+        "attribution_status": "mixed_policy_and_context",
+        "primary_failure_mode": "winners_curse_overpayment",
+        "contributing_failure_modes": [],
+        "any_failure_modes": [
+          "winners_curse_overpayment"
+        ]
+      },
+      "judge_2": {
+        "attribution_status": "dominant_policy_failure",
+        "primary_failure_mode": "winners_curse_overpayment",
+        "contributing_failure_modes": [
+          "competitive_threshold_miscalibration"
+        ],
+        "any_failure_modes": [
+          "winners_curse_overpayment",
+          "competitive_threshold_miscalibration"
+        ]
+      }
+    },
+    {
+      "case_id": "case_048",
+      "source_item_id": "batch_032_no_opp_info_c_med_20days::exp_052::meta_2::Bob",
+      "batch_name": "batch_032_no_opp_info_c_med_20days",
+      "condition": "OF",
+      "experiment_id": "exp_052",
+      "meta_round_id": 2,
+      "agent_id": "Bob",
+      "model_name": "gpt-5.4",
+      "prompt_sha256": "63bc590b58eb864ed5ee1b7a377bd28ae45d4efb6fed3c6939e154f68a7053a2",
+      "judge_1": {
+        "attribution_status": "dominant_policy_failure",
+        "primary_failure_mode": "winners_curse_overpayment",
+        "contributing_failure_modes": [],
+        "any_failure_modes": [
+          "winners_curse_overpayment"
+        ]
+      },
+      "judge_2": {
+        "attribution_status": "dominant_policy_failure",
+        "primary_failure_mode": "winners_curse_overpayment",
+        "contributing_failure_modes": [],
+        "any_failure_modes": [
+          "winners_curse_overpayment"
+        ]
+      }
+    },
+    {
+      "case_id": "case_049",
+      "source_item_id": "batch_031_full_code_access_c_med_20days::exp_058::meta_1::Alex",
+      "batch_name": "batch_031_full_code_access_c_med_20days",
+      "condition": "OPF",
+      "experiment_id": "exp_058",
+      "meta_round_id": 1,
+      "agent_id": "Alex",
+      "model_name": "gpt-5.4-nano",
+      "prompt_sha256": "b1969226669aa03d104d176652c771a92d3ba8011878838b1979e3231becd312",
+      "judge_1": {
+        "attribution_status": "dominant_policy_failure",
+        "primary_failure_mode": "fatal_undercommitment",
+        "contributing_failure_modes": [
+          "competitive_threshold_miscalibration"
+        ],
+        "any_failure_modes": [
+          "fatal_undercommitment",
+          "competitive_threshold_miscalibration"
+        ]
+      },
+      "judge_2": {
+        "attribution_status": "dominant_policy_failure",
+        "primary_failure_mode": "competitive_threshold_miscalibration",
+        "contributing_failure_modes": [],
+        "any_failure_modes": [
+          "competitive_threshold_miscalibration"
+        ]
+      }
+    },
+    {
+      "case_id": "case_050",
+      "source_item_id": "batch_031_full_code_access_c_med_20days::exp_019::meta_2::David",
+      "batch_name": "batch_031_full_code_access_c_med_20days",
+      "condition": "OPF",
+      "experiment_id": "exp_019",
+      "meta_round_id": 2,
+      "agent_id": "David",
+      "model_name": "gpt-5.4-nano",
+      "prompt_sha256": "55dfe032209c71ea90d2f7f465ecf157267b94765afa90201afb256f57644b57",
+      "judge_1": {
+        "attribution_status": "dominant_policy_failure",
+        "primary_failure_mode": "fatal_undercommitment",
+        "contributing_failure_modes": [],
+        "any_failure_modes": [
+          "fatal_undercommitment"
+        ]
+      },
+      "judge_2": {
+        "attribution_status": "dominant_policy_failure",
+        "primary_failure_mode": "fatal_undercommitment",
+        "contributing_failure_modes": [],
+        "any_failure_modes": [
+          "fatal_undercommitment"
+        ]
+      }
+    }
+  ]
+}

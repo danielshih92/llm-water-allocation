@@ -1,0 +1,13 @@
+condition,meta_round,metric,estimate,ci95_low,ci95_high,interpretation,bootstrap_samples
+OF,1,Behavioral distance,0.29488,0.285585,0.304637,lower means more similar,5000
+OF,2,Behavioral distance,0.315423,0.30637,0.324367,lower means more similar,5000
+OF,3,Behavioral distance,0.331457,0.32247,0.340443,lower means more similar,5000
+OF,1,Structural similarity,0.305815,0.300852,0.310957,higher means more similar,5000
+OF,2,Structural similarity,0.314263,0.307791,0.320515,higher means more similar,5000
+OF,3,Structural similarity,0.32276,0.318186,0.327339,higher means more similar,5000
+OPF,1,Behavioral distance,0.283516,0.275735,0.2916,lower means more similar,5000
+OPF,2,Behavioral distance,0.273321,0.263357,0.2833,lower means more similar,5000
+OPF,3,Behavioral distance,0.273436,0.263627,0.283177,lower means more similar,5000
+OPF,1,Structural similarity,0.311174,0.306423,0.31588,higher means more similar,5000
+OPF,2,Structural similarity,0.399525,0.393058,0.405696,higher means more similar,5000
+OPF,3,Structural similarity,0.420879,0.413264,0.428091,higher means more similar,5000

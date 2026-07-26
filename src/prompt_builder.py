@@ -184,7 +184,7 @@ class PromptBuilder:
                     "and runtime opponents_status inside get_bid.\n"
                 )
             reasoning_focus = (
-                "Keep reasoning under 60 words. Focus on improving your previous strategy, interpreting prior "
+                "Keep reasoning under 100 words. Focus on improving your previous strategy, interpreting prior "
                 "survival results, budget-safe reasoning, calibrated risk control, and survival.\n"
             )
 

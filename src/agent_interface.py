@@ -103,7 +103,11 @@ class GeminiBackend(LLMBackend):
     def generate(self, prompt: str) -> str:
         # 🌟 核心修正點 1：強制 Gemini 使用 JSON 輸出模式，徹底去除 markdown fences
         generation_config = {
-            "temperature": self.temperature or 0.6,
+            "temperature": (
+                self.temperature
+                if self.temperature is not None
+                else 0.6
+            ),
             "response_mime_type": "application/json"
         }
         response = self.client.generate_content(prompt, generation_config=generation_config)
@@ -152,6 +156,7 @@ class DeepSeekBackend(LLMBackend):
     temperature: Optional[float] = None
     base_url: str = "https://api.deepseek.com"
     system_prompt: Optional[str] = None
+    max_tokens: int = 3500
 
     def __post_init__(self) -> None:
         load_dotenv()
@@ -184,7 +189,7 @@ class DeepSeekBackend(LLMBackend):
                     "content": prompt,
                 },
             ],
-            "max_tokens": 3500,
+            "max_tokens": self.max_tokens,
             "extra_body": {
                 "thinking": {
                     "type": "enabled"

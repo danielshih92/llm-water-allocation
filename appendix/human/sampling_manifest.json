@@ -1,0 +1,51 @@
+{
+  "annotation_version": "wac-human-failure-validation-v1",
+  "source_result_dir": "/home/danie/thesis_experiment/Alympics/judge_result/failure_analysis_full_gpt_deepseek_v3",
+  "sampling_seed": 2027,
+  "sampling_rule": "Five paired death cases per model-condition stratum, sampled without consulting either judge's labels; presentation order is independently shuffled.",
+  "case_count": 50,
+  "model_count": 5,
+  "conditions": [
+    "OF",
+    "OPF"
+  ],
+  "per_model_condition": 5,
+  "stratum_counts_private_check": {
+    "gemini-3.5-flash::OF": 5,
+    "gemini-3.5-flash::OPF": 5,
+    "claude-sonnet-5::OF": 5,
+    "claude-sonnet-5::OPF": 5,
+    "gpt-5.4::OF": 5,
+    "gpt-5.4::OPF": 5,
+    "deepseek-v4-flash::OF": 5,
+    "deepseek-v4-flash::OPF": 5,
+    "gpt-5.4-nano::OF": 5,
+    "gpt-5.4-nano::OPF": 5
+  },
+  "model_name_leak_candidates_skipped": {
+    "gemini-3.5-flash::OPF": 0,
+    "gemini-3.5-flash::OF": 0,
+    "claude-sonnet-5::OPF": 0,
+    "claude-sonnet-5::OF": 0,
+    "gpt-5.4::OPF": 0,
+    "gpt-5.4::OF": 0,
+    "deepseek-v4-flash::OPF": 0,
+    "deepseek-v4-flash::OF": 0,
+    "gpt-5.4-nano::OPF": 0,
+    "gpt-5.4-nano::OF": 0
+  },
+  "allowed_attribution_statuses": [
+    "dominant_policy_failure",
+    "mixed_policy_and_context",
+    "no_clear_policy_failure",
+    "insufficient_evidence"
+  ],
+  "allowed_failure_modes": [
+    "fatal_undercommitment",
+    "winners_curse_overpayment",
+    "emergency_response_failure",
+    "competitive_threshold_miscalibration",
+    "allocation_context_misreasoning"
+  ],
+  "all_cases_have_paired_llm_judgments": true
+}

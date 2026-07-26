@@ -1,0 +1,15 @@
+{
+  "prompt_version": "wac-failure-analysis-v3-causal-attribution",
+  "judge_specs": [
+    {"backend": "openai", "model": "gpt-5.4"},
+    {"backend": "deepseek", "model": "deepseek-v4-flash"}
+  ],
+  "temperature": 0.0,
+  "blind_model_names": true,
+  "death_only": true,
+  "batch_condition_mapping": [
+    {"batch": "OPF", "condition": "OPF"},
+    {"batch": "OF", "condition": "OF"}
+  ],
+  "categorical_aggregation": "Each judge contributes 0.5 attribution-status vote and 0.5 primary-mode vote per item; contributing and contextual modes are independent prevalence scores."
+}

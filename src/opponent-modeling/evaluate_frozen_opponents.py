@@ -226,8 +226,13 @@ def run_isolated_episode(
                     raise RuntimeError("ipc_failure: episode worker exited without a payload") from exc
     process.join(1.0)
     if process.is_alive():
-        process.terminate(); process.join()
-        raise RuntimeError("ipc_failure: episode worker did not exit after returning a payload")
+        # The complete focal result has already crossed the queue boundary.
+        # Under high parallel load, a worker can remain alive briefly while
+        # multiprocessing finalizers run; retaining the received payload is
+        # safer than converting a successful deterministic replay into
+        # missing data.
+        process.terminate()
+        process.join()
     if payload.get("error"):
         raise RuntimeError(str(payload["error"]))
     return payload["result"]
@@ -518,6 +523,26 @@ def write_json(path: Path, payload: Any) -> None:
     path.write_text(json.dumps(payload, indent=2, sort_keys=False), encoding="utf-8")
 
 
+def pair_key(row: Mapping[str, Any]) -> Tuple[str, str, str, int]:
+    return (
+        str(row["feedback"]),
+        str(row["experiment_id"]),
+        str(row["focal_agent"]),
+        int(row["seed"]),
+    )
+
+
+def load_existing_pairs(path: Path) -> List[Dict[str, Any]]:
+    if not path.exists():
+        return []
+    with path.open(encoding="utf-8", newline="") as handle:
+        rows = list(csv.DictReader(handle))
+    keys = [pair_key(row) for row in rows]
+    if len(keys) != len(set(keys)):
+        raise ValueError(f"duplicate paired replay keys in {path}")
+    return rows
+
+
 def configure_matplotlib(output_dir: Path) -> Any:
     os.environ.setdefault("MPLCONFIGDIR", str(output_dir / ".matplotlib"))
     import matplotlib
@@ -698,6 +723,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--self-test", action="store_true")
     parser.add_argument("--parity-check", action="store_true")
     parser.add_argument("--parity-max-experiments", type=int, default=None)
+    parser.add_argument(
+        "--resume",
+        action="store_true",
+        help="Reuse valid rows already present in frozen_opponent_pairs.csv and evaluate only missing pairs.",
+    )
     parser.add_argument("--skip-plots", action="store_true", help="Write numeric outputs without importing matplotlib.")
     return parser.parse_args()
 
@@ -716,18 +746,24 @@ def main() -> None:
     for feedback, path in (("OF", args.of_dir), ("OPF", args.opf_dir)):
         batch_tasks, batch_errors, count = collect_tasks(path, feedback, args.seeds)
         tasks.extend(batch_tasks); errors.extend(batch_errors); counts[feedback] = count
+    expected_task_count = len(tasks)
+    rows = []
+    if args.resume:
+        rows = load_existing_pairs(args.output_dir / "frozen_opponent_pairs.csv")
+        completed = {pair_key(row) for row in rows}
+        tasks = [task for task in tasks if pair_key(task) not in completed]
+        print(f"Resuming with {len(rows)} existing pairs; {len(tasks)} pairs remain.")
     if args.max_tasks is not None:
         tasks = tasks[:args.max_tasks]
-    task_count = len(tasks)
-    rows = []
     with ThreadPoolExecutor(max_workers=max(1, args.workers)) as executor:
         for row, error in executor.map(lambda item: evaluate_task(item, args.timeout_seconds), tasks):
             if row is not None: rows.append(row)
             if error is not None: errors.append(error)
     rows.sort(key=lambda row: (
-        row["feedback"], row["model"], row["experiment_id"], row["focal_agent"], row["seed"]
+        str(row["feedback"]), str(row["model"]), str(row["experiment_id"]),
+        str(row["focal_agent"]), int(row["seed"])
     ))
-    write_outputs(args.output_dir, rows, errors, args, task_count, counts)
+    write_outputs(args.output_dir, rows, errors, args, expected_task_count, counts)
     print(f"Wrote {len(rows)} valid paired rollouts and {len(errors)} errors to {args.output_dir}")
     for row in grouped_summary(rows, "model", len(args.seeds), 0):
         print(

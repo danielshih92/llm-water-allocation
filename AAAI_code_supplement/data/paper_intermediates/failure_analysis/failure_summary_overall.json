@@ -1,0 +1,104 @@
+{
+  "paired_item_count": 1444,
+  "policy_attributable_vote_weight": 1303.0,
+  "policy_attribution_coverage_rate": 0.902355,
+  "averaged_attribution_status_counts": {
+    "dominant_policy_failure": 980.0,
+    "mixed_policy_and_context": 323.0,
+    "no_clear_policy_failure": 137.5,
+    "insufficient_evidence": 3.5
+  },
+  "averaged_attribution_status_rates": {
+    "dominant_policy_failure": 0.67867,
+    "mixed_policy_and_context": 0.223684,
+    "no_clear_policy_failure": 0.095222,
+    "insufficient_evidence": 0.002424
+  },
+  "judge_1_attribution_status_counts": {
+    "mixed_policy_and_context": 348,
+    "dominant_policy_failure": 968,
+    "no_clear_policy_failure": 128
+  },
+  "judge_2_attribution_status_counts": {
+    "dominant_policy_failure": 992,
+    "mixed_policy_and_context": 298,
+    "no_clear_policy_failure": 147,
+    "insufficient_evidence": 7
+  },
+  "attribution_status_agreement_count": 1173,
+  "attribution_status_agreement_rate": 0.812327,
+  "attribution_status_cohen_kappa": 0.609597,
+  "averaged_primary_counts": {
+    "fatal_undercommitment": 777.5,
+    "winners_curse_overpayment": 210.5,
+    "emergency_response_failure": 66.5,
+    "competitive_threshold_miscalibration": 237.0,
+    "allocation_context_misreasoning": 11.5,
+    "no_primary_policy_failure": 141.0
+  },
+  "averaged_primary_rates_all_items": {
+    "fatal_undercommitment": 0.538435,
+    "winners_curse_overpayment": 0.145776,
+    "emergency_response_failure": 0.046053,
+    "competitive_threshold_miscalibration": 0.164127,
+    "allocation_context_misreasoning": 0.007964,
+    "no_primary_policy_failure": 0.097645
+  },
+  "averaged_primary_rates_attributable": {
+    "fatal_undercommitment": 0.5967,
+    "winners_curse_overpayment": 0.16155,
+    "emergency_response_failure": 0.051036,
+    "competitive_threshold_miscalibration": 0.181888,
+    "allocation_context_misreasoning": 0.008826
+  },
+  "averaged_any_failure_mode_counts": {
+    "fatal_undercommitment": 889.5,
+    "winners_curse_overpayment": 291.5,
+    "emergency_response_failure": 98.5,
+    "competitive_threshold_miscalibration": 621.0,
+    "allocation_context_misreasoning": 17.0
+  },
+  "averaged_any_failure_mode_rates_all_items": {
+    "fatal_undercommitment": 0.615997,
+    "winners_curse_overpayment": 0.20187,
+    "emergency_response_failure": 0.068213,
+    "competitive_threshold_miscalibration": 0.430055,
+    "allocation_context_misreasoning": 0.011773
+  },
+  "averaged_contextual_contributor_counts": {
+    "resource_disadvantaged_role": 589.5,
+    "unaffordable_competitive_pressure": 619.5,
+    "severe_supply_scarcity": 6.0,
+    "opponent_bid_outlier": 179.0
+  },
+  "averaged_contextual_contributor_rates_all_items": {
+    "resource_disadvantaged_role": 0.408241,
+    "unaffordable_competitive_pressure": 0.429017,
+    "severe_supply_scarcity": 0.004155,
+    "opponent_bid_outlier": 0.123961
+  },
+  "judge_1_primary_counts": {
+    "winners_curse_overpayment": 215,
+    "emergency_response_failure": 82,
+    "fatal_undercommitment": 954,
+    "no_primary_policy_failure": 128,
+    "competitive_threshold_miscalibration": 60,
+    "allocation_context_misreasoning": 5
+  },
+  "judge_2_primary_counts": {
+    "winners_curse_overpayment": 206,
+    "fatal_undercommitment": 601,
+    "no_primary_policy_failure": 154,
+    "competitive_threshold_miscalibration": 414,
+    "emergency_response_failure": 51,
+    "allocation_context_misreasoning": 18
+  },
+  "primary_agreement_count": 890,
+  "primary_agreement_rate": 0.616343,
+  "cohen_kappa": 0.436108,
+  "reasoning_policy_mismatch_rate": 0.115997,
+  "policy_trajectory_mismatch_rate": 0.042936,
+  "reasoning_policy_mismatch_agreement_rate": 0.804017,
+  "policy_trajectory_mismatch_agreement_rate": 0.914127,
+  "mean_judge_confidence": 4.366
+}

@@ -1,0 +1,13 @@
+condition,transition,metric,estimate,ci95_low,ci95_high,interpretation,bootstrap_samples
+OF,MR2-MR1,Behavioral distance,0.020542,0.010379,0.030755,lower means more similar,5000
+OPF,MR2-MR1,Behavioral distance,-0.010195,-0.020024,-0.000431,lower means more similar,5000
+OF,MR2-MR1,Structural similarity,0.008448,0.002358,0.014513,higher means more similar,5000
+OPF,MR2-MR1,Structural similarity,0.088351,0.08111,0.095218,higher means more similar,5000
+OF,MR3-MR2,Behavioral distance,0.016035,0.007775,0.024294,lower means more similar,5000
+OPF,MR3-MR2,Behavioral distance,0.000115,-0.008912,0.009023,lower means more similar,5000
+OF,MR3-MR2,Structural similarity,0.008498,0.003545,0.0136,higher means more similar,5000
+OPF,MR3-MR2,Structural similarity,0.021354,0.012983,0.029518,higher means more similar,5000
+OF,MR3-MR1,Behavioral distance,0.036577,0.025233,0.04811,lower means more similar,5000
+OPF,MR3-MR1,Behavioral distance,-0.01008,-0.020664,0.000309,lower means more similar,5000
+OF,MR3-MR1,Structural similarity,0.016945,0.011281,0.022644,higher means more similar,5000
+OPF,MR3-MR1,Structural similarity,0.109706,0.101024,0.118157,higher means more similar,5000

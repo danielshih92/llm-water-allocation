@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "agents": ["Alex", "Bob", "Cindy", "David", "Eric"],
+  "models": [
+    {"backend": "mock", "model": "mock-a", "temperature": 0.0},
+    {"backend": "mock", "model": "mock-b", "temperature": 0.0},
+    {"backend": "mock", "model": "mock-c", "temperature": 0.0},
+    {"backend": "mock", "model": "mock-d", "temperature": 0.0},
+    {"backend": "mock", "model": "mock-e", "temperature": 0.0}
+  ],
+  "experiment": {
+    "scenario": "medium",
+    "episode_days": 5,
+    "meta_rounds": 2,
+    "seed": 42,
+    "evaluation_mode": "repair_assisted",
+    "max_json_repair_attempts": 1,
+    "max_code_repair_attempts": 1
+  },
+  "conditions": {
+    "OF": "no_opponent_info",
+    "OPF": "full_code_access"
+  },
+  "analysis": {
+    "replay_seeds": [42],
+    "bootstrap_seed": 42
+  }
+}
+

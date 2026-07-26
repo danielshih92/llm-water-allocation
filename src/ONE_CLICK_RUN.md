@@ -36,7 +36,7 @@ Batch run (permutations)
 3) Run multiple slices into the same batch folder:
    python3 src/run_all_permutations.py --slice-start 34 --slice-end 34 --no-plots --batch-name batch_031_full_code_access_c_med_20days --meta-rounds 3 --episode-days 20 --opponent-info-mode full_code_access --seed 42 --scenario medium
 
-   python3 src/run_all_permutations.py --slice-start 1 --slice-end 10 --no-plots --batch-name batch_033_no_opp_info_deepseek-flash_seed42 --meta-rounds 3 --episode-days 20 --opponent-info-mode no_opponent_info --seed 42 --scenario medium
+   python3 src/run_all_permutations.py --slice-start 1 --slice-end 10 --no-plots --batch-name batch_034_no_opp_info_gpt-nano_seed42 --meta-rounds 3 --episode-days 20 --opponent-info-mode no_opponent_info --seed 42 --scenario medium
 
    python3 src/run_all_permutations.py --slice-start 6 --slice-end 10 --no-plots --batch-name batch_030_full_code_access_claude_seed42 --meta-rounds 3 --episode-days 20 --opponent-info-mode full_code_access --seed 42 --scenario medium
 
@@ -122,7 +122,7 @@ python3 temp/meta_round_trend.py \
   --present-name "Gemini 3.5" \
   --batch batch_030_full_code_access_claude_seed42 \
   --present-name "Claude Sonnet 5" \
-  --output-prefix five_model_test_v2
+  --output-prefix five_model_test_v3
 
 python3 temp/meta_round_trend.py \
   --batch batch_033_no_opp_info_deepseek-flash_seed42 \
@@ -136,8 +136,25 @@ python src/long-term-planning/evaluate_horizon_awareness.py \
   --batch log/batch_032_no_opp_info_c_med_20days \
   --output-folder batch_032
 
---- (used to build main table, but will delete in the future)
-python temp/main_combine.py 
+--- (main table and five-seed replay)
+MPLCONFIGDIR=/tmp/wacbench-matplotlib \
+../venv/bin/python temp/main_combine.py \
+  --resume \
+  --meta-rounds 1 2 3 \
+  --table-meta-rounds 2 3 \
+  --trusted-fast-replay
+
+--- (adaptation dynamics: five fixed supply seeds)
+MPLCONFIGDIR=/tmp/wacbench-matplotlib \
+../venv/bin/python src/adaptation_dynamics/plot_adaptation_dynamics.py
+
+--- (objective revised-policy outcomes: MR2--MR3)
+MPLCONFIGDIR=/tmp/wacbench-matplotlib \
+../venv/bin/python src/objective_outcomes/analyze_objective_outcomes.py
+
+--- (policy convergence: 144 controlled states per policy)
+MPLCONFIGDIR=/tmp/wacbench-matplotlib \
+../venv/bin/python src/policy_convergence/analyze_policy_convergence.py
 
 ---(risk sensitive decision making)
 python3 src/risk-sensitive-decision-making/evaluate_risk_sensitivity.py \

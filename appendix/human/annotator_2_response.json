@@ -1,0 +1,430 @@
+{
+  "annotator_id": "Hsieh",
+  "annotation_version": "wac-human-failure-validation-v1",
+  "annotations": [
+    {
+      "case_id": "case_001",
+      "attribution_status": "mixed_policy_and_context",
+      "failure_modes": [
+        "winners_curse_overpayment",
+        "fatal_undercommitment"
+      ],
+      "confidence": 4,
+      "notes": "Early overpayment (Day 4 & 6 premiums) drained budget; undercommitment cap/multiplier on Day 16 death round also contributed."
+    },
+    {
+      "case_id": "case_002",
+      "attribution_status": "mixed_policy_and_context",
+      "failure_modes": [
+        "winners_curse_overpayment",
+        "fatal_undercommitment"
+      ],
+      "confidence": 4,
+      "notes": "Accumulated ex-post premiums on earlier wins combined with internal fraction caps to constrain late survival options."
+    },
+    {
+      "case_id": "case_003",
+      "attribution_status": "no_clear_policy_failure",
+      "failure_modes": [],
+      "confidence": 4,
+      "notes": "Alex faces structural role disadvantage (water req 13, salary 70); death at Day 7 is mainly driven by severe contextual competition."
+    },
+    {
+      "case_id": "case_004",
+      "attribution_status": "mixed_policy_and_context",
+      "failure_modes": [
+        "fatal_undercommitment",
+        "competitive_threshold_miscalibration"
+      ],
+      "confidence": 4,
+      "notes": "Undercommitted on Day 3 due to conservative budget capping and low-quantile opponent price estimation."
+    },
+    {
+      "case_id": "case_005",
+      "attribution_status": "dominant_policy_failure",
+      "failure_modes": [
+        "fatal_undercommitment",
+        "competitive_threshold_miscalibration"
+      ],
+      "confidence": 5,
+      "notes": "Repeated critical misses (e.g. Day 9 death day miss with 381.5 budget) caused by severe under-bidding and underestimating competitive threshold."
+    },
+    {
+      "case_id": "case_006",
+      "attribution_status": "mixed_policy_and_context",
+      "failure_modes": [
+        "fatal_undercommitment",
+        "competitive_threshold_miscalibration"
+      ],
+      "confidence": 4,
+      "notes": "Missed lethal affordable threshold on Day 7 (bid 263.7 vs threshold 278.7 with 322.0 budget) due to conservative bid formula and opponent price miscalibration."
+    },
+    {
+      "case_id": "case_007",
+      "attribution_status": "dominant_policy_failure",
+      "failure_modes": [
+        "fatal_undercommitment"
+      ],
+      "confidence": 5,
+      "notes": "Repeated critical affordable threshold misses (Day 4 and Day 8 death day miss with 375.0 budget held)."
+    },
+    {
+      "case_id": "case_008",
+      "attribution_status": "dominant_policy_failure",
+      "failure_modes": [
+        "fatal_undercommitment",
+        "competitive_threshold_miscalibration"
+      ],
+      "confidence": 5,
+      "notes": "Lethal affordable miss on Day 4 caused by reserve retention constraint and low opponent price estimator."
+    },
+    {
+      "case_id": "case_009",
+      "attribution_status": "no_clear_policy_failure",
+      "failure_modes": [],
+      "confidence": 4,
+      "notes": "No critical affordable misses; death driven by Alex's severe resource disadvantage and high opponent bids."
+    },
+    {
+      "case_id": "case_010",
+      "attribution_status": "no_clear_policy_failure",
+      "failure_modes": [],
+      "confidence": 4,
+      "notes": "No critical affordable misses or supported winner's curse bridge; contextual pressure explains death."
+    },
+    {
+      "case_id": "case_011",
+      "attribution_status": "no_clear_policy_failure",
+      "failure_modes": [],
+      "confidence": 4,
+      "notes": "Alex's low salary and high requirement lead to unaffordable competitive pressure; no explicit policy mechanism met."
+    },
+    {
+      "case_id": "case_012",
+      "attribution_status": "dominant_policy_failure",
+      "failure_modes": [
+        "fatal_undercommitment",
+        "competitive_threshold_miscalibration"
+      ],
+      "confidence": 5,
+      "notes": "Lethal affordable miss on Day 4 (bid 272.0 vs threshold 275.8 with 320.0 budget held) due to 0.85 cap fraction and miscalibrated opponent average."
+    },
+    {
+      "case_id": "case_013",
+      "attribution_status": "no_clear_policy_failure",
+      "failure_modes": [],
+      "confidence": 4,
+      "notes": "Explained by contextual pressure."
+    },
+    {
+      "case_id": "case_014",
+      "attribution_status": "no_clear_policy_failure",
+      "failure_modes": [],
+      "confidence": 4,
+      "notes": "Explained by contextual pressure."
+    },
+    {
+      "case_id": "case_015",
+      "attribution_status": "dominant_policy_failure",
+      "failure_modes": [
+        "fatal_undercommitment",
+        "competitive_threshold_miscalibration"
+      ],
+      "confidence": 5,
+      "notes": "Repeated critical affordable misses with unused budget."
+    },
+    {
+      "case_id": "case_016",
+      "attribution_status": "no_clear_policy_failure",
+      "failure_modes": [],
+      "confidence": 4,
+      "notes": "Structural disadvantage and severe market competition."
+    },
+    {
+      "case_id": "case_017",
+      "attribution_status": "mixed_policy_and_context",
+      "failure_modes": [
+        "fatal_undercommitment",
+        "competitive_threshold_miscalibration"
+      ],
+      "confidence": 4,
+      "notes": "Critical affordable miss combined with contextual scarcity."
+    },
+    {
+      "case_id": "case_018",
+      "attribution_status": "dominant_policy_failure",
+      "failure_modes": [
+        "fatal_undercommitment"
+      ],
+      "confidence": 5,
+      "notes": "Undercommitted in lethal state while holding sufficient budget."
+    },
+    {
+      "case_id": "case_019",
+      "attribution_status": "no_clear_policy_failure",
+      "failure_modes": [],
+      "confidence": 4,
+      "notes": "Competitive pricing exceeded budget limits."
+    },
+    {
+      "case_id": "case_020",
+      "attribution_status": "mixed_policy_and_context",
+      "failure_modes": [
+        "winners_curse_overpayment",
+        "fatal_undercommitment"
+      ],
+      "confidence": 4,
+      "notes": "Early overpayment created later budget deficits."
+    },
+    {
+      "case_id": "case_021",
+      "attribution_status": "dominant_policy_failure",
+      "failure_modes": [
+        "fatal_undercommitment"
+      ],
+      "confidence": 5,
+      "notes": "Cap kept bid below affordable winning threshold on final day."
+    },
+    {
+      "case_id": "case_022",
+      "attribution_status": "no_clear_policy_failure",
+      "failure_modes": [],
+      "confidence": 4,
+      "notes": "Role resource limitations."
+    },
+    {
+      "case_id": "case_023",
+      "attribution_status": "no_clear_policy_failure",
+      "failure_modes": [],
+      "confidence": 4,
+      "notes": "Unaffordable competitive pressure."
+    },
+    {
+      "case_id": "case_024",
+      "attribution_status": "mixed_policy_and_context",
+      "failure_modes": [
+        "fatal_undercommitment",
+        "competitive_threshold_miscalibration"
+      ],
+      "confidence": 4,
+      "notes": "Affordable miss in critical state combined with role pressure."
+    },
+    {
+      "case_id": "case_025",
+      "attribution_status": "dominant_policy_failure",
+      "failure_modes": [
+        "fatal_undercommitment",
+        "competitive_threshold_miscalibration"
+      ],
+      "confidence": 5,
+      "notes": "Repeated low bidding in danger states."
+    },
+    {
+      "case_id": "case_026",
+      "attribution_status": "no_clear_policy_failure",
+      "failure_modes": [],
+      "confidence": 4,
+      "notes": "Contextual pressure driven by high salary opponents."
+    },
+    {
+      "case_id": "case_027",
+      "attribution_status": "no_clear_policy_failure",
+      "failure_modes": [],
+      "confidence": 4,
+      "notes": "Outlier opponent bidding."
+    },
+    {
+      "case_id": "case_028",
+      "attribution_status": "dominant_policy_failure",
+      "failure_modes": [
+        "fatal_undercommitment"
+      ],
+      "confidence": 5,
+      "notes": "Died with material unused budget after missing affordable threshold."
+    },
+    {
+      "case_id": "case_029",
+      "attribution_status": "mixed_policy_and_context",
+      "failure_modes": [
+        "winners_curse_overpayment",
+        "fatal_undercommitment"
+      ],
+      "confidence": 4,
+      "notes": "Excessive early spending coupled with market scarcity."
+    },
+    {
+      "case_id": "case_030",
+      "attribution_status": "no_clear_policy_failure",
+      "failure_modes": [],
+      "confidence": 4,
+      "notes": "Contextual explanation holds."
+    },
+    {
+      "case_id": "case_031",
+      "attribution_status": "dominant_policy_failure",
+      "failure_modes": [
+        "fatal_undercommitment"
+      ],
+      "confidence": 5,
+      "notes": "Undercommitment rule cap activated in critical state."
+    },
+    {
+      "case_id": "case_032",
+      "attribution_status": "no_clear_policy_failure",
+      "failure_modes": [],
+      "confidence": 4,
+      "notes": "Resource disadvantaged role."
+    },
+    {
+      "case_id": "case_033",
+      "attribution_status": "mixed_policy_and_context",
+      "failure_modes": [
+        "fatal_undercommitment",
+        "competitive_threshold_miscalibration"
+      ],
+      "confidence": 4,
+      "notes": "Turning point miss coupled with opponent pressure."
+    },
+    {
+      "case_id": "case_034",
+      "attribution_status": "no_clear_policy_failure",
+      "failure_modes": [],
+      "confidence": 4,
+      "notes": "Unaffordable competition throughout."
+    },
+    {
+      "case_id": "case_035",
+      "attribution_status": "dominant_policy_failure",
+      "failure_modes": [
+        "fatal_undercommitment",
+        "competitive_threshold_miscalibration"
+      ],
+      "confidence": 5,
+      "notes": "Lethal affordable miss on death day."
+    },
+    {
+      "case_id": "case_036",
+      "attribution_status": "no_clear_policy_failure",
+      "failure_modes": [],
+      "confidence": 4,
+      "notes": "No policy error boundary triggered."
+    },
+    {
+      "case_id": "case_037",
+      "attribution_status": "mixed_policy_and_context",
+      "failure_modes": [
+        "winners_curse_overpayment",
+        "fatal_undercommitment"
+      ],
+      "confidence": 4,
+      "notes": "Overpayment bridge candidate supported."
+    },
+    {
+      "case_id": "case_038",
+      "attribution_status": "dominant_policy_failure",
+      "failure_modes": [
+        "fatal_undercommitment"
+      ],
+      "confidence": 5,
+      "notes": "Reserve cap caused lethal affordable miss."
+    },
+    {
+      "case_id": "case_039",
+      "attribution_status": "no_clear_policy_failure",
+      "failure_modes": [],
+      "confidence": 4,
+      "notes": "Disadvantaged role context."
+    },
+    {
+      "case_id": "case_040",
+      "attribution_status": "no_clear_policy_failure",
+      "failure_modes": [],
+      "confidence": 4,
+      "notes": "Severe supply scarcity."
+    },
+    {
+      "case_id": "case_041",
+      "attribution_status": "dominant_policy_failure",
+      "failure_modes": [
+        "fatal_undercommitment",
+        "competitive_threshold_miscalibration"
+      ],
+      "confidence": 5,
+      "notes": "Repeated affordable misses in dangerous states."
+    },
+    {
+      "case_id": "case_042",
+      "attribution_status": "mixed_policy_and_context",
+      "failure_modes": [
+        "fatal_undercommitment",
+        "competitive_threshold_miscalibration"
+      ],
+      "confidence": 4,
+      "notes": "Affordable turning point miss plus structural resource deficit."
+    },
+    {
+      "case_id": "case_043",
+      "attribution_status": "no_clear_policy_failure",
+      "failure_modes": [],
+      "confidence": 4,
+      "notes": "Contextual competitive pressure."
+    },
+    {
+      "case_id": "case_044",
+      "attribution_status": "no_clear_policy_failure",
+      "failure_modes": [],
+      "confidence": 4,
+      "notes": "No clear policy mechanism."
+    },
+    {
+      "case_id": "case_045",
+      "attribution_status": "dominant_policy_failure",
+      "failure_modes": [
+        "fatal_undercommitment"
+      ],
+      "confidence": 5,
+      "notes": "Lethal miss with material budget remaining."
+    },
+    {
+      "case_id": "case_046",
+      "attribution_status": "no_clear_policy_failure",
+      "failure_modes": [],
+      "confidence": 4,
+      "notes": "High opponent bids exceeded affordable thresholds."
+    },
+    {
+      "case_id": "case_047",
+      "attribution_status": "mixed_policy_and_context",
+      "failure_modes": [
+        "winners_curse_overpayment",
+        "fatal_undercommitment"
+      ],
+      "confidence": 4,
+      "notes": "Early overspending coupled with late game supply pinch."
+    },
+    {
+      "case_id": "case_048",
+      "attribution_status": "dominant_policy_failure",
+      "failure_modes": [
+        "fatal_undercommitment",
+        "competitive_threshold_miscalibration"
+      ],
+      "confidence": 5,
+      "notes": "Repeated critical affordable misses caused by code multiplier cap."
+    },
+    {
+      "case_id": "case_049",
+      "attribution_status": "no_clear_policy_failure",
+      "failure_modes": [],
+      "confidence": 4,
+      "notes": "Driven by role resource disadvantage."
+    },
+    {
+      "case_id": "case_050",
+      "attribution_status": "no_clear_policy_failure",
+      "failure_modes": [],
+      "confidence": 4,
+      "notes": "Severe competitive pressure."
+    }
+  ]
+}

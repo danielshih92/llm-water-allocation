@@ -31,27 +31,27 @@ AGENTS = ["Alex", "Bob", "Cindy", "David", "Eric"]
 #     {"backend": "gemini", "model": "gemini-3.5-flash"},
 #     {"backend": "claude", "model": "claude-sonnet-5"},
 # ]
+# BATCH_MODELS = [
+#     {"backend": "deepseek", "model": "deepseek-v4-flash"},
+#     {"backend": "deepseek", "model": "deepseek-v4-flash"},
+#     {"backend": "deepseek", "model": "deepseek-v4-flash"},
+#     {"backend": "deepseek", "model": "deepseek-v4-flash"},
+#     {"backend": "deepseek", "model": "deepseek-v4-flash"},
+# ]
+# BATCH_MODELS = [
+#     {"backend": "claude", "model": "claude-sonnet-5"},
+#     {"backend": "claude", "model": "claude-sonnet-5"},
+#     {"backend": "claude", "model": "claude-sonnet-5"},
+#     {"backend": "claude", "model": "claude-sonnet-5"},
+#     {"backend": "claude", "model": "claude-sonnet-5"},
+# ]
 BATCH_MODELS = [
-    {"backend": "deepseek", "model": "deepseek-v4-flash"},
-    {"backend": "deepseek", "model": "deepseek-v4-flash"},
-    {"backend": "deepseek", "model": "deepseek-v4-flash"},
-    {"backend": "deepseek", "model": "deepseek-v4-flash"},
-    {"backend": "deepseek", "model": "deepseek-v4-flash"},
+    {"backend": "openai", "model": "gpt-5.4-nano"},
+    {"backend": "openai", "model": "gpt-5.4-nano"},
+    {"backend": "openai", "model": "gpt-5.4-nano"},
+    {"backend": "openai", "model": "gpt-5.4-nano"},
+    {"backend": "openai", "model": "gpt-5.4-nano"},
 ]
-# BATCH_MODELS = [
-#     {"backend": "claude", "model": "claude-sonnet-5"},
-#     {"backend": "claude", "model": "claude-sonnet-5"},
-#     {"backend": "claude", "model": "claude-sonnet-5"},
-#     {"backend": "claude", "model": "claude-sonnet-5"},
-#     {"backend": "claude", "model": "claude-sonnet-5"},
-# ]
-# BATCH_MODELS = [
-#     {"backend": "openai", "model": "gpt-5.4"},
-#     {"backend": "openai", "model": "gpt-5.4"},
-#     {"backend": "openai", "model": "gpt-5.4"},
-#     {"backend": "openai", "model": "gpt-5.4"},
-#     {"backend": "openai", "model": "gpt-5.4"},
-# ]
 
 
 # Backend selection mode: "uniform" (mode 1) or "per-agent" (mode 2)

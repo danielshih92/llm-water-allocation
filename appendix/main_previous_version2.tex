@@ -1,0 +1,731 @@
+\documentclass[letterpaper]{article} % DO NOT CHANGE THIS
+\usepackage[submission]{aaai2027}  % DO NOT CHANGE THIS
+% The serif, sans-serif, and monospaced fonts are loaded automatically by
+% aaai2027.sty (newtxtext, helvet, courier). DO NOT add \usepackage{times},
+% \usepackage{helvet}, \usepackage{courier}, or any other font package.
+\usepackage[hyphens]{url}  % DO NOT CHANGE THIS
+\usepackage{graphicx} % DO NOT CHANGE THIS
+\urlstyle{rm} % DO NOT CHANGE THIS
+\def\UrlFont{\rm}  % DO NOT CHANGE THIS
+\usepackage{natbib}  % DO NOT CHANGE THIS AND DO NOT ADD ANY OPTIONS TO IT
+\usepackage{caption} % DO NOT CHANGE THIS AND DO NOT ADD ANY OPTIONS TO IT
+\frenchspacing  % DO NOT CHANGE THIS
+
+% Recommended to typeset algorithms.
+\usepackage{algorithm}
+\usepackage{algorithmic}
+
+% Recommended to typeset listings.
+\usepackage{newfloat}
+\usepackage{listings}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\DeclareCaptionStyle{ruled}{labelfont=normalfont,labelsep=colon,strut=off} % DO NOT CHANGE THIS
+\lstset{%
+    basicstyle={\footnotesize\ttfamily},
+    numbers=left,numberstyle=\footnotesize,xleftmargin=2em,
+    aboveskip=0pt,belowskip=0pt,
+    showstringspaces=false,tabsize=2,breaklines=true}
+\floatstyle{ruled}
+\newfloat{listing}{tb}{lst}{}
+\floatname{listing}{Listing}
+
+% Recommended for better-looking tables.
+\usepackage{booktabs}
+
+\pdfinfo{
+/TemplateVersion (2027.1)
+}
+
+\setcounter{secnumdepth}{0} % May be changed to 1 or 2 if section numbers are desired.
+
+% Title must be in mixed case.
+\title{WACBench: Evaluating Strategic Adaptation in LLM Agents through Executable Policies}
+
+\author{Anonymous Submission}
+\affiliations{}
+
+\begin{document}
+
+\maketitle
+
+% Large language models are increasingly moving from assistant-style interaction toward roles that may require consequential, repeated decision making.
+
+\begin{abstract}
+Large language models (LLMs) are increasingly considered not only as assistants but as agents that may formulate and execute consequential strategies. Yet existing benchmarks often emphasize isolated actions or task completion, leaving unclear whether models can construct persistent policies and revise them under scarcity, uncertainty, delayed consequences, and strategic interdependence. We introduce WACBench, a code-mediated multi-agent benchmark built on a repeated resource-allocation game. In each meta-round, agents submit executable bidding policies that govern a complete episode and can be frozen, replayed, and inspected. Treating executable policy as the unit of evaluation removes repeated policy-to-action translation and enables comparison of stated rationale, implemented decision rules, and realized trajectories. We compare a shared self-policy-and-outcome feedback protocol with a condition that additionally reveals opponents' previous policies. Across multiple LLM backends, opponent-policy access produces more sustained gains in role-balanced survival and greater behavioral and structural convergence, while effects on mortality and individual models remain heterogeneous. WACBench provides a reproducible framework for evaluating policy construction and adaptation, showing that additional strategic information does not uniformly translate into more reliable decisions.
+\end{abstract}
+\noindent\textbf{Code} --- \url{https://github.com/your-anonymous-repo/code-mediated-resource-allocation}
+
+
+% Uncomment the following to link to code, datasets, or an extended version.
+% Keep this block between the abstract and the main body, and avoid de-anonymizing links.
+% \begin{links}
+%     \link{Code}{https://anonymous.4open.science/your-repository}
+%     \link{Datasets}{https://anonymous.4open.science/your-dataset}
+%     \link{Extended version}{https://anonymous.4open.science/your-extended-version}
+% \end{links}
+
+\section{Introduction}
+
+Large language models (LLMs) are increasingly considered not only as
+assistants that recommend actions, but also as agents that may formulate and
+execute strategies on behalf of users. In settings such as resource
+allocation, bidding, procurement, and organizational planning, decisions are
+repeated, consequences may be delayed, and success depends on both an
+uncertain environment and the behavior of other decision makers. Evaluating
+isolated responses or task completion alone provides limited evidence about
+whether an LLM can construct a policy that remains effective under these
+conditions.
+
+Existing agent benchmarks have substantially advanced the evaluation of
+multi-step reasoning, tool use, open-ended task completion, and social
+interaction~\cite{liu2023agentbench,mialon2023gaia,zhou2024sotopia,zhu2025multiagentbench}.
+Game-theoretic benchmarks provide a complementary perspective by introducing
+explicit objectives, strategic interdependence, and objectively measurable
+outcomes. Prior work has evaluated preference formation, belief refinement,
+and rational action selection in classical games~\cite{fan2024rational};
+strategic reasoning across game taxonomies~\cite{duan2024gtbench,huang2025gamabench};
+and planning and budget management in auctions~\cite{chen2023aucarena}.
+Alympics further introduced the Water Allocation Challenge (WAC), which
+combines repeated auctions, asymmetric player constraints, stochastic
+scarcity, and survival dynamics~\cite{mao2025alympics}.
+
+These environments reveal important aspects of LLM decision making, but many
+evaluations still treat each interaction-step action as the primary unit of
+analysis. A model must then translate a verbal plan into a new action
+repeatedly, obscuring whether success reflects a stable decision rule or
+locally generated responses. Prior work also shows that an LLM can overlook or
+modify a previously refined belief when selecting an
+action~\cite{fan2024rational}. Evaluating consequential decision making should
+therefore not depend on faithful reconstruction of an intended policy at every
+step.
+
+WACBench instead treats an \emph{executable policy} as the unit of decision
+making. An LLM states a strategy rationale and submits a Python policy that
+maps observable game states to bids; the simulator invokes the same code
+throughout the episode. This makes the implemented decision rule persistent
+and its actions traceable, enabling exact replay and direct comparison of the
+stated rationale, implemented policy, and realized trajectory. Program-based
+strategies have also supported analysis of code-conditioned cooperation and
+exploitation in open-source games~\cite{sistla2025opensourcegames}. WACBench
+uses this auditability to evaluate long-horizon adaptation under resource
+competition.
+
+We introduce \textbf{WACBench}, a code-mediated multi-agent benchmark built
+on WAC. Five agents compete for limited daily water over a 20-day episode.
+Asymmetric roles, stochastic supply, budget depletion, health penalties, and
+simultaneous bidding create a stress test of policy construction under
+scarcity, uncertainty, delayed consequences, and strategic interdependence.
+In each meta-round, an LLM generates a policy for a complete episode and may
+revise it only before the next meta-round.
+
+We use this framework to study how cross-round access to opponents' decision
+rules changes strategic revision. Both feedback conditions provide each agent
+with its own previous policy and all agents' survival durations from the
+preceding meta-round. Under \textbf{Outcome Feedback (OF)}, no opponent
+policies are revealed; \textbf{Outcome-and-Policy Feedback (OPF)}
+additionally provides the opponents' submitted policies. The conditions
+otherwise share the common revision memory and within-episode observation
+interface, isolating the added value of opponent-policy access within this
+protocol.
+
+Our primary evidence comes from simulator-grounded survival outcomes and
+cross-meta-round adaptation, evaluated by replaying policies under common
+supply sequences and balancing outcomes across asymmetric roles. Controlled
+behavioral and program-structure probes, together with failure analysis, serve
+as secondary diagnostics of how policies change and fail.
+
+Across the evaluated backends, opponent-policy access produces more sustained
+cross-round gains in role-balanced survival, while its additional effect on
+mortality and its model-level benefits remain heterogeneous. It also makes
+policies more similar in both controlled bidding behavior and normalized
+program structure. These findings show that policy transparency changes how
+LLM agents revise executable strategies, but that additional strategic
+information does not uniformly translate into more reliable decisions.
+
+Our contributions are summarized as follows:
+
+\begin{itemize}
+    \item We introduce WACBench, a code-mediated benchmark that evaluates
+    LLM agents through persistent executable policies in a repeated,
+    asymmetric, and resource-constrained multi-agent environment.
+    
+    \item We evaluate opponent-policy access as an information intervention
+    using role-balanced multi-seed replay and controlled behavioral
+    diagnostics.
+    
+    \item We show that opponent-policy access changes adaptation and is
+    accompanied by behavioral and structural convergence, while its effects
+    on survival reliability remain heterogeneous across model backends.
+\end{itemize}
+\section{Related Work}
+
+\paragraph{LLM agent evaluation.}
+General agent benchmarks emphasize multi-step task completion, tool use,
+and interaction, while multi-agent benchmarks additionally study social
+coordination and competition~\cite{liu2023agentbench,mialon2023gaia,zhou2024sotopia,zhu2025multiagentbench}.
+WACBench instead evaluates a policy that is generated once and then acts
+without further LLM intervention throughout an episode. This separates
+policy construction from repeated execution and permits exact replay and
+behavioral probing.
+
+\paragraph{LLMs in games and auctions.}
+Prior work uses classical games and auction environments to examine
+rational choice, strategic reasoning, and budget management
+~\cite{fan2024rational,duan2024gtbench,huang2025gamabench,chen2023aucarena}.
+Alympics introduced WAC as a pilot environment for empirical game-theoretic
+analysis and combined objective game records with human ratings of broad
+strategic abilities~\cite{mao2025alympics}. We retain WAC's scarcity,
+asymmetry, and survival dynamics, but shift the unit of evaluation from a
+sequence of natural-language actions to persistent executable policies and
+controlled cross-meta-round policy revision.
+
+\paragraph{Program-mediated strategies.}
+Program-based games make strategies reproducible and inspectable, and have
+been used to study code-conditioned cooperation and exploitation
+~\cite{sistla2025opensourcegames}. WACBench uses the same auditability for a
+different purpose: linking a model's stated rationale, submitted code, and
+realized trajectory under stochastic scarcity and strategic competition.
+\section{The Repeated Water Allocation Game}
+The Water Allocation Challenge (WAC), originally introduced
+as a pilot environment in Alympics~\cite{mao2025alympics},
+is a repeated resource-allocation game in which multiple agents compete for a limited daily water supply while managing health, budget, and long-term survival. We adopt WAC as the strategic environment underlying WACBench. Although WAC is a stylized simulation rather than a direct model of a particular real-world domain, it jointly captures several properties of real-world multi-agent decision making: scarce resources, asymmetric participants, uncertainty over future supply, and the need to balance short-term survival against long-term planning.
+
+\subsection{Game Overview}
+
+Each episode spans $T=20$ simulation days. At the beginning of an
+episode, each agent is assigned a role specifying its daily salary $s_i$
+and water requirement $w_i$. All roles begin with the same health,
+budget, and no-water penalty state: $H_{i,1}=8$, $B_{i,1}=0$, and
+$c_{i,1}=1$, with maximum health $H_{\max}=10$. The medium-scarcity
+setting used in our experiments samples each day's integer supply as
+$S_t\sim\operatorname{Unif}\{15,\ldots,25\}$. The current supply is
+announced before all living agents submit simultaneous bids, but
+current-day opponent bids remain hidden. The resulting four-stage daily loop
+is summarized in the central panel of Figure~\ref{fig:wacbench_framework}.
+
+\begin{table}[t]
+    \centering
+    \small
+    \setlength{\tabcolsep}{9pt}
+    \caption{Asymmetric WAC role profiles. Each role has a distinct joint
+    salary--requirement profile; Alex and Cindy share a water requirement
+    but differ in daily salary.}
+    \label{tab:role-profiles}
+    \begin{tabular}{lrr}
+        \toprule
+        Role & Water requirement $w_i$ & Daily salary $s_i$ \\
+        \midrule
+        Alex  & 13 & 70  \\
+        Bob   & 9  & 90  \\
+        Cindy & 13 & 150 \\
+        David & 7  & 80  \\
+        Eric  & 8  & 140 \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+As Table~\ref{tab:role-profiles} shows, asymmetry refers to the joint
+salary--requirement profiles rather than to different initial health
+states. These profiles create different strategic constraints: high water
+requirements make allocation more difficult when little supply remains,
+while low salaries limit the bids that can be sustained over the episode.
+The complete permutation evaluation rotates every model through every role
+so that these structural advantages do not determine a model's aggregate
+score.
+
+Formally, let $i \in \{1,\ldots,N\}$ denote an agent and $t$ denote the
+day. In addition to the fixed $s_i$ and $w_i$, each agent maintains budget
+$B_{i,t}$, health $H_{i,t}$, and a no-water penalty counter $c_{i,t}$. The
+counter determines the health penalty if the agent fails to obtain water
+on the current day. Agents observe the announced supply and current public
+states before choosing $b_{i,t}$, but do not observe other agents'
+current-day bids.
+
+\subsection{Daily Bidding, Allocation, and State Transitions}
+
+At the start of each day, each living agent receives its
+salary. Let
+\begin{equation}
+    \widetilde{B}_{i,t}=B_{i,t}+s_i
+\end{equation}
+denote the budget available for that day's auction.
+The environment ranks positive feasible bids in descending order, with
+ties first resolved in favor of the lower water requirement. Remaining
+exact ties are resolved by a reproducible seeded tie-break. It then visits
+the ranked list and allocates water to any agent whose requirement fits the
+remaining supply, subtracting that requirement before considering the next
+agent. Let $z_{i,t}\in\{0,1\}$ indicate whether agent $i$ receives water
+on day $t$.
+
+A winning agent pays its bid, while a non-winning agent pays
+nothing:
+\begin{equation}
+    B_{i,t+1}
+    =
+    \widetilde{B}_{i,t}-z_{i,t}b_{i,t}.
+\end{equation}
+
+The no-water penalty counter is updated as
+\begin{equation}
+    c_{i,t+1}
+    =
+    \begin{cases}
+        1, & z_{i,t}=1,\\
+        c_{i,t}+1, & z_{i,t}=0.
+    \end{cases}
+\end{equation}
+
+Health then evolves according to
+\begin{equation}
+    H_{i,t+1}
+    =
+    \begin{cases}
+        \min(H_{\max},H_{i,t}+2), & z_{i,t}=1,\\
+        H_{i,t}-c_{i,t}, & z_{i,t}=0.
+    \end{cases}
+\end{equation}
+An agent is eliminated when its health reaches zero or below.
+
+\subsection{Strategic Challenges}
+
+WAC is strategically challenging for several reasons. First, the game is long-horizon: an agent can survive early days by spending aggressively, but this may leave insufficient budget later in the episode. Second, risk is state-dependent: low health or a high no-water counter may justify aggressive bidding, whereas the same bid may be wasteful when the agent is healthy. Third, the environment is competitive: whether a bid succeeds depends not only on supply but also on other agents' strategies. Finally, agents may be asymmetric in salary and water requirement, so a strategy that is effective for one role may fail for another.
+
+These properties make WAC a useful testbed for evaluating whether language-model agents can produce executable policies that balance survival, budget discipline, opponent-aware adaptation, and long-term planning under uncertainty.
+
+\section{WACBench}
+
+WACBench evaluates strategic LLM agents through policies rather than
+independently generated daily actions. Each submitted policy remains the
+agent's decision rule for a complete episode, after which it can be revised,
+frozen for replay, or evaluated on controlled states.
+
+\begin{figure*}[t]
+    \centering
+    \includegraphics[width=\textwidth]{framework_v4.pdf}
+    \caption{Overview of WACBench. The central green panel summarizes the
+    four-stage daily WAC loop: announce supply, collect simultaneous bids,
+    allocate water, and update agent states. Submitted rationales, executable
+    policies, traces, and outcomes are stored for condition-dependent
+    meta-round feedback and post-hoc evaluation. Judge annotations are
+    secondary and never affect gameplay or primary outcomes.}
+    \label{fig:wacbench_framework}
+\end{figure*}
+
+\subsection{Benchmark Overview}
+
+As shown in Figure~\ref{fig:wacbench_framework}, the experiment controller
+assigns backends and roles, validates submitted policies, executes each
+meta-round, and stores the resulting code, traces, and outcomes. Selected
+artifacts construct OF or OPF feedback for the next revision; post-hoc
+diagnostics read the store without affecting gameplay.
+
+The benchmark separates three objects that action-level evaluation can
+conflate: the model's stated rationale, its implemented policy, and the
+trajectory produced when that policy is executed. Simulator-grounded survival
+and adaptation are the primary evidence of decision quality. Code validity,
+controlled policy probes, and judge annotations characterize reliability and
+failure mechanisms without replacing realized outcomes.
+
+\subsection{Code-Mediated Agent Policies}
+
+In each meta-round, an LLM agent receives a profile, the current game setup, and condition-dependent information about other agents. The agent produces two artifacts: a concise natural-language strategy rationale and executable Python policy code. The submitted code must define a policy of the following form:
+
+\begin{verbatim}
+def get_bid(day_context, my_status, 
+opponents_status):
+    ...
+\end{verbatim}
+
+The environment calls this function on every simulation day to obtain the
+agent's bid. The input \texttt{day\_context} contains the current day and
+announced supply; \texttt{my\_status} contains health, available budget, and
+the no-water counter; and \texttt{opponents\_status} contains the public
+current states and recent past-day observations of other agents. Current-day
+opponent bids are never available when a policy acts.
+
+Code mediation serves four evaluation purposes. First, it makes the policy
+persistent: the simulator invokes the submitted decision rule rather than
+asking the LLM to reconstruct a strategy each day. Second, it provides
+policy--execution fidelity: every realized bid is attributable to a specific
+program and observed state, subject to explicit validation and runtime checks.
+Third, a frozen policy can be replayed under common supply sequences or probed
+on controlled states. Fourth, the natural-language rationale, implemented
+logic, and resulting trajectory can be audited separately. The design thus
+removes repeated translation from policy to action, but deliberately retains
+rationale--policy disagreement as a detectable failure mode.
+
+\subsection{Meta-Round Adaptation and Feedback Conditions}
+A meta-round is the complete policy-revision cycle. At the
+beginning of meta-round $k$, each agent generates one policy
+$\pi_i^{(k)}$; the simulator then executes one $T$-day episode
+using that policy; finally, the resulting artifacts are stored
+and selected information is used to construct feedback for
+meta-round $k+1$. We use $k\in\{1,\ldots,K\}$ for meta-rounds
+and reserve $t\in\{1,\ldots,T\}$ for days within an episode.
+
+Each meta-round $k$ consists of policy generation followed by
+one complete game episode. The generated policy remains fixed
+during the episode and may be revised only before the next
+meta-round.
+
+For $k>1$, both feedback conditions provide the agent's own
+previous policy and the vector of survival durations from the
+previous meta-round. We denote this common revision memory by
+\begin{equation}
+    M_i^{(k)}
+    =
+    \left\{\pi_i^{(k-1)},
+    D_1^{(k-1)},\ldots,D_N^{(k-1)}\right\}.
+\end{equation}
+Under \textbf{Outcome Feedback (OF)}, $F_{i,\mathrm{OF}}^{(k)}=M_i^{(k)}$.
+No opponents' previous policies, bids, allocation records, daily
+trajectories, or intermediate state histories are revealed.
+
+Under \textbf{Outcome-and-Policy Feedback (OPF)}, the agent
+receives the common revision memory together with the strategy
+code submitted by every opponent in the previous meta-round:
+\begin{equation}
+    F_{i,\mathrm{OPF}}^{(k)}
+    =
+    M_i^{(k)}
+    \cup
+    \{\pi_j^{(k-1)}:j\neq i\}.
+\end{equation}
+
+The two conditions share the simulator, role assignments, own-policy memory,
+outcome feedback, and within-episode observation interface. Their comparison
+estimates the effect of adding opponents' policy representations within this
+fixed feedback protocol. Meta-round one has no previous-round memory and
+serves as a pre-feedback baseline within each condition. Because OF and OPF
+use separate policy-generation runs, their MR1 policies need not be identical;
+we therefore estimate policy-access effects as matched differences in changes
+from the respective MR1 baselines.
+
+\subsection{Memory, Trace Storage, and Policy Evaluation}
+
+After each episode, WACBench stores the generated strategy code, reasoning logs, daily execution traces, and final outcomes. These records serve three purposes. First, they provide memory for later meta-rounds when the information condition allows cross-round access. Second, they support deterministic evaluation metrics such as survival days, mortality, final budget, total bid, and resource-adjusted utility. Third, they form the evidence base for judge-based diagnostic analysis.
+
+This separation between execution and evaluation is important. The judge does not affect the game or agent behavior; it is used only after execution to interpret the stored traces. As a result, outcome metrics remain deterministic and reproducible, while the judge provides additional qualitative and structured explanations.
+
+\subsection{Evidence-Grounded Failure Analysis}
+
+WACBench performs post-hoc failure analysis over the stored rationale,
+executable policy, and active-day trajectory. Each diagnostic item is one
+agent in one experiment and meta-round whose original policy-generation
+trajectory ends in death. Mechanically verifiable events---including death,
+affordable threshold misses, realized payments, and prior overpayment---are
+reconstructed directly from simulator records. Same-day opponent bids and
+winning thresholds are marked as ex-post evidence rather than information
+available to the acting policy.
+
+The diagnostic first distinguishes whether the policy is the dominant cause,
+whether policy and adverse context jointly contribute, whether no clear
+policy failure is supported, or whether evidence is insufficient. A primary
+mode is assigned only to the first two cases. The complete taxonomy contains
+five mechanisms: fatal undercommitment, winner's-curse overpayment,
+emergency-response failure, competitive-threshold miscalibration, and
+allocation-rule misreasoning. Role disadvantage, unaffordable competitive
+pressure, supply scarcity, and opponent-bid outliers are recorded separately
+as contextual contributors and are not treated as policy failures.
+
+Two independently queried judges (GPT-5.4 and DeepSeek V4 Flash, temperature
+zero) receive the same structured evidence with the acting model's identity
+hidden. Each judge contributes one-half vote to the attribution status and
+primary mode. We report coverage and agreement before interpreting the
+averaged distributions. We do not ask the judges for a scalar strategy score:
+the diagnosis explains failed trajectories but does not replace WACScore or
+mortality. Human validation on a stratified subset remains required before
+final submission.
+
+\section{Experimental Setup}
+
+\subsection{Models, Conditions, and Replays}
+
+We evaluate Claude Sonnet 5, DeepSeek V4 Flash, Gemini 3.5 Flash,
+GPT-5.4, and GPT-5.4 Nano. The heterogeneous evaluation enumerates all
+120 assignments of these five backends to the five asymmetric roles, so
+every model is evaluated equally often in every role. Each assignment is
+run for three meta-rounds under OF and OPF. The conditions use matched
+assignments but separate policy-generation runs; consequently, their MR1
+policies need not be identical.
+
+Policy generation and revision use a common base supply sequence (seed 42),
+so each model revises from one realized experience. We then freeze every
+submitted policy and replay the MR1--MR3 policy sets under five fixed supply
+seeds $\{10,42,98,197,666\}$. Seed 42 is the experienced trajectory; the
+remaining four sequences are held out from policy generation. Replays assess
+whether a revision transfers beyond the trajectory that produced its
+feedback and do not provide further opportunities for revision.
+
+\subsection{Metrics and Statistical Analysis}
+
+Our primary outcomes are WACScore and mortality. Let $T$ be the episode
+horizon, $\mathcal{R}$ the roles, $\mathcal{E}_{m,r}$ the evaluation episodes
+in which model $m$ occupies role $r$, and $D_{m,r,e}$ its survival duration.
+We define
+\begin{equation}
+    \operatorname{WACScore}(m)
+    =
+    \frac{100}{|\mathcal{R}|T}
+    \sum_{r\in\mathcal{R}}
+    \frac{1}{|\mathcal{E}_{m,r}|}
+    \sum_{e\in\mathcal{E}_{m,r}}D_{m,r,e}.
+\end{equation}
+WACScore is the role-balanced percentage of the episode survived. Mortality
+is the corresponding role-balanced percentage of episodes in which a policy
+dies before the horizon. Higher WACScore and lower mortality are better.
+
+Cross-meta-round changes measure adaptation. Because OF and OPF have separate
+MR1 realizations, the policy-access contrast is estimated as the matched
+difference between their changes from the respective MR1 baselines; raw
+condition levels are descriptive. We first average replay seeds within each
+experiment and then bootstrap the 120 matched experiment clusters, keeping
+the five strategically coupled agents, both conditions, and all meta-rounds
+together. Reported 95\% intervals are conditional on the selected supply
+sequences.
+
+To characterize collective policy dynamics, we evaluate each submitted
+policy on the same grid of 144 controlled states. Behavioral Policy Distance
+(BPD) is the within-experiment mean pairwise RMSE between feasible bids after
+normalization by available budget; lower BPD means that policies respond more
+similarly to the same states. A normalized-AST analysis provides a structural
+robustness check in the supplementary appendix. Frozen-opponent replays and
+the additional planning and risk-response diagnostics are reported there as
+well.
+
+\subsection{Non-LLM Reference Policy}
+
+% TODO: finalize the policy rule, comparison protocol, and evaluation results.
+To calibrate benchmark difficulty, the final evaluation will include one
+pre-specified, interpretable non-LLM reference policy using the same
+observation interface and no privileged information. We reserve this
+subsection for its decision rule, evaluation protocol, and role-balanced
+WACScore and mortality. The reference policy is not used to revise or prompt
+the LLM agents in the main experiment.
+
+\section{Results}
+
+\subsection{Adaptation under Policy Transparency}
+
+We evaluate adaptation by replaying each fixed MR1--MR3 policy set under
+the same five evaluation supply sequences. MR1 is the pre-feedback baseline:
+neither condition has access to prior-round information. Because OF and OPF
+are independent policy-generation runs, their MR1 levels need not be
+identical; policy-access effects are therefore estimated as matched
+differences in changes from MR1. The transition from MR1 to MR2 measures the
+first revision, while MR2 to MR3 distinguishes continued improvement from
+saturation or regression.
+
+% TODO: report experienced-seed versus held-out-seed changes as a transfer
+% robustness analysis once the corresponding estimates are finalized.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=\linewidth]{adaptation_trajectories.png}
+    \caption{Cross-meta-round adaptation under Outcome Feedback (OF) and
+    Outcome-and-Policy Feedback (OPF). Policies from each meta-round are
+    replayed under five fixed supply sequences. Points are role-balanced
+    estimates after averaging seeds within experiments; shaded regions are
+    95\% matched experiment-cluster bootstrap intervals.}
+    \label{fig:adaptation-trajectories}
+\end{figure}
+
+Figure~\ref{fig:adaptation-trajectories} shows improvement after the first
+revision under both conditions, but their later dynamics diverge. OF largely
+plateaus after MR2, whereas OPF continues to improve through MR3. Across the
+full revision horizon, the OPF increase in WACScore exceeds the OF increase
+by 2.08 points (95\% CI $[0.46,3.77]$). Mortality declines under both
+conditions, but the difference between their reductions remains uncertain.
+Policy transparency therefore more clearly improves survival duration than
+the probability of avoiding every catastrophic failure.
+
+The aggregate effect is highly heterogeneous. GPT-5.4 Nano has the largest
+baseline-adjusted MR1-to-MR3 effect: $+11.53$ WACScore points (95\% CI
+$[4.28,18.80]$) and $-11.83$ mortality points ($[-21.32,-2.27]$). The other
+model-specific intervals include zero. This pattern does not support a
+simple strong-model advantage-amplification account; instead, the largest
+measured benefit accrues to the backend that performs worst under OF. Full
+model-level estimates are reported in the appendix.
+
+\subsection{Overall Policy Effectiveness and Baseline Calibration}
+
+Table~\ref{tab:outcome-performance} provides descriptive context for the
+adaptation results by reporting the two simulator-grounded outcome metrics
+for revised policies in MR2--MR3. Gemini 3.5 Flash achieves the highest
+WACScore under both feedback conditions and maintains low mortality. Claude
+Sonnet 5 and GPT-5.4 form a second performance tier, whereas DeepSeek V4
+Flash and GPT-5.4 Nano have weaker feedback-averaged outcomes. These raw
+condition levels combine distinct MR1 realizations and should not be read as
+policy-access effects; the matched changes reported above provide the
+appropriate comparison. Corresponding matched-cluster intervals are reported
+in the appendix.
+
+% TODO: add the finalized non-LLM reference outcome beside this model-level
+% context, without treating it as another adaptive LLM condition.
+
+\begin{table}[t]
+    \centering
+    \small
+    \setlength{\tabcolsep}{5pt}
+    \caption{Simulator-grounded performance of revised policies, averaged
+    over MR2--MR3 and five fixed supply sequences. Estimates are
+    role-balanced. Avg. is the unweighted mean across OF and OPF; raw
+    condition levels are descriptive rather than baseline-adjusted effects.}
+    \label{tab:outcome-performance}
+    \begin{tabular}{lrrr rrr}
+        \toprule
+        & \multicolumn{3}{c}{WACScore $\uparrow$}
+        & \multicolumn{3}{c}{Mortality (\%) $\downarrow$} \\
+        \cmidrule(lr){2-4}\cmidrule(lr){5-7}
+        Model & OF & OPF & Avg. & OF & OPF & Avg. \\
+        \midrule
+        Gemini 3.5 Flash  & \textbf{86.47} & \textbf{87.05} & \textbf{86.76} & 25.75 & \textbf{25.08} & \textbf{25.42} \\
+        Claude Sonnet 5   & 86.17 & 84.05 & 85.11 & \textbf{25.00} & 28.67 & 26.83 \\
+        GPT-5.4           & 84.27 & 81.72 & 83.00 & 27.58 & 31.08 & 29.33 \\
+        DeepSeek V4 Flash & 69.04 & 67.84 & 68.44 & 45.83 & 46.58 & 46.21 \\
+        GPT-5.4 Nano      & 50.95 & 65.35 & 58.15 & 66.42 & 48.83 & 57.62 \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\subsection{Policy Homogenization under Transparency}
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.90\linewidth]{policy_convergence.png}
+    \caption{Behavioral convergence across meta-rounds. Distance is the
+    within-experiment mean pairwise RMSE between normalized bids on 144
+    controlled states; lower values indicate more similar behavior. Shaded
+    regions are 95\% matched experiment-cluster bootstrap intervals.}
+    \label{fig:policy-convergence}
+\end{figure}
+
+Figure~\ref{fig:policy-convergence} shows that the two feedback conditions
+produce qualitatively different policy dynamics. Under OF, behavioral
+distance increases across revisions; under OPF, it decreases after the first
+policy exposure and then remains stable. From MR1 to MR3, the OPF-minus-OF
+change in behavioral distance is $-0.0467$ (95\% CI
+$[-0.0613,-0.0325]$). A normalized-AST analysis yields the same qualitative
+pattern and is reported in the supplementary appendix.
+
+This behavioral homogenization is stronger and more consistent than the
+corresponding improvement in outcomes: access to decision rules moves agents
+toward a more shared bidding repertoire, but does not make that repertoire
+uniformly more effective. Descriptive outcome dispersion moves in the same
+direction and is also reported in the appendix. Because the roles remain
+asymmetric, convergence is not intrinsically desirable. The result shows that
+policy transparency changes the revision process, but does not distinguish
+selective strategic transfer from broad imitation or establish that agents
+copy any particular opponent.
+
+\subsection{Failure Mechanisms}
+
+Table~\ref{tab:outcome-performance} already reports how frequently models
+die under multi-seed replay. We therefore use the judge only to ask how the
+original failed trajectories differ, rather than repeating mortality in a
+second figure. Among 3,600 valid agent-rounds in the policy-generation
+trajectories, 1,444 end in death; all receive valid outputs from both judges.
+These cases come from the common generation supply sequence and should not be
+confused with the five-seed replay population in
+Table~\ref{tab:outcome-performance}.
+
+The attribution stage does not force every death into a policy category.
+Averaging the two judges' votes, 67.9\% of deaths are attributed primarily to
+the policy, 22.4\% to a combination of policy and adverse context, 9.5\% have
+no clear policy failure, and 0.2\% have insufficient evidence. Thus, 90.2\%
+of deaths support at least partial policy attribution;
+Figure~\ref{fig:failure-modes} shows the primary-mode composition of this
+attributable subset.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=\linewidth]{failure_analysis_figures/primary_failure_heatmap.pdf}
+    \caption{Primary failure modes among policy-attributable deaths in the
+    original policy-generation trajectories. Each blinded judge contributes
+    one-half vote, and every row is normalized over deaths attributed wholly
+    or partly to the submitted policy. The complete five-mode taxonomy is
+    retained, including rare allocation-rule misreasoning. Values are rounded
+    percentages and represent diagnostic annotations rather than
+    simulator-defined causal ground truth.}
+    \label{fig:failure-modes}
+\end{figure}
+
+Figure~\ref{fig:failure-modes} reveals different failure signatures despite
+the shared game interface. Fatal undercommitment accounts for 75.7\% of
+DeepSeek V4 Flash's attributable deaths and 66.0\% of GPT-5.4 Nano's. Gemini
+3.5 Flash instead has a winner's-curse-heavy profile (47.3\%), consistent with
+policies that secure costly earlier wins at the expense of later budget. This
+operationalizes the overpayment mechanism observed in the original WAC study
+~\cite{mao2025alympics}. GPT-5.4 is divided between undercommitment (39.2\%)
+and winner's-curse overpayment (36.4\%), while competitive-threshold
+miscalibration remains a secondary but recurrent diagnosis across models.
+Allocation-rule misreasoning is below 1\% overall; retaining it shows that
+explicit misunderstanding of the allocation mechanism is rare relative to
+bid calibration and intertemporal budget errors.
+
+Attribution-status agreement is 81.2\% ($\kappa=0.610$), whereas exact
+primary-mode agreement is 61.6\% ($\kappa=0.436$). We therefore interpret the
+heatmap as an averaged diagnostic distribution, not a definitive causal
+labeling of individual deaths. Contextual contributors, judge-specific
+counts, death-conditioned rationale--policy and policy--trajectory mismatch,
+and human-validation results are reserved for the appendix.
+
+\section{Limitations}
+
+WACBench studies one stylized resource-allocation game, and policy
+revision is generated from feedback under a single base supply
+trajectory. Although replaying the fixed policies under five evaluation
+seeds tests robustness to additional scarcity realizations, the reported
+uncertainty remains conditional on this selected seed set and does not
+capture the full distribution of possible environments. Code mediation
+also evaluates a model's ability to formulate an executable policy under
+a restricted interface, which is narrower than unconstrained interactive
+agency and does not guarantee agreement between a model's verbal rationale
+and its submitted program. Moreover, OF and OPF branch from separately
+generated MR1 policies rather than an identical shared policy set. Matched
+differences in changes adjust for their observed MR1 levels, but cannot remove
+all variation due to independent policy generation. Performance is also
+conditional on the selected backend pool. Absolute calibration remains
+incomplete until the planned non-LLM reference policy is finalized, and one
+reference policy will not span the range of possible heuristic or
+search-based opponents. The convergence probes cover a fixed, task-motivated
+state grid;
+behavior outside this grid may differ, and similarity does not by itself
+imply strategic optimality or direct copying from a particular opponent.
+Finally, LLM-judge annotations remain interpretive even when grounded in
+reconstructed evidence. We mitigate this limitation through two independent
+judges, model-name blinding, explicit non-policy attribution options, and by
+keeping all judge outputs secondary to deterministic simulator outcomes.
+Exact primary-mode agreement is moderate, and the planned stratified human
+validation is necessary before treating the taxonomy as reliable beyond the
+reported diagnostic use.
+
+\section{Conclusion}
+
+We introduced WACBench, a code-mediated benchmark for evaluating strategic
+adaptation in a repeated, asymmetric resource competition environment.
+Treating executable policies as the unit of decision making makes the
+implemented decision rule persistent, permits exact replay, and exposes the
+links among a model's rationale, policy, actions, and realized trajectory.
+Across five backends, opponent-policy feedback has heterogeneous effects, but
+multi-seed replays reveal a clear aggregate revision pattern: OF largely
+plateaus after its first revision, whereas OPF sustains WACScore gains through
+the final meta-round. Its additional effect on mortality is less certain.
+Controlled probes further show convergence in bidding behavior and program
+structure under OPF, with the largest performance benefit accruing to
+GPT-5.4 Nano rather than the strongest backend. These results show that
+access to opponents' executable strategies changes policy revision, but does
+not uniformly produce more reliable decisions. Failure diagnosis further
+separates undercommitment-heavy deaths in DeepSeek V4 Flash and GPT-5.4 Nano
+from the winner's-curse-heavy profile of Gemini 3.5 Flash. More broadly, the
+results motivate
+evaluating strategic agents through persistent policies, common-environment
+replays, objective outcomes, and auditable failure mechanisms.
+
+% Uncomment and replace with your bibliography file when ready.
+\bibliography{aaai2027}
+
+\end{document}
+
+%temp_v5

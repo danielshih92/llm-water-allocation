@@ -1,0 +1,51 @@
+{
+  "generated_at": "2026-07-26T05:03:01.294491Z",
+  "input_dir": "/home/danie/thesis_experiment/Alympics/judge_result/failure_analysis_full_gpt_deepseek_v3",
+  "output_dir": "/home/danie/thesis_experiment/Alympics/appendix/failure_analysis_figures",
+  "log_dir": "/home/danie/thesis_experiment/Alympics/log",
+  "batches": [
+    "batch_031_full_code_access_c_med_20days",
+    "batch_032_no_opp_info_c_med_20days"
+  ],
+  "experiment_range_inclusive": [
+    1,
+    120
+  ],
+  "experiment_clusters": 120,
+  "models": [
+    "gemini-3.5-flash",
+    "claude-sonnet-5",
+    "gpt-5.4",
+    "deepseek-v4-flash",
+    "gpt-5.4-nano"
+  ],
+  "valid_generation_policy_rounds": 3600,
+  "eligible_source_deaths": 1444,
+  "judge_1_successes": 1444,
+  "judge_2_successes": 1444,
+  "paired_death_cases": 1444,
+  "paired_coverage_rate": 1.0,
+  "bootstrap_samples": 5000,
+  "bootstrap_seed": 42,
+  "displayed_primary_factors": [
+    "resource_disadvantaged_role",
+    "fatal_undercommitment",
+    "winners_curse_overpayment",
+    "emergency_response_failure",
+    "competitive_threshold_miscalibration"
+  ],
+  "judge_agreement": {
+    "paired_item_count": 1444,
+    "primary_agreement_count": 890,
+    "primary_agreement_rate": 0.616343,
+    "cohen_kappa": 0.436108,
+    "attribution_status_agreement_count": 1173,
+    "attribution_status_agreement_rate": 0.812327,
+    "attribution_status_cohen_kappa": 0.609597
+  },
+  "panel_scope": {
+    "A": "All valid original generation-trajectory policy-rounds.",
+    "B": "Deterministic disadvantaged-role exposure among source deaths, followed by two-judge averaged primary-mechanism votes among paired death cases. All percentages use deaths as the denominator. Role exposure can overlap with a primary mechanism; omitted no-primary and rare allocation labels mean displayed policy columns need not sum to 100.",
+    "C": "Two-judge averaged mismatch annotations among paired death cases only."
+  }
+}
